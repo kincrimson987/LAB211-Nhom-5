@@ -1,3 +1,4 @@
+```mermaid
 classDiagram
 
 class Report {
@@ -65,3 +66,4 @@ CSVHandler ..> FileManager
 CSVHandler ..> Employee
 CSVHandler ..> Department
 CSVHandler ..> Payroll
+```
