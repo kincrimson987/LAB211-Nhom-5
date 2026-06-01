@@ -1,3 +1,4 @@
+```mermaid
 classDiagram
 
 class Employee {
@@ -89,6 +90,7 @@ class LeaveStatus {
 
 Employee "1" --> "*" LeaveRequest
 Employee "1" --> "1" LeaveBalance
+```
 
 LeaveService ..> Employee
 LeaveService ..> LeaveRequest
