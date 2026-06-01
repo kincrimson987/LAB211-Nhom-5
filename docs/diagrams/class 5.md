@@ -1,3 +1,4 @@
+```mermaid
 classDiagram
 
 class PayrollSimulation {
@@ -89,3 +90,4 @@ SyncStrategy <|.. MutexStrategy
 SyncStrategy <|.. SemaphoreStrategy
 SyncStrategy <|.. ReentrantLockStrategy
 SyncStrategy <|.. SynchronizedStrategy
+```
