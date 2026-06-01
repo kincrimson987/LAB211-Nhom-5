@@ -1,3 +1,4 @@
+```mermaid
 classDiagram
 
 class UserAccount {
@@ -335,3 +336,4 @@ Employee "1" --> "*" Payroll
 PayrollManager --> Payroll
 
 ReportManager --> Report
+```
