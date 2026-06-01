@@ -90,7 +90,7 @@ class LeaveStatus {
 
 Employee "1" --> "*" LeaveRequest
 Employee "1" --> "1" LeaveBalance
-```
+
 
 LeaveService ..> Employee
 LeaveService ..> LeaveRequest
@@ -98,3 +98,4 @@ LeaveService ..> LeaveBalance
 
 LeaveRequest --> LeaveType
 LeaveRequest --> LeaveStatus
+```
