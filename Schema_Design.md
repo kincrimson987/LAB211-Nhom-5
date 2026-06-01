@@ -1,6 +1,6 @@
 # Báo cáo Thiết Kế Kiến Trúc & Cấu trúc Dữ Liệu
 **Project:** Employee Payroll Management Simulation (LAB211)
-
+khoa đã tới đây
 ---
 
 ## 1. Class Diagram Tổng Quan (Mô hình MVC - Phần MODEL)
