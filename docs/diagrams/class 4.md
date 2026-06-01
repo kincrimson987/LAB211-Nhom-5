@@ -1,3 +1,5 @@
+
+```mermaid
 classDiagram
 
 class Payroll {
@@ -112,3 +114,4 @@ PayrollHistory --> Payroll
 PayrollService --> Payroll
 PayrollService --> PayrollRule
 PayrollService --> Employee
+```
