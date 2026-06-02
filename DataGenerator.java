@@ -9,14 +9,15 @@ public class DataGenerator {
     private static final int NUM_DEPARTMENTS = 10;
     private static final int NUM_EMPLOYEES = 1200;
     private static final int CURRENT_YEAR = 2023;
-    private static final int MONTHS_TO_GENERATE = 12; // Sinh dữ liệu tròn 1 năm cho 1200 nhân viên -> đạt mức 14400 bản ghi
+    private static final int MONTHS_TO_GENERATE = 12; // Sinh dữ liệu tròn 1 năm cho 1200 nhân viên -> đạt mức 14400 bản
+                                                      // ghi
     private static final Random RANDOM = new Random();
 
     public static void main(String[] args) {
         System.out.println("===================================================================");
         System.out.println(" Bắt đầu sinh dữ liệu CSV theo chuẩn UML (Simulation 12 Tháng)     ");
         System.out.println("===================================================================");
-        
+
         File directory = new File(DATA_DIR);
         if (!directory.exists()) {
             directory.mkdir();
@@ -30,7 +31,7 @@ public class DataGenerator {
             generateLeaveRequests();
             generatePayrollEntries();
             generatePayrollRuns();
-            
+
             System.out.println("\n[HOÀN TẤT] File CSV đã sinh thành công hoàn toàn đạt chuẩn.");
         } catch (IOException e) {
             System.err.println("Lỗi khi sinh file CSV: " + e.getMessage());
@@ -51,18 +52,18 @@ public class DataGenerator {
     }
 
     private static final String[] FIRST_NAMES = {
-        "James", "Mary", "John", "Patricia", "Robert", "Jennifer", "Michael", "Elizabeth",
-        "William", "Linda", "David", "Barbara", "Richard", "Susan", "Joseph", "Jessica",
-        "Thomas", "Sarah", "Charles", "Karen", "Christopher", "Lisa", "Daniel", "Nancy",
-        "Matthew", "Betty", "Anthony", "Sandra", "Mark", "Margaret", "Donald", "Ashley",
-        "Steven", "Kimberly", "Paul", "Emily", "Andrew", "Donna", "Joshua", "Michelle"
+            "James", "Mary", "John", "Patricia", "Robert", "Jennifer", "Michael", "Elizabeth",
+            "William", "Linda", "David", "Barbara", "Richard", "Susan", "Joseph", "Jessica",
+            "Thomas", "Sarah", "Charles", "Karen", "Christopher", "Lisa", "Daniel", "Nancy",
+            "Matthew", "Betty", "Anthony", "Sandra", "Mark", "Margaret", "Donald", "Ashley",
+            "Steven", "Kimberly", "Paul", "Emily", "Andrew", "Donna", "Joshua", "Michelle"
     };
 
     private static final String[] LAST_NAMES = {
-        "Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis", "Garcia",
-        "Rodriguez", "Wilson", "Martinez", "Anderson", "Taylor", "Thomas", "Hernandez",
-        "Moore", "Martin", "Jackson", "Lee", "Perez", "Thompson", "White",
-        "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson", "Walker", "Young"
+            "Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis", "Garcia",
+            "Rodriguez", "Wilson", "Martinez", "Anderson", "Taylor", "Thomas", "Hernandez",
+            "Moore", "Martin", "Jackson", "Lee", "Perez", "Thompson", "White",
+            "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson", "Walker", "Young"
     };
 
     private static void generateEmployees() throws IOException {
@@ -103,7 +104,8 @@ public class DataGenerator {
                 for (int i = 1; i <= NUM_EMPLOYEES; i++) {
                     int workDays = 20 + RANDOM.nextInt(4);
                     double otHours = RANDOM.nextInt(10) + (RANDOM.nextDouble() * 2);
-                    writer.println(String.format("A_E%04d_%02d_%d,1,E%04d,%d,%.1f", i, m, CURRENT_YEAR, i, workDays, otHours));
+                    writer.println(
+                            String.format("A_E%04d_%02d_%d,1,E%04d,%d,%.1f", i, m, CURRENT_YEAR, i, workDays, otHours));
                     totalRows++;
                 }
             }
@@ -120,7 +122,8 @@ public class DataGenerator {
                     if (RANDOM.nextInt(100) < 10) { // 10% cơ hội mỗi tháng mỗi nhân sự xin nghỉ
                         String type = RANDOM.nextBoolean() ? "ANNUAL" : "SICK";
                         int days = 1 + RANDOM.nextInt(3);
-                        writer.println(String.format("LR_E%04d_%02d_%d,1,E%04d,%s,%d,PENDING", i, m, CURRENT_YEAR, i, type, days));
+                        writer.println(String.format("LR_E%04d_%02d_%d,1,E%04d,%s,%d,PENDING", i, m, CURRENT_YEAR, i,
+                                type, days));
                         totalRows++;
                     }
                 }
@@ -147,10 +150,11 @@ public class DataGenerator {
         int totalRows = 0;
         try (PrintWriter writer = new PrintWriter(new FileWriter(DATA_DIR + "payroll_runs.csv"))) {
             writer.println("id,version,month,year,lockMechanism,doublePaymentCount,wrongLeaveCount,elapsedMs,tps");
-            String[] mechanisms = {"NONE", "PESSIMISTIC", "OPTIMISTIC", "QUEUE"};
+            String[] mechanisms = { "NONE", "PESSIMISTIC", "OPTIMISTIC", "QUEUE" };
             for (int m = 1; m <= MONTHS_TO_GENERATE; m++) {
                 for (String mech : mechanisms) {
-                    writer.println(String.format("RUN_%s_%02d_%d,1,%d,%d,%s,0,0,0,0.0", mech, m, CURRENT_YEAR, m, CURRENT_YEAR, mech));
+                    writer.println(String.format("RUN_%s_%02d_%d,1,%d,%d,%s,0,0,0,0.0", mech, m, CURRENT_YEAR, m,
+                            CURRENT_YEAR, mech));
                     totalRows++;
                 }
             }
