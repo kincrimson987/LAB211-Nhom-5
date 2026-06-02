@@ -2,7 +2,8 @@ public class LeaveBalance extends BaseEntity {
     private int annualRemaining;
     private int sickRemaining;
 
-    public LeaveBalance() {}
+    public LeaveBalance() {
+    }
 
     public LeaveBalance(String id, long version, int annualRemaining, int sickRemaining) {
         super(id, version);
@@ -10,11 +11,21 @@ public class LeaveBalance extends BaseEntity {
         this.sickRemaining = sickRemaining;
     }
 
-    public int getAnnualRemaining() { return annualRemaining; }
-    public void setAnnualRemaining(int annualRemaining) { this.annualRemaining = annualRemaining; }
+    public int getAnnualRemaining() {
+        return annualRemaining;
+    }
 
-    public int getSickRemaining() { return sickRemaining; }
-    public void setSickRemaining(int sickRemaining) { this.sickRemaining = sickRemaining; }
+    public void setAnnualRemaining(int annualRemaining) {
+        this.annualRemaining = annualRemaining;
+    }
+
+    public int getSickRemaining() {
+        return sickRemaining;
+    }
+
+    public void setSickRemaining(int sickRemaining) {
+        this.sickRemaining = sickRemaining;
+    }
 
     @Override
     public String toCsvLine() {
