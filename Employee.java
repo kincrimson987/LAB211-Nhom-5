@@ -5,7 +5,8 @@ public class Employee extends BaseEntity {
     private Enums.EmploymentType employmentType = Enums.EmploymentType.FULLTIME;
     private double baseSalary = 0.0; // monthly base salary
 
-    public Employee() {}
+    public Employee() {
+    }
 
     public Employee(String id, long version, String name, String email, String departmentId) {
         super(id, version);
@@ -14,17 +15,37 @@ public class Employee extends BaseEntity {
         this.departmentId = departmentId;
     }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public String getName() {
+        return name;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public String getDepartmentId() { return departmentId; }
-    public void setDepartmentId(String departmentId) { this.departmentId = departmentId; }
+    public String getEmail() {
+        return email;
+    }
 
-    public Enums.EmploymentType getEmploymentType() { return employmentType; }
-    public void setEmploymentType(Enums.EmploymentType employmentType) { this.employmentType = employmentType; }
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getDepartmentId() {
+        return departmentId;
+    }
+
+    public void setDepartmentId(String departmentId) {
+        this.departmentId = departmentId;
+    }
+
+    public Enums.EmploymentType getEmploymentType() {
+        return employmentType;
+    }
+
+    public void setEmploymentType(Enums.EmploymentType employmentType) {
+        this.employmentType = employmentType;
+    }
 
     public double getBaseSalary() {
         if (baseSalary <= 0.0) {
@@ -32,7 +53,10 @@ public class Employee extends BaseEntity {
         }
         return baseSalary;
     }
-    public void setBaseSalary(double baseSalary) { this.baseSalary = baseSalary; }
+
+    public void setBaseSalary(double baseSalary) {
+        this.baseSalary = baseSalary;
+    }
 
     @Override
     public String toCsvLine() {
