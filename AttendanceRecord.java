@@ -3,7 +3,8 @@ public class AttendanceRecord extends BaseEntity {
     private int workDays;
     private double overtimeHours;
 
-    public AttendanceRecord() {}
+    public AttendanceRecord() {
+    }
 
     public AttendanceRecord(String id, long version, String employeeId, int workDays, double overtimeHours) {
         super(id, version);
@@ -12,14 +13,29 @@ public class AttendanceRecord extends BaseEntity {
         this.overtimeHours = overtimeHours;
     }
 
-    public String getEmployeeId() { return employeeId; }
-    public void setEmployeeId(String employeeId) { this.employeeId = employeeId; }
+    public String getEmployeeId() {
+        return employeeId;
+    }
 
-    public int getWorkDays() { return workDays; }
-    public void setWorkDays(int workDays) { this.workDays = workDays; }
+    public void setEmployeeId(String employeeId) {
+        this.employeeId = employeeId;
+    }
 
-    public double getOvertimeHours() { return overtimeHours; }
-    public void setOvertimeHours(double overtimeHours) { this.overtimeHours = overtimeHours; }
+    public int getWorkDays() {
+        return workDays;
+    }
+
+    public void setWorkDays(int workDays) {
+        this.workDays = workDays;
+    }
+
+    public double getOvertimeHours() {
+        return overtimeHours;
+    }
+
+    public void setOvertimeHours(double overtimeHours) {
+        this.overtimeHours = overtimeHours;
+    }
 
     @Override
     public String toCsvLine() {
