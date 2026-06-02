@@ -2,7 +2,8 @@ public class Department extends BaseEntity {
     private String name;
     private String managerId;
 
-    public Department() {}
+    public Department() {
+    }
 
     public Department(String id, long version, String name, String managerId) {
         super(id, version);
@@ -10,11 +11,21 @@ public class Department extends BaseEntity {
         this.managerId = managerId;
     }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public String getName() {
+        return name;
+    }
 
-    public String getManagerId() { return managerId; }
-    public void setManagerId(String managerId) { this.managerId = managerId; }
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getManagerId() {
+        return managerId;
+    }
+
+    public void setManagerId(String managerId) {
+        this.managerId = managerId;
+    }
 
     @Override
     public String toCsvLine() {
