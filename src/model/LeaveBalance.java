@@ -1,3 +1,4 @@
+
 public class LeaveBalance {
 
     private int totalLeaveDays;
