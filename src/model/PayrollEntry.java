@@ -1,4 +1,3 @@
-package model;
 public class PayrollEntry {
 
     private PayrollStatus status;
