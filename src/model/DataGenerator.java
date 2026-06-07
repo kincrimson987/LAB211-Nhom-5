@@ -3,6 +3,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Random;
+import java.util.Locale;
 
 public class DataGenerator {
     private static final String DATA_DIR = "data/";
@@ -134,7 +135,7 @@ public class DataGenerator {
                     String employeeId = String.format("E%04d", i);
                     String yearMonth = String.format("%d-%02d", CURRENT_YEAR, m);
 
-                    writer.println(String.format("%s,1,%s,%s,%d,%.1f",
+                    writer.println(String.format(Locale.US, "%s,1,%s,%s,%d,%.1f",
                             attendanceId,
                             employeeId,
                             yearMonth,
