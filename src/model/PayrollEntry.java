@@ -1,152 +1,63 @@
 
 
-public class PayrollEntry {
+public class PayrollEntry extends BaseEntity {
 
-    // ── Từ diagram ──────────────────────────────
+    private String employeeId;
+    private double netSalary;
     private PayrollStatus status;
-    private int version;
-
-    // ── Thêm cho dự án ──────────────────────────
-    private String entryId; // khóa chính
-    private String employeeId; // nhân viên nào
-    private String yearMonth; // tháng nào "2024-01"
-    private double baseSalaryPaid; // lương cơ bản đã tính
-    private double overtimePay; // tiền OT
-    private double bonus; // thưởng chuyên cần
-    private double deduction; // khấu trừ vắng
-    private double tax; // thuế TNCN
-    private double netSalary; // lương thực nhận
-    private String processedBy; // hrId đã xử lý
 
     // ==================== CONSTRUCTORS ====================
 
-    /** Từ diagram — giữ nguyên, chỉ sửa version = 0 */
     public PayrollEntry() {
+        super(null, 0);
         this.status = PayrollStatus.PENDING;
-        this.version = 0; // sửa từ 1 → 0 cho đồng nhất với DataGenerator
     }
 
-    /** Thêm — constructor tạo entry mới chờ xử lý */
-    public PayrollEntry(String entryId, String employeeId, String yearMonth) {
-        this();
-        this.entryId = entryId;
+    public PayrollEntry(String id, String employeeId) {
+        super(id, 0);
         this.employeeId = employeeId;
-        this.yearMonth = yearMonth;
+        this.status = PayrollStatus.PENDING;
     }
 
-    /** Thêm — constructor đầy đủ sau khi tính lương */
-    public PayrollEntry(String entryId, String employeeId, String yearMonth,
-            double baseSalaryPaid, double overtimePay, double bonus,
-            double deduction, double tax, double netSalary) {
-        this(entryId, employeeId, yearMonth);
-        this.baseSalaryPaid = baseSalaryPaid;
-        this.overtimePay = overtimePay;
-        this.bonus = bonus;
-        this.deduction = deduction;
-        this.tax = tax;
+    public PayrollEntry(String id, long version, String employeeId, double netSalary, PayrollStatus status) {
+        super(id, version);
+        this.employeeId = employeeId;
         this.netSalary = netSalary;
+        this.status = status != null ? status : PayrollStatus.PENDING;
     }
 
-    // ==================== GETTERS — từ diagram ====================
-
-    public PayrollStatus getStatus() {
-        return status;
-    }
-
-    public int getVersion() {
-        return version;
-    }
-
-    // ==================== SETTERS — thêm cho dự án ====================
-
-    public void setStatus(PayrollStatus status) {
-        this.status = status;
-    }
-
-    public void setVersion(int version) {
-        this.version = version;
-    }
-
-    // ==================== GETTERS/SETTERS — thêm cho dự án ====================
+    // ==================== GETTERS / SETTERS ====================
 
     public String getEntryId() {
-        return entryId;
+        return getId();
+    }
+
+    public void setEntryId(String entryId) {
+        setId(entryId);
     }
 
     public String getEmployeeId() {
         return employeeId;
     }
 
-    public String getYearMonth() {
-        return yearMonth;
-    }
-
-    public double getBaseSalaryPaid() {
-        return baseSalaryPaid;
-    }
-
-    public double getOvertimePay() {
-        return overtimePay;
-    }
-
-    public double getBonus() {
-        return bonus;
-    }
-
-    public double getDeduction() {
-        return deduction;
-    }
-
-    public double getTax() {
-        return tax;
+    public void setEmployeeId(String employeeId) {
+        this.employeeId = employeeId;
     }
 
     public double getNetSalary() {
         return netSalary;
     }
 
-    public String getProcessedBy() {
-        return processedBy;
-    }
-
-    public void setEntryId(String entryId) {
-        this.entryId = entryId;
-    }
-
-    public void setEmployeeId(String employeeId) {
-        this.employeeId = employeeId;
-    }
-
-    public void setYearMonth(String yearMonth) {
-        this.yearMonth = yearMonth;
-    }
-
-    public void setBaseSalaryPaid(double baseSalaryPaid) {
-        this.baseSalaryPaid = baseSalaryPaid;
-    }
-
-    public void setOvertimePay(double overtimePay) {
-        this.overtimePay = overtimePay;
-    }
-
-    public void setBonus(double bonus) {
-        this.bonus = bonus;
-    }
-
-    public void setDeduction(double deduction) {
-        this.deduction = deduction;
-    }
-
-    public void setTax(double tax) {
-        this.tax = tax;
-    }
-
     public void setNetSalary(double netSalary) {
         this.netSalary = netSalary;
     }
 
-    public void setProcessedBy(String processedBy) {
-        this.processedBy = processedBy;
+    public PayrollStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(PayrollStatus status) {
+        this.status = status;
     }
 
     // ==================== BUSINESS METHODS — từ diagram ====================
@@ -160,63 +71,76 @@ public class PayrollEntry {
             throw new IllegalStateException("Payroll already processed.");
         }
         this.status = PayrollStatus.PROCESSED;
-        this.version++;
+        setVersion(getVersion() + 1);
     }
 
 
-    // ==================== CSV — thêm cho dự án ====================
+    // ==================== CSV — theo schema chính thức ====================
+
+    public static String getFullCsvHeader() {
+        return "id,version,employeeId,netSalary,status";
+    }
 
     public String getCsvHeader() {
-        return "entryId,employeeId,yearMonth,baseSalaryPaid,overtimePay," +
-                "bonus,deduction,tax,netSalary,status,processedBy,version";
+        return getFullCsvHeader();
     }
 
+    @Override
     public String toCsvLine() {
         return String.join(",",
-                entryId,
-                employeeId,
-                yearMonth,
-                String.valueOf(baseSalaryPaid),
-                String.valueOf(overtimePay),
-                String.valueOf(bonus),
-                String.valueOf(deduction),
-                String.valueOf(tax),
+                getId() != null ? getId() : "",
+                String.valueOf(getVersion()),
+                employeeId != null ? employeeId : "",
                 String.valueOf(netSalary),
-                status.name(),
-                processedBy != null ? processedBy : "",
-                String.valueOf(version));
+                status != null ? status.name() : PayrollStatus.PENDING.name());
     }
 
-    public static PayrollEntry fromCsvLine(String line) {
-        String[] p = line.split(",");
+    public static PayrollEntry parseCsvLine(String line) {
+        String[] parts = line.split(",");
+        if (parts.length < 5) {
+            throw new IllegalArgumentException("Invalid payroll entry CSV line: " + line);
+        }
+
         PayrollEntry pe = new PayrollEntry();
-        pe.entryId = p[0].trim();
-        pe.employeeId = p[1].trim();
-        pe.yearMonth = p[2].trim();
-        pe.baseSalaryPaid = Double.parseDouble(p[3].trim());
-        pe.overtimePay = Double.parseDouble(p[4].trim());
-        pe.bonus = Double.parseDouble(p[5].trim());
-        pe.deduction = Double.parseDouble(p[6].trim());
-        pe.tax = Double.parseDouble(p[7].trim());
-        pe.netSalary = Double.parseDouble(p[8].trim());
-        pe.status = PayrollStatus.valueOf(p[9].trim());
-        pe.processedBy = p[10].trim().isEmpty() ? null : p[10].trim();
-        pe.version = Integer.parseInt(p[11].trim());
+        pe.id = parts[0].trim();
+        pe.version = Long.parseLong(parts[1].trim());
+        pe.employeeId = parts[2].trim();
+        pe.netSalary = Double.parseDouble(parts[3].trim());
+        pe.status = PayrollStatus.valueOf(parts[4].trim());
         return pe;
+    }
+
+    @Override
+    public void fromCsvLine(String line) {
+        PayrollEntry parsed = parseCsvLine(line);
+        setId(parsed.getId());
+        setVersion(parsed.getVersion());
+        this.employeeId = parsed.employeeId;
+        this.netSalary = parsed.netSalary;
+        this.status = parsed.status;
+    }
+
+    public static String extractYearMonthFromId(String id) {
+        if (id == null) {
+            return "";
+        }
+        String[] parts = id.split("_");
+        if (parts.length >= 4) {
+            return parts[3] + "-" + parts[2];
+        }
+        return "";
     }
 
     // ==================== toString — từ diagram ====================
 
-    /** Từ diagram — giữ nguyên code bạn, thêm netSalary */
     @Override
     public String toString() {
         return "PayrollEntry{" +
-                "entryId='" + entryId + '\'' +
+                "id='" + getId() + '\'' +
                 ", employeeId='" + employeeId + '\'' +
-                ", yearMonth='" + yearMonth + '\'' +
                 ", netSalary=" + netSalary +
                 ", status=" + status +
-                ", version=" + version +
+                ", version=" + getVersion() +
                 '}';
     }
 }
