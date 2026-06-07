@@ -2,13 +2,13 @@
 classDiagram
 
 class Employee {
-    +String id
-    +long version
-    +String name
-    +String email
-    +String departmentId
-    +Enums.EmploymentType employmentType
-    +double baseSalary
+    -String id
+    -long version
+    -String name
+    -String email
+    -String departmentId
+    -Enums.EmploymentType employmentType
+    -double baseSalary
 
     +Employee()
     +Employee(String id, long version, String name, String email, String departmentId)
@@ -31,10 +31,10 @@ class Employee {
 }
 
 class Department {
-    +String id
-    +long version
-    +String name
-    +String managerId
+    -String id
+    -long version
+    -String name
+    -String managerId
 
     +Department()
     +Department(String id, long version, String name, String managerId)
@@ -51,11 +51,11 @@ class Department {
 }
 
 class AttendanceRecord {
-    +String id
-    +long version
-    +String employeeId
-    +int workDays
-    +double overtimeHours
+    -String id
+    -long version
+    -String employeeId
+    -int workDays
+    -double overtimeHours
 
     +AttendanceRecord()
     +AttendanceRecord(String id, long version, String employeeId, int workDays, double overtimeHours)
@@ -74,13 +74,13 @@ class AttendanceRecord {
 }
 
 class LeaveBalance {
-    +String balanceId
-    +String employeeId
-    +LeaveType leaveType
-    +int totalLeaveDays
-    +int usedLeaveDays
-    +int remainingLeaveDays
-    +int version
+    -String balanceId
+    -String employeeId
+    -LeaveType leaveType
+    -int totalLeaveDays
+    -int usedLeaveDays
+    -int remainingLeaveDays
+    -int version
 
     +LeaveBalance()
     +LeaveBalance(int totalLeaveDays, int usedLeaveDays, int remainingLeaveDays)
@@ -109,14 +109,14 @@ class LeaveBalance {
 }
 
 class LeaveRequest {
-    +String leaveId
-    +String employeeId
-    +LeaveType leaveType
-    +LocalDate startDate
-    +LocalDate endDate
-    +String reason
-    +LeaveStatus status
-    +String approvedBy
+    -String leaveId
+    -String employeeId
+    -LeaveType leaveType
+    -LocalDate startDate
+    -LocalDate endDate
+    -String reason
+    -LeaveStatus status
+    -String approvedBy
 
     +LeaveRequest()
     +LeaveRequest(String leaveId, LeaveType leaveType, LocalDate startDate, LocalDate endDate, String reason, LeaveStatus status)
