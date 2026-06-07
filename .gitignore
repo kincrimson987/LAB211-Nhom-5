@@ -1,0 +1,16 @@
+# Java build output — không nộp trong zip theo yêu cầu thầy
+out/
+*.class
+
+# NetBeans / IntelliJ
+nbproject/private/
+build/
+nbbuild/
+dist/
+.idea/
+*.iml
+
+# OS / Excel temp
+Thumbs.db
+.DS_Store
+~$*
