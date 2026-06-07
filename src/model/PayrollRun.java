@@ -24,11 +24,11 @@ public class PayrollRun extends BaseEntity {
     }
 
     public String getRunId() {
-        return id;
+        return getId();
     }
 
     public void setRunId(String runId) {
-        this.id = runId;
+        setId(runId);
     }
 
     public String getYearMonth() {
@@ -90,7 +90,7 @@ public class PayrollRun extends BaseEntity {
     @Override
     public String toCsvLine() {
         return String.format("%s,%d,%s,%s,%d,%d,%d,%d,%.2f",
-                id, version, yearMonth, mechanism, elapsedMs,
+                getId(), getVersion(), yearMonth, mechanism, elapsedMs,
                 successCount, doublePaymentCount, wrongLeaveCount, tps);
     }
 
@@ -99,8 +99,8 @@ public class PayrollRun extends BaseEntity {
         String[] parts = line.split(",");
 
         if (parts.length >= 9) {
-            this.id = parts[0];
-            this.version = Long.parseLong(parts[1]);
+            setId(parts[0]);
+            setVersion(Long.parseLong(parts[1]));
             this.yearMonth = parts[2];
             this.mechanism = parts[3];
             this.elapsedMs = Long.parseLong(parts[4]);
@@ -114,8 +114,8 @@ public class PayrollRun extends BaseEntity {
     @Override
     public String toString() {
         return "PayrollRun{" +
-                "runId='" + id + '\'' +
-                ", version=" + version +
+                "runId='" + getId() + '\'' +
+                ", version=" + getVersion() +
                 ", yearMonth='" + yearMonth + '\'' +
                 ", mechanism='" + mechanism + '\'' +
                 ", elapsedMs=" + elapsedMs +
