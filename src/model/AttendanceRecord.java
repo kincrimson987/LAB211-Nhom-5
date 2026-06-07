@@ -39,15 +39,15 @@ public class AttendanceRecord extends BaseEntity {
 
     @Override
     public String toCsvLine() {
-        return String.format("%s,%d,%s,%d,%.1f", id, version, employeeId, workDays, overtimeHours);
+        return String.format("%s,%d,%s,%d,%.1f", getId(), getVersion(), employeeId, workDays, overtimeHours);
     }
 
     @Override
     public void fromCsvLine(String line) {
         String[] parts = line.split(",");
         if (parts.length >= 5) {
-            this.id = parts[0];
-            this.version = Long.parseLong(parts[1]);
+            setId(parts[0]);
+            setVersion(Long.parseLong(parts[1]));
             this.employeeId = parts[2];
             this.workDays = Integer.parseInt(parts[3]);
             this.overtimeHours = Double.parseDouble(parts[4]);
