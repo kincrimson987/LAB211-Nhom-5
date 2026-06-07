@@ -9,13 +9,12 @@ public class DataGenerator {
     private static final int NUM_DEPARTMENTS = 10;
     private static final int NUM_EMPLOYEES = 1200;
     private static final int CURRENT_YEAR = 2023;
-    private static final int MONTHS_TO_GENERATE = 12; // Sinh dữ liệu tròn 1 năm cho 1200 nhân viên -> đạt mức 14400 bản
-                                                      // ghi
+    private static final int MONTHS_TO_GENERATE = 12;
     private static final Random RANDOM = new Random();
 
     public static void main(String[] args) {
         System.out.println("===================================================================");
-        System.out.println(" Bắt đầu sinh dữ liệu CSV theo chuẩn UML (Simulation 12 Tháng)     ");
+        System.out.println(" Bắt đầu sinh dữ liệu CSV theo chuẩn UML / Repository Layer        ");
         System.out.println("===================================================================");
 
         File directory = new File(DATA_DIR);
@@ -32,7 +31,7 @@ public class DataGenerator {
             generatePayrollEntries();
             generatePayrollRuns();
 
-            System.out.println("\n[HOÀN TẤT] File CSV đã sinh thành công hoàn toàn đạt chuẩn.");
+            System.out.println("\n[HOÀN TẤT] File CSV đã sinh thành công.");
         } catch (IOException e) {
             System.err.println("Lỗi khi sinh file CSV: " + e.getMessage());
         }
@@ -40,15 +39,21 @@ public class DataGenerator {
 
     private static void generateDepartments() throws IOException {
         int totalRows = 0;
+
         try (PrintWriter writer = new PrintWriter(new FileWriter(DATA_DIR + "departments.csv"))) {
             writer.println("id,version,name,managerId");
+
             for (int i = 1; i <= NUM_DEPARTMENTS; i++) {
                 String managerId = String.format("E%04d", 1 + RANDOM.nextInt(NUM_EMPLOYEES));
-                writer.println(String.format("D%03d,1,Department %d,%s", i, i, managerId));
+
+                writer.println(String.format("D%03d,1,Department %d,%s",
+                        i, i, managerId));
+
                 totalRows++;
             }
         }
-        System.out.printf("[OK] departments.csv     (%d dòng)\n", totalRows);
+
+        System.out.printf("[OK] departments.csv     (%d dòng)%n", totalRows);
     }
 
     private static final String[] FIRST_NAMES = {
@@ -68,97 +73,166 @@ public class DataGenerator {
 
     private static void generateEmployees() throws IOException {
         int totalRows = 0;
+
         try (PrintWriter writer = new PrintWriter(new FileWriter(DATA_DIR + "employees.csv"))) {
             writer.println("id,version,name,email,departmentId");
+
             for (int i = 1; i <= NUM_EMPLOYEES; i++) {
                 String firstName = FIRST_NAMES[RANDOM.nextInt(FIRST_NAMES.length)];
                 String lastName = LAST_NAMES[RANDOM.nextInt(LAST_NAMES.length)];
                 String fullName = firstName + " " + lastName;
-                String email = String.format("%s.%s%d@company.com", firstName.toLowerCase(), lastName.toLowerCase(), i);
+                String email = String.format("%s.%s%d@company.com",
+                        firstName.toLowerCase(),
+                        lastName.toLowerCase(),
+                        i);
                 String deptId = String.format("D%03d", 1 + RANDOM.nextInt(NUM_DEPARTMENTS));
-                writer.println(String.format("E%04d,1,%s,%s,%s", i, fullName, email, deptId));
+
+                writer.println(String.format("E%04d,1,%s,%s,%s",
+                        i, fullName, email, deptId));
+
                 totalRows++;
             }
         }
-        System.out.printf("[OK] employees.csv       (%d dòng)\n", totalRows);
+
+        System.out.printf("[OK] employees.csv       (%d dòng)%n", totalRows);
     }
 
     private static void generateLeaveBalances() throws IOException {
         int totalRows = 0;
+
         try (PrintWriter writer = new PrintWriter(new FileWriter(DATA_DIR + "leave_balances.csv"))) {
-            writer.println("id,version,annualRemaining,sickRemaining");
+            writer.println("balanceId,employeeId,leaveType,totalLeaveDays,usedLeaveDays,remainingLeaveDays,version");
+
             for (int i = 1; i <= NUM_EMPLOYEES; i++) {
-                writer.println(String.format("E%04d,1,12,6", i));
-                totalRows++;
+                String employeeId = String.format("E%04d", i);
+
+                writer.println(String.format("LB_%s_ANNUAL,%s,ANNUAL,12,0,12,0",
+                        employeeId, employeeId));
+
+                writer.println(String.format("LB_%s_SICK,%s,SICK,6,0,6,0",
+                        employeeId, employeeId));
+
+                totalRows += 2;
             }
         }
-        System.out.printf("[OK] leave_balances.csv  (%d dòng)\n", totalRows);
+
+        System.out.printf("[OK] leave_balances.csv  (%d dòng)%n", totalRows);
     }
 
     private static void generateAttendanceRecords() throws IOException {
         int totalRows = 0;
+
         try (PrintWriter writer = new PrintWriter(new FileWriter(DATA_DIR + "attendance.csv"))) {
-            writer.println("id,version,employeeId,workDays,overtimeHours");
-            // Sinh cho mỗi tháng trong 12 tháng
+            writer.println("id,version,employeeId,yearMonth,workDays,overtimeHours");
+
             for (int m = 1; m <= MONTHS_TO_GENERATE; m++) {
                 for (int i = 1; i <= NUM_EMPLOYEES; i++) {
-                    int workDays = 20 + RANDOM.nextInt(4);
+                    int workDays = 20 + RANDOM.nextInt(7); // 20 -> 26 ngày
                     double otHours = RANDOM.nextInt(10) + (RANDOM.nextDouble() * 2);
-                    writer.println(
-                            String.format("A_E%04d_%02d_%d,1,E%04d,%d,%.1f", i, m, CURRENT_YEAR, i, workDays, otHours));
+
+                    String attendanceId = String.format("A_E%04d_%02d_%d", i, m, CURRENT_YEAR);
+                    String employeeId = String.format("E%04d", i);
+                    String yearMonth = String.format("%d-%02d", CURRENT_YEAR, m);
+
+                    writer.println(String.format("%s,1,%s,%s,%d,%.1f",
+                            attendanceId,
+                            employeeId,
+                            yearMonth,
+                            workDays,
+                            otHours));
+
                     totalRows++;
                 }
             }
         }
-        System.out.printf("[OK] attendance.csv      (%d dòng) -> Đạt mốc yêu cầu!\n", totalRows);
+
+        System.out.printf("[OK] attendance.csv      (%d dòng) -> Đạt mốc yêu cầu!%n", totalRows);
     }
 
     private static void generateLeaveRequests() throws IOException {
         int totalRows = 0;
+
         try (PrintWriter writer = new PrintWriter(new FileWriter(DATA_DIR + "leave_requests.csv"))) {
-            writer.println("id,version,employeeId,type,days,status");
+            writer.println("leaveId,employeeId,leaveType,startDate,endDate,reason,status,approvedBy");
+
             for (int m = 1; m <= MONTHS_TO_GENERATE; m++) {
                 for (int i = 1; i <= NUM_EMPLOYEES; i++) {
-                    if (RANDOM.nextInt(100) < 10) { // 10% cơ hội mỗi tháng mỗi nhân sự xin nghỉ
-                        String type = RANDOM.nextBoolean() ? "ANNUAL" : "SICK";
+                    if (RANDOM.nextInt(100) < 10) {
+                        String employeeId = String.format("E%04d", i);
+                        String leaveType = RANDOM.nextBoolean() ? "ANNUAL" : "SICK";
+
+                        int startDay = 1 + RANDOM.nextInt(20);
                         int days = 1 + RANDOM.nextInt(3);
-                        writer.println(String.format("LR_E%04d_%02d_%d,1,E%04d,%s,%d,PENDING", i, m, CURRENT_YEAR, i,
-                                type, days));
+                        int endDay = startDay + days - 1;
+
+                        String startDate = String.format("%d-%02d-%02d", CURRENT_YEAR, m, startDay);
+                        String endDate = String.format("%d-%02d-%02d", CURRENT_YEAR, m, endDay);
+                        String leaveId = String.format("LR_%s_%02d_%d", employeeId, m, CURRENT_YEAR);
+
+                        writer.println(String.format("%s,%s,%s,%s,%s,Leave request,PENDING,",
+                                leaveId,
+                                employeeId,
+                                leaveType,
+                                startDate,
+                                endDate));
+
                         totalRows++;
                     }
                 }
             }
         }
-        System.out.printf("[OK] leave_requests.csv  (%d dòng)\n", totalRows);
+
+        System.out.printf("[OK] leave_requests.csv  (%d dòng)%n", totalRows);
     }
 
     private static void generatePayrollEntries() throws IOException {
         int totalRows = 0;
+
         try (PrintWriter writer = new PrintWriter(new FileWriter(DATA_DIR + "payroll_entries.csv"))) {
             writer.println("id,version,employeeId,netSalary,status");
+
             for (int m = 1; m <= MONTHS_TO_GENERATE; m++) {
                 for (int i = 1; i <= NUM_EMPLOYEES; i++) {
-                    writer.println(String.format("PR_E%04d_%02d_%d,1,E%04d,0.0,PENDING", i, m, CURRENT_YEAR, i));
+                    writer.println(String.format("PR_E%04d_%02d_%d,0,E%04d,0.0,PENDING",
+                            i, m, CURRENT_YEAR, i));
+
                     totalRows++;
                 }
             }
         }
-        System.out.printf("[OK] payroll_entries.csv (%d dòng)\n", totalRows);
+
+        System.out.printf("[OK] payroll_entries.csv (%d dòng)%n", totalRows);
     }
 
     private static void generatePayrollRuns() throws IOException {
         int totalRows = 0;
+
         try (PrintWriter writer = new PrintWriter(new FileWriter(DATA_DIR + "payroll_runs.csv"))) {
-            writer.println("id,version,month,year,lockMechanism,doublePaymentCount,wrongLeaveCount,elapsedMs,tps");
-            String[] mechanisms = { "NONE", "PESSIMISTIC", "OPTIMISTIC", "QUEUE" };
+            writer.println("id,version,yearMonth,mechanism,elapsedMs,successCount,doublePaymentCount,wrongLeaveCount,tps");
+
+            String[] mechanisms = {
+                    "NO_LOCK",
+                    "SYNCHRONIZED",
+                    "OPTIMISTIC_LOCKING",
+                    "FILE_LOCK"
+            };
+
             for (int m = 1; m <= MONTHS_TO_GENERATE; m++) {
-                for (String mech : mechanisms) {
-                    writer.println(String.format("RUN_%s_%02d_%d,1,%d,%d,%s,0,0,0,0.0", mech, m, CURRENT_YEAR, m,
-                            CURRENT_YEAR, mech));
+                String yearMonth = String.format("%d-%02d", CURRENT_YEAR, m);
+
+                for (String mechanism : mechanisms) {
+                    String runId = String.format("RUN_%s_%02d_%d", mechanism, m, CURRENT_YEAR);
+
+                    writer.println(String.format("%s,0,%s,%s,0,0,0,0,0.0",
+                            runId,
+                            yearMonth,
+                            mechanism));
+
                     totalRows++;
                 }
             }
         }
-        System.out.printf("[OK] payroll_runs.csv    (%d dòng)\n", totalRows);
+
+        System.out.printf("[OK] payroll_runs.csv    (%d dòng)%n", totalRows);
     }
 }
