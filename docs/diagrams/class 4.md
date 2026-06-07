@@ -18,7 +18,7 @@ class CsvRepository~T~ {
 
 class PayrollEntryRepository {
     +PayrollEntryRepository()
-    +PayrollEntryRepository(filePath : String)
+    +PayrollEntryRepository(String : filePath :)
     +findByEmployeeAndMonth(empId : String, yearMonth : String) : PayrollEntry
     +findByStatus(status : PayrollStatus) : List~PayrollEntry~
     +findByDeptAndMonth(deptId : String, yearMonth : String) : List~PayrollEntry~
@@ -42,8 +42,8 @@ class PayrollEntry {
     -status : PayrollStatus
 
     +PayrollEntry()
-    +PayrollEntry(id : String, employeeId : String)
-    +PayrollEntry(id : String, version : long, employeeId : String, netSalary : double, status : PayrollStatus)
+    +PayrollEntry(String : id :, String : employeeId :)
+    +PayrollEntry(String : id :, long : version :, String : employeeId :, double : netSalary :, PayrollStatus : status :)
     +getEntryId() : String
     +setEntryId(entryId : String) : void
     +getEmployeeId() : String
@@ -74,7 +74,7 @@ class PayrollRun {
     -tps : double
 
     +PayrollRun()
-    +PayrollRun(runId : String, version : long, yearMonth : String, mechanism : String, elapsedMs : long, successCount : int, doublePaymentCount : int, wrongLeaveCount : int, tps : double)
+    +PayrollRun(String : runId :, long : version :, String : yearMonth :, String : mechanism :, long : elapsedMs :, int : successCount :, int : doublePaymentCount :, int : wrongLeaveCount :, double : tps :)
     +getRunId() : String
     +setRunId(runId : String) : void
     +getYearMonth() : String
@@ -105,7 +105,7 @@ class PayrollRule {
     -taxThreshold : double
 
     +PayrollRule()
-    +PayrollRule(standardWorkingDays : int, workingHoursPerDay : int, overtimeMultiplier : double, attendanceBonus : double, taxRate : double, taxThreshold : double)
+    +PayrollRule(int : standardWorkingDays :, int : workingHoursPerDay :, double : overtimeMultiplier :, double : attendanceBonus :, double : taxRate :, double : taxThreshold :)
     +getStandardWorkingDays() : int
     +setStandardWorkingDays(standardWorkingDays : int) : void
     +getWorkingHoursPerDay() : int
@@ -141,7 +141,7 @@ class Employee {
     -baseSalary : double
 
     +Employee()
-    +Employee(id : String, version : long, name : String, email : String, departmentId : String)
+    +Employee(String : id :, long : version :, String : name :, String : email :, String : departmentId :)
     +getId() : String
     +setId(id : String) : void
     +getVersion() : long
@@ -168,7 +168,7 @@ class AttendanceRecord {
     -overtimeHours : double
 
     +AttendanceRecord()
-    +AttendanceRecord(id : String, version : long, employeeId : String, workDays : int, overtimeHours : double)
+    +AttendanceRecord(String : id :, long : version :, String : employeeId :, int : workDays :, double : overtimeHours :)
     +getId() : String
     +setId(id : String) : void
     +getVersion() : long
@@ -193,8 +193,8 @@ class LeaveBalance {
     -version : int
 
     +LeaveBalance()
-    +LeaveBalance(totalLeaveDays : int, usedLeaveDays : int, remainingLeaveDays : int)
-    +LeaveBalance(balanceId : String, employeeId : String, leaveType : Enums.LeaveType, totalLeaveDays : int)
+    +LeaveBalance(int : totalLeaveDays :, int : usedLeaveDays :, int : remainingLeaveDays :)
+    +LeaveBalance(String : balanceId :, String : employeeId :, leaveType : Enums.LeaveType, int : totalLeaveDays :)
     +getBalanceId() : String
     +setBalanceId(balanceId : String) : void
     +getEmployeeId() : String
@@ -229,8 +229,8 @@ class LeaveRequest {
     -approvedBy : String
 
     +LeaveRequest()
-    +LeaveRequest(leaveId : String, leaveType : Enums.LeaveType, startDate : LocalDate, endDate : LocalDate, reason : String, status : Enums.LeaveStatus)
-    +LeaveRequest(leaveId : String, employeeId : String, leaveType : Enums.LeaveType, startDate : LocalDate, endDate : LocalDate, reason : String)
+    +LeaveRequest(String : leaveId :, leaveType : Enums.LeaveType, LocalDate : startDate :, LocalDate : endDate :, String : reason :, status : Enums.LeaveStatus)
+    +LeaveRequest(String : leaveId :, String : employeeId :, leaveType : Enums.LeaveType, LocalDate : startDate :, LocalDate : endDate :, String : reason :)
     +getLeaveId() : String
     +setLeaveId(leaveId : String) : void
     +getEmployeeId() : String
@@ -263,7 +263,7 @@ class Department {
     -managerId : String
 
     +Department()
-    +Department(id : String, version : long, name : String, managerId : String)
+    +Department(String : id :, long : version :, String : name :, String : managerId :)
     +getId() : String
     +setId(id : String) : void
     +getVersion() : long
