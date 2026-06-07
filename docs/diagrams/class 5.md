@@ -35,11 +35,11 @@ class DataGenerator {
 }
 
 class PayrollEntry {
-    +String id
-    +long version
-    +String employeeId
-    +double netSalary
-    +PayrollStatus status
+    -String id
+    -long version
+    -String employeeId
+    -double netSalary
+    -PayrollStatus status
 
     +PayrollEntry()
     +PayrollEntry(String id, String employeeId)
@@ -63,13 +63,13 @@ class PayrollEntry {
 }
 
 class Employee {
-    +String id
-    +long version
-    +String name
-    +String email
-    +String departmentId
-    +Enums.EmploymentType employmentType
-    +double baseSalary
+    -String id
+    -long version
+    -String name
+    -String email
+    -String departmentId
+    -Enums.EmploymentType employmentType
+    -double baseSalary
 
     +Employee()
     +Employee(String id, long version, String name, String email, String departmentId)
@@ -92,10 +92,10 @@ class Employee {
 }
 
 class Department {
-    +String id
-    +long version
-    +String name
-    +String managerId
+    -String id
+    -long version
+    -String name
+    -String managerId
 
     +Department()
     +Department(String id, long version, String name, String managerId)
@@ -112,13 +112,13 @@ class Department {
 }
 
 class LeaveBalance {
-    +String balanceId
-    +String employeeId
-    +Enums.LeaveType leaveType
-    +int totalLeaveDays
-    +int usedLeaveDays
-    +int remainingLeaveDays
-    +int version
+    -String balanceId
+    -String employeeId
+    -Enums.LeaveType leaveType
+    -int totalLeaveDays
+    -int usedLeaveDays
+    -int remainingLeaveDays
+    -int version
 
     +LeaveBalance()
     +LeaveBalance(int totalLeaveDays, int usedLeaveDays, int remainingLeaveDays)
@@ -147,14 +147,14 @@ class LeaveBalance {
 }
 
 class LeaveRequest {
-    +String leaveId
-    +String employeeId
-    +Enums.LeaveType leaveType
-    +LocalDate startDate
-    +LocalDate endDate
-    +String reason
-    +Enums.LeaveStatus status
-    +String approvedBy
+    -String leaveId
+    -String employeeId
+    -Enums.LeaveType leaveType
+    -LocalDate startDate
+    -LocalDate endDate
+    -String reason
+    -Enums.LeaveStatus status
+    -String approvedBy
 
     +LeaveRequest()
     +LeaveRequest(String leaveId, Enums.LeaveType leaveType, LocalDate startDate, LocalDate endDate, String reason, Enums.LeaveStatus status)
@@ -185,11 +185,11 @@ class LeaveRequest {
 }
 
 class AttendanceRecord {
-    +String id
-    +long version
-    +String employeeId
-    +int workDays
-    +double overtimeHours
+    -String id
+    -long version
+    -String employeeId
+    -int workDays
+    -double overtimeHours
 
     +AttendanceRecord()
     +AttendanceRecord(String id, long version, String employeeId, int workDays, double overtimeHours)
@@ -208,15 +208,15 @@ class AttendanceRecord {
 }
 
 class PayrollRun {
-    +String id
-    +long version
-    +String yearMonth
-    +String mechanism
-    +long elapsedMs
-    +int successCount
-    +int doublePaymentCount
-    +int wrongLeaveCount
-    +double tps
+    -String id
+    -long version
+    -String yearMonth
+    -String mechanism
+    -long elapsedMs
+    -int successCount
+    -int doublePaymentCount
+    -int wrongLeaveCount
+    -double tps
 
     +PayrollRun()
     +PayrollRun(String runId, long version, String yearMonth, String mechanism, long elapsedMs, int successCount, int doublePaymentCount, int wrongLeaveCount, double tps)
