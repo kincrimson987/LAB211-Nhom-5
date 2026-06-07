@@ -1,3 +1,4 @@
+import java.util.Locale;
 public class AttendanceRecord extends BaseEntity {
     private String employeeId;
     private String yearMonth;
@@ -60,7 +61,7 @@ public class AttendanceRecord extends BaseEntity {
 
     @Override
     public String toCsvLine() {
-        return String.format("%s,%d,%s,%s,%d,%.1f",
+        return String.format(Locale.US, "%s,%d,%s,%s,%d,%.1f",
                 getId(), getVersion(), employeeId, yearMonth, workDays, overtimeHours);
     }
 
