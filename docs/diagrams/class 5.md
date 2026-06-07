@@ -8,12 +8,6 @@ class CsvRepository~T~ {
     +void save(T entity)
     +void update(T entity)
     +void delete(String id)
-    -String getHeader()
-    -String getId(T entity)
-    -String toLine(T entity)
-    -T parseLine(String line)
-    -List~T~ readAllLines()
-    -void writeAllLines(List~T~ entities)
 }
 
 class PayrollEntryRepository {
@@ -27,11 +21,6 @@ class PayrollEntryRepository {
     +boolean processWithFileLock(String entryId, String processedBy)
     +boolean processWithSync(String entryId, String processedBy)
     +boolean processWithOptimistic(String entryId, String processedBy)
-    -boolean updateIfVersionMatch(PayrollEntry updated, long expectedVersion)
-    -static PayrollEntry findInList(List~PayrollEntry~ entries, String entryId)
-    -static void markProcessed(PayrollEntry entry, String processedBy)
-    -static void sleepWithBackoff(int attempt)
-    -Set~String~ loadEmployeeIdsByDepartment(String deptId)
 }
 
 class DataGenerator {
