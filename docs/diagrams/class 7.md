@@ -1,195 +1,155 @@
-```mermaid
+﻿```mermaid
 classDiagram
 
-%% =========================
-%% ENTITY
-%% =========================
-
 class Employee {
-    -employeeId : String
-    -fullName : String
-    -departmentId : String
-    -employeeType : String
-    -baseSalary : double
+    +String id
+    +long version
+    +String name
+    +String email
+    +String departmentId
+    +Enums.EmploymentType employmentType
+    +double baseSalary
 
     +Employee()
-    +Employee(employeeId : String, fullName : String, departmentId : String, employeeType : String, baseSalary : double)
-    +getEmployeeId() String
-    +setEmployeeId(employeeId : String) void
-    +getFullName() String
-    +setFullName(fullName : String) void
-    +getDepartmentId() String
-    +setDepartmentId(departmentId : String) void
-    +getEmployeeType() String
-    +setEmployeeType(employeeType : String) void
-    +getBaseSalary() double
-    +setBaseSalary(baseSalary : double) void
-    +toString() String
+    +Employee(String id, long version, String name, String email, String departmentId)
+    +String getId()
+    +void setId(String id)
+    +long getVersion()
+    +void setVersion(long version)
+    +String getName()
+    +void setName(String name)
+    +String getEmail()
+    +void setEmail(String email)
+    +String getDepartmentId()
+    +void setDepartmentId(String departmentId)
+    +Enums.EmploymentType getEmploymentType()
+    +void setEmploymentType(Enums.EmploymentType employmentType)
+    +double getBaseSalary()
+    +void setBaseSalary(double baseSalary)
+    +String toCsvLine()
+    +void fromCsvLine(String line)
+}
+
+class Department {
+    +String id
+    +long version
+    +String name
+    +String managerId
+
+    +Department()
+    +Department(String id, long version, String name, String managerId)
+    +String getId()
+    +void setId(String id)
+    +long getVersion()
+    +void setVersion(long version)
+    +String getName()
+    +void setName(String name)
+    +String getManagerId()
+    +void setManagerId(String managerId)
+    +String toCsvLine()
+    +void fromCsvLine(String line)
 }
 
 class AttendanceRecord {
-    -attendanceId : String
-    -employeeId : String
-    -workDate : LocalDate
-    -checkInTime : LocalTime
-    -checkOutTime : LocalTime
-    -workingHours : double
-    -overtimeHours : double
-    -attendanceStatus : String
+    +String id
+    +long version
+    +String employeeId
+    +int workDays
+    +double overtimeHours
 
     +AttendanceRecord()
-    +AttendanceRecord(attendanceId : String, employeeId : String, workDate : LocalDate, checkInTime : LocalTime, checkOutTime : LocalTime, workingHours : double, overtimeHours : double, attendanceStatus : String)
-    +getAttendanceId() String
-    +setAttendanceId(attendanceId : String) void
-    +getEmployeeId() String
-    +setEmployeeId(employeeId : String) void
-    +getWorkDate() LocalDate
-    +setWorkDate(workDate : LocalDate) void
-    +getCheckInTime() LocalTime
-    +setCheckInTime(checkInTime : LocalTime) void
-    +getCheckOutTime() LocalTime
-    +setCheckOutTime(checkOutTime : LocalTime) void
-    +getWorkingHours() double
-    +setWorkingHours(workingHours : double) void
-    +getOvertimeHours() double
-    +setOvertimeHours(overtimeHours : double) void
-    +getAttendanceStatus() String
-    +setAttendanceStatus(attendanceStatus : String) void
-    +calculateWorkingHours() double
-    +calculateOvertimeHours() double
-    +toCsvLine() String
-    +toString() String
+    +AttendanceRecord(String id, long version, String employeeId, int workDays, double overtimeHours)
+    +String getId()
+    +void setId(String id)
+    +long getVersion()
+    +void setVersion(long version)
+    +String getEmployeeId()
+    +void setEmployeeId(String employeeId)
+    +int getWorkDays()
+    +void setWorkDays(int workDays)
+    +double getOvertimeHours()
+    +void setOvertimeHours(double overtimeHours)
+    +String toCsvLine()
+    +void fromCsvLine(String line)
 }
 
-class AttendanceSummary {
-    -summaryId : String
-    -employeeId : String
-    -month : String
-    -totalWorkingDays : int
-    -totalWorkingHours : double
-    -totalOvertimeHours : double
-    -absentDays : int
-    -lateDays : int
+class LeaveBalance {
+    +String balanceId
+    +String employeeId
+    +LeaveType leaveType
+    +int totalLeaveDays
+    +int usedLeaveDays
+    +int remainingLeaveDays
+    +int version
 
-    +AttendanceSummary()
-    +AttendanceSummary(summaryId : String, employeeId : String, month : String, totalWorkingDays : int, totalWorkingHours : double, totalOvertimeHours : double, absentDays : int, lateDays : int)
-    +getSummaryId() String
-    +setSummaryId(summaryId : String) void
-    +getEmployeeId() String
-    +setEmployeeId(employeeId : String) void
-    +getMonth() String
-    +setMonth(month : String) void
-    +getTotalWorkingDays() int
-    +setTotalWorkingDays(totalWorkingDays : int) void
-    +getTotalWorkingHours() double
-    +setTotalWorkingHours(totalWorkingHours : double) void
-    +getTotalOvertimeHours() double
-    +setTotalOvertimeHours(totalOvertimeHours : double) void
-    +getAbsentDays() int
-    +setAbsentDays(absentDays : int) void
-    +getLateDays() int
-    +setLateDays(lateDays : int) void
-    +generateSummary(records : List~AttendanceRecord~) void
-    +toCsvLine() String
-    +toString() String
+    +LeaveBalance()
+    +LeaveBalance(int totalLeaveDays, int usedLeaveDays, int remainingLeaveDays)
+    +LeaveBalance(String balanceId, String employeeId, LeaveType leaveType, int totalLeaveDays)
+    +String getBalanceId()
+    +void setBalanceId(String balanceId)
+    +String getEmployeeId()
+    +void setEmployeeId(String employeeId)
+    +LeaveType getLeaveType()
+    +void setLeaveType(LeaveType leaveType)
+    +int getTotalLeaveDays()
+    +void setTotalLeaveDays(int totalLeaveDays)
+    +int getUsedLeaveDays()
+    +void setUsedLeaveDays(int usedLeaveDays)
+    +int getRemainingLeaveDays()
+    +void setRemainingLeaveDays(int remainingLeaveDays)
+    +int getVersion()
+    +void setVersion(int version)
+    +void deductLeave(int days)
+    +void addLeave(int days)
+    +int checkRemaining()
+    +String getCsvHeader()
+    +String toCsvLine()
+    +static LeaveBalance fromCsvLine(String line)
+    +String toString()
 }
 
-%% =========================
-%% REPOSITORY
-%% =========================
+class LeaveRequest {
+    +String leaveId
+    +String employeeId
+    +LeaveType leaveType
+    +LocalDate startDate
+    +LocalDate endDate
+    +String reason
+    +LeaveStatus status
+    +String approvedBy
 
-class AttendanceRepository {
-    -attendanceFilePath : String
-    -attendanceRecords : List~AttendanceRecord~
-
-    +AttendanceRepository(attendanceFilePath : String)
-    +findAll() List~AttendanceRecord~
-    +findById(attendanceId : String) AttendanceRecord
-    +findByEmployeeId(employeeId : String) List~AttendanceRecord~
-    +findByMonth(month : String) List~AttendanceRecord~
-    +save(record : AttendanceRecord) void
-    +update(record : AttendanceRecord) void
-    +delete(attendanceId : String) void
-    +loadFromCsv() List~AttendanceRecord~
-    +writeToCsv(records : List~AttendanceRecord~) void
+    +LeaveRequest()
+    +LeaveRequest(String leaveId, LeaveType leaveType, LocalDate startDate, LocalDate endDate, String reason, LeaveStatus status)
+    +LeaveRequest(String leaveId, String employeeId, LeaveType leaveType, LocalDate startDate, LocalDate endDate, String reason)
+    +String getLeaveId()
+    +void setLeaveId(String leaveId)
+    +String getEmployeeId()
+    +void setEmployeeId(String employeeId)
+    +LeaveType getLeaveType()
+    +void setLeaveType(LeaveType leaveType)
+    +LocalDate getStartDate()
+    +void setStartDate(LocalDate startDate)
+    +LocalDate getEndDate()
+    +void setEndDate(LocalDate endDate)
+    +String getReason()
+    +void setReason(String reason)
+    +LeaveStatus getStatus()
+    +void setStatus(LeaveStatus status)
+    +String getApprovedBy()
+    +void setApprovedBy(String approvedBy)
+    +void approve()
+    +void reject()
+    +int getDays()
+    +String getCsvHeader()
+    +String toCsvLine()
+    +static LeaveRequest fromCsvLine(String line)
+    +String toString()
 }
 
-class AttendanceSummaryRepository {
-    -summaryFilePath : String
-    -attendanceSummaries : List~AttendanceSummary~
-
-    +AttendanceSummaryRepository(summaryFilePath : String)
-    +findAll() List~AttendanceSummary~
-    +findByEmployeeId(employeeId : String) AttendanceSummary
-    +findByMonth(month : String) List~AttendanceSummary~
-    +save(summary : AttendanceSummary) void
-    +update(summary : AttendanceSummary) void
-    +loadFromCsv() List~AttendanceSummary~
-    +writeToCsv(summaries : List~AttendanceSummary~) void
-}
-
-%% =========================
-%% SERVICE / BUSINESS
-%% =========================
-
-class AttendanceService {
-    -attendanceRepository : AttendanceRepository
-    -summaryRepository : AttendanceSummaryRepository
-
-    +AttendanceService(attendanceRepository : AttendanceRepository, summaryRepository : AttendanceSummaryRepository)
-    +recordAttendance(record : AttendanceRecord) void
-    +updateAttendance(record : AttendanceRecord) void
-    +deleteAttendance(attendanceId : String) void
-    +getAttendanceList() List~AttendanceRecord~
-    +getAttendanceByEmployee(employeeId : String) List~AttendanceRecord~
-    +generateAttendanceSummary(employeeId : String, month : String) AttendanceSummary
-    +calculateWorkingHours(record : AttendanceRecord) double
-    +calculateOvertimeHours(record : AttendanceRecord) double
-}
-
-%% =========================
-%% CONTROLLER
-%% =========================
-
-class AttendanceController {
-    -attendanceService : AttendanceService
-
-    +AttendanceController(attendanceService : AttendanceService)
-    +recordAttendance(record : AttendanceRecord) void
-    +updateAttendance(record : AttendanceRecord) void
-    +deleteAttendance(attendanceId : String) void
-    +viewAttendanceList() List~AttendanceRecord~
-    +viewAttendanceByEmployee(employeeId : String) List~AttendanceRecord~
-    +viewAttendanceSummary(employeeId : String, month : String) AttendanceSummary
-}
-%% =========================
-%% VIEW
-%% =========================
-
-class AttendanceView {
-    -attendanceController : AttendanceController
-
-    +AttendanceView(attendanceController : AttendanceController)
-    +showAttendanceMenu() void
-    +inputAttendanceRecord() AttendanceRecord
-    +displayAttendanceList(records : List~AttendanceRecord~) void
-    +displayAttendanceSummary(summary : AttendanceSummary) void
-    +showMessage(message : String) void
-}
-
-%% =========================
-%% RELATIONSHIPS
-%% =========================
-
-Employee "1" --> "*" AttendanceRecord : has
-Employee "1" --> "*" AttendanceSummary : has
-
-AttendanceRepository "1" --> "*" AttendanceRecord : manages
-AttendanceSummaryRepository "1" --> "*" AttendanceSummary : manages
-
-AttendanceService --> AttendanceRepository : uses
-AttendanceService --> AttendanceSummaryRepository : uses
-
-AttendanceController --> AttendanceService : calls
-AttendanceView --> AttendanceController : interacts
+Employee --> Department
+Employee --> AttendanceRecord
+Employee --> LeaveBalance
+Employee --> LeaveRequest
+LeaveRequest --> LeaveStatus
+LeaveBalance --> LeaveType
 ```
