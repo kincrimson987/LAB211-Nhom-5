@@ -12,9 +12,9 @@ import java.util.List;
  */
 public abstract class CsvRepository<T> {
 
-    protected final String filePath;
+    private final String filePath;
 
-    protected CsvRepository(String filePath) {
+    public CsvRepository(String filePath) {
         this.filePath = filePath;
     }
 
@@ -22,13 +22,13 @@ public abstract class CsvRepository<T> {
         return filePath;
     }
 
-    protected abstract String getHeader();
+    public abstract String getHeader();
 
-    protected abstract String getId(T entity);
+    public abstract String getId(T entity);
 
-    protected abstract String toLine(T entity);
+    public abstract String toLine(T entity);
 
-    protected abstract T parseLine(String line);
+    public abstract T parseLine(String line);
 
     public List<T> findAll() {
         return readAllLines();
@@ -71,7 +71,7 @@ public abstract class CsvRepository<T> {
         writeAllLines(all);
     }
 
-    protected List<T> readAllLines() {
+    public List<T> readAllLines() {
         List<T> list = new ArrayList<>();
         File file = new File(filePath);
         if (!file.exists()) {
@@ -96,7 +96,7 @@ public abstract class CsvRepository<T> {
         return list;
     }
 
-    protected void writeAllLines(List<T> entities) {
+    public void writeAllLines(List<T> entities) {
         File file = new File(filePath);
         File parent = file.getParentFile();
         if (parent != null && !parent.exists()) {
