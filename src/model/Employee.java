@@ -60,15 +60,15 @@ public class Employee extends BaseEntity {
 
     @Override
     public String toCsvLine() {
-        return String.format("%s,%d,%s,%s,%s", id, version, name, email, departmentId);
+        return String.format("%s,%d,%s,%s,%s", getId(), getVersion(), name, email, departmentId);
     }
 
     @Override
     public void fromCsvLine(String line) {
         String[] parts = line.split(",");
         if (parts.length >= 5) {
-            this.id = parts[0];
-            this.version = Long.parseLong(parts[1]);
+            setId(parts[0]);
+            setVersion(Long.parseLong(parts[1]));
             this.name = parts[2];
             this.email = parts[3];
             this.departmentId = parts[4];
