@@ -28,7 +28,7 @@ public class PayrollEntry extends BaseEntity {
     // ==================== GETTERS / SETTERS ====================
 
     public String getEntryId() {
-        return getId();
+        return this.getId();
     }
 
     public void setEntryId(String entryId) {
@@ -100,8 +100,8 @@ public class PayrollEntry extends BaseEntity {
         }
 
         PayrollEntry pe = new PayrollEntry();
-        pe.id = parts[0].trim();
-        pe.version = Long.parseLong(parts[1].trim());
+        pe.setId(parts[0].trim());
+        pe.setVersion(Long.parseLong(parts[1].trim()));
         pe.employeeId = parts[2].trim();
         pe.netSalary = Double.parseDouble(parts[3].trim());
         pe.status = PayrollStatus.valueOf(parts[4].trim());
