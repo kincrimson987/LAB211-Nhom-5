@@ -1,6 +1,6 @@
 public abstract class BaseEntity {
-    protected String id;
-    protected long version;
+    private String id;
+    private long version;
 
     public BaseEntity() {
     }
