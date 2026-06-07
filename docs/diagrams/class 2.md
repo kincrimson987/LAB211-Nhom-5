@@ -261,4 +261,4 @@ BaseEntity <|-- PayrollEntry
 BaseEntity <|-- PayrollRun
 ```
 
-```
+
