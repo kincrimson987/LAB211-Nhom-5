@@ -29,15 +29,15 @@ public class Department extends BaseEntity {
 
     @Override
     public String toCsvLine() {
-        return String.format("%s,%d,%s,%s", id, version, name, managerId);
+        return String.format("%s,%d,%s,%s", getId(), getVersion(), name, managerId);
     }
 
     @Override
     public void fromCsvLine(String line) {
         String[] parts = line.split(",");
         if (parts.length >= 4) {
-            this.id = parts[0];
-            this.version = Long.parseLong(parts[1]);
+            setId(parts[0]);
+            setVersion(Long.parseLong(parts[1]));
             this.name = parts[2];
             this.managerId = parts[3];
         }
