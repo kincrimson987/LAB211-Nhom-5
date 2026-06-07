@@ -1,339 +1,264 @@
-```mermaid
+﻿```mermaid
+
 classDiagram
 
-class UserAccount {
-    - userId : String
-    - username : String
-    - password : String
-    - role : Role
-    - active : boolean
+class BaseEntity {
+    +id : String
+    +version : long
 
-    + UserAccount()
-    + UserAccount(userId : String, username : String, password : String, role : Role)
-
-    + getUserId() String
-    + setUserId(userId : String) void
-
-    + getUsername() String
-    + setUsername(username : String) void
-
-    + getPassword() String
-    + setPassword(password : String) void
-
-    + getRole() Role
-    + setRole(role : Role) void
-
-    + isActive() boolean
-    + setActive(active : boolean) void
-
-    + login() boolean
-    + logout() void
-    + changePassword(newPassword : String) void
-
-    + toString() String
-}
-
-class AuthenticationService {
-    + AuthenticationService()
-
-    + authenticate(username : String, password : String) boolean
-    + validateUser(account : UserAccount) boolean
-    + logout(account : UserAccount) void
-}
-
-class Session {
-    - sessionId : String
-    - loginTime : LocalDateTime
-    - status : String
-
-    + Session()
-    + Session(sessionId : String, loginTime : LocalDateTime, status : String)
-
-    + getSessionId() String
-    + setSessionId(sessionId : String) void
-
-    + getLoginTime() LocalDateTime
-    + setLoginTime(loginTime : LocalDateTime) void
-
-    + getStatus() String
-    + setStatus(status : String) void
-
-    + createSession() void
-    + destroySession() void
-
-    + toString() String
+    +getId() String
+    +setId(id : String) void
+    +getVersion() long
+    +setVersion(version : long) void
+    +toCsvLine() String
+    +fromCsvLine(line : String) void
 }
 
 class Employee {
-    - employeeId : String
-    - fullName : String
-    - age : int
-    - gender : String
-    - email : String
-    - phone : String
-    - address : String
-    - position : String
-    - joinDate : LocalDate
-    - baseSalary : double
-    - status : EmployeeStatus
-    - department : Department
+    +id : String
+    +version : long
+    +name : String
+    +email : String
+    +departmentId : String
+    +employmentType : Enums.EmploymentType
+    +baseSalary : double
 
-    + Employee()
+    +Employee()
+    +Employee(id : String, version : long, name : String, email : String, departmentId : String)
 
-    + Employee(employeeId : String, fullName : String, age : int, gender : String, email : String, phone : String, address : String, position : String, joinDate : LocalDate, baseSalary : double, department : Department)
-
-    + getEmployeeId() String
-    + setEmployeeId(employeeId : String) void
-
-    + getFullName() String
-    + setFullName(fullName : String) void
-
-    + getAge() int
-    + setAge(age : int) void
-
-    + getGender() String
-    + setGender(gender : String) void
-
-    + getEmail() String
-    + setEmail(email : String) void
-
-    + getPhone() String
-    + setPhone(phone : String) void
-
-    + getAddress() String
-    + setAddress(address : String) void
-
-    + getPosition() String
-    + setPosition(position : String) void
-
-    + getJoinDate() LocalDate
-    + setJoinDate(joinDate : LocalDate) void
-
-    + getBaseSalary() double
-    + setBaseSalary(baseSalary : double) void
-
-    + getDepartment() Department
-    + setDepartment(department : Department) void
-
-    + getStatus() EmployeeStatus
-    + setStatus(status : EmployeeStatus) void
-
-    + requestLeave() void
-    + viewPayroll() void
-
-    + toString() String
-}
-
-class EmployeeManager {
-    - employeeList : List~Employee~
-
-    + EmployeeManager()
-
-    + addEmployee(employee : Employee) void
-    + updateEmployee(employeeId : String) void
-    + deleteEmployee(employeeId : String) void
-    + searchEmployee(employeeId : String) Employee
-    + displayEmployees() void
-
-    + getEmployeeList() List~Employee~
-    + setEmployeeList(employeeList : List~Employee~) void
-
-    + toString() String
+    +getId() String
+    +setId(id : String) void
+    +getVersion() long
+    +setVersion(version : long) void
+    +getName() String
+    +setName(name : String) void
+    +getEmail() String
+    +setEmail(email : String) void
+    +getDepartmentId() String
+    +setDepartmentId(departmentId : String) void
+    +getEmploymentType() Enums.EmploymentType
+    +setEmploymentType(employmentType : Enums.EmploymentType) void
+    +getBaseSalary() double
+    +setBaseSalary(baseSalary : double) void
+    +toCsvLine() String
+    +fromCsvLine(line : String) void
 }
 
 class Department {
-    - departmentId : String
-    - departmentName : String
-    - description : String
+    +id : String
+    +version : long
+    +name : String
+    +managerId : String
 
-    + Department()
+    +Department()
+    +Department(id : String, version : long, name : String, managerId : String)
 
-    + Department(departmentId : String, departmentName : String, description : String)
-
-    + getDepartmentId() String
-    + setDepartmentId(departmentId : String) void
-
-    + getDepartmentName() String
-    + setDepartmentName(departmentName : String) void
-
-    + getDescription() String
-    + setDescription(description : String) void
-
-    + toString() String
+    +getId() String
+    +setId(id : String) void
+    +getVersion() long
+    +setVersion(version : long) void
+    +getName() String
+    +setName(name : String) void
+    +getManagerId() String
+    +setManagerId(managerId : String) void
+    +toCsvLine() String
+    +fromCsvLine(line : String) void
 }
 
-class DepartmentManager {
-    - departmentList : List~Department~
+class AttendanceRecord {
+    +id : String
+    +version : long
+    +employeeId : String
+    +workDays : int
+    +overtimeHours : double
 
-    + DepartmentManager()
+    +AttendanceRecord()
+    +AttendanceRecord(id : String, version : long, employeeId : String, workDays : int, overtimeHours : double)
 
-    + addDepartment(department : Department) void
-    + updateDepartment(departmentId : String) void
-    + deleteDepartment(departmentId : String) void
-    + searchDepartment(departmentId : String) Department
-    + displayDepartments() void
+    +getId() String
+    +setId(id : String) void
+    +getVersion() long
+    +setVersion(version : long) void
+    +getEmployeeId() String
+    +setEmployeeId(employeeId : String) void
+    +getWorkDays() int
+    +setWorkDays(workDays : int) void
+    +getOvertimeHours() double
+    +setOvertimeHours(overtimeHours : double) void
+    +toCsvLine() String
+    +fromCsvLine(line : String) void
+}
 
-    + getDepartmentList() List~Department~
-    + setDepartmentList(departmentList : List~Department~) void
+class LeaveBalance {
+    +balanceId : String
+    +employeeId : String
+    +leaveType : LeaveType
+    +totalLeaveDays : int
+    +usedLeaveDays : int
+    +remainingLeaveDays : int
+    +version : int
 
-    + toString() String
+    +LeaveBalance()
+    +LeaveBalance(balanceId : String, employeeId : String, leaveType : LeaveType, totalLeaveDays : int)
+
+    +getBalanceId() String
+    +setBalanceId(balanceId : String) void
+    +getEmployeeId() String
+    +setEmployeeId(employeeId : String) void
+    +getLeaveType() LeaveType
+    +setLeaveType(leaveType : LeaveType) void
+    +getTotalLeaveDays() int
+    +setTotalLeaveDays(totalLeaveDays : int) void
+    +getUsedLeaveDays() int
+    +setUsedLeaveDays(usedLeaveDays : int) void
+    +getRemainingLeaveDays() int
+    +setRemainingLeaveDays(remainingLeaveDays : int) void
+    +getVersion() int
+    +setVersion(version : int) void
+    +deductLeave(days : int) void
+    +addLeave(days : int) void
+    +checkRemaining() int
+    +toCsvLine() String
+    +fromCsvLine(line : String) LeaveBalance
 }
 
 class LeaveRequest {
-    - leaveId : String
-    - leaveType : String
-    - startDate : LocalDate
-    - endDate : LocalDate
-    - reason : String
-    - status : LeaveStatus
-    - employee : Employee
+    +leaveId : String
+    +employeeId : String
+    +leaveType : LeaveType
+    +startDate : LocalDate
+    +endDate : LocalDate
+    +reason : String
+    +status : LeaveStatus
+    +approvedBy : String
 
-    + LeaveRequest()
+    +LeaveRequest()
+    +LeaveRequest(leaveId : String, employeeId : String, leaveType : LeaveType, startDate : LocalDate, endDate : LocalDate, reason : String)
 
-    + LeaveRequest(leaveId : String, leaveType : String, startDate : LocalDate, endDate : LocalDate, reason : String, employee : Employee)
-
-    + getLeaveId() String
-    + setLeaveId(leaveId : String) void
-
-    + getLeaveType() String
-    + setLeaveType(leaveType : String) void
-
-    + getStartDate() LocalDate
-    + setStartDate(startDate : LocalDate) void
-
-    + getEndDate() LocalDate
-    + setEndDate(endDate : LocalDate) void
-
-    + getReason() String
-    + setReason(reason : String) void
-
-    + getStatus() LeaveStatus
-    + setStatus(status : LeaveStatus) void
-
-    + approveLeave() void
-    + rejectLeave() void
-
-    + toString() String
+    +getLeaveId() String
+    +setLeaveId(leaveId : String) void
+    +getEmployeeId() String
+    +setEmployeeId(employeeId : String) void
+    +getLeaveType() LeaveType
+    +setLeaveType(leaveType : LeaveType) void
+    +getStartDate() LocalDate
+    +setStartDate(startDate : LocalDate) void
+    +getEndDate() LocalDate
+    +setEndDate(endDate : LocalDate) void
+    +getReason() String
+    +setReason(reason : String) void
+    +getStatus() LeaveStatus
+    +setStatus(status : LeaveStatus) void
+    +getApprovedBy() String
+    +setApprovedBy(approvedBy : String) void
+    +approve() void
+    +reject() void
+    +getDays() int
+    +toCsvLine() String
+    +fromCsvLine(line : String) LeaveRequest
 }
 
-class LeaveManager {
-    - leaveList : List~LeaveRequest~
+class PayrollEntry {
+    +id : String
+    +version : long
+    +employeeId : String
+    +netSalary : double
+    +status : PayrollStatus
 
-    + LeaveManager()
+    +PayrollEntry()
+    +PayrollEntry(id : String, employeeId : String)
+    +PayrollEntry(id : String, version : long, employeeId : String, netSalary : double, status : PayrollStatus)
 
-    + addLeaveRequest(request : LeaveRequest) void
-    + approveLeave(leaveId : String) void
-    + rejectLeave(leaveId : String) void
-    + searchLeave(leaveId : String) LeaveRequest
-    + displayLeaves() void
-
-    + toString() String
+    +getId() String
+    +setId(id : String) void
+    +getVersion() long
+    +setVersion(version : long) void
+    +getEmployeeId() String
+    +setEmployeeId(employeeId : String) void
+    +getNetSalary() double
+    +setNetSalary(netSalary : double) void
+    +getStatus() PayrollStatus
+    +setStatus(status : PayrollStatus) void
+    +process() void
+    +toCsvLine() String
+    +fromCsvLine(line : String) void
 }
 
-class Payroll {
-    - payrollId : String
-    - payDate : LocalDate
-    - basicSalary : double
-    - allowance : double
-    - bonus : double
-    - deduction : double
-    - netSalary : double
-    - employee : Employee
+class PayrollRun {
+    +id : String
+    +version : long
+    +yearMonth : String
+    +mechanism : String
+    +elapsedMs : long
+    +successCount : int
+    +doublePaymentCount : int
+    +wrongLeaveCount : int
+    +tps : double
 
-    + Payroll()
+    +PayrollRun()
+    +PayrollRun(id : String, version : long, yearMonth : String, mechanism : String, elapsedMs : long, successCount : int, doublePaymentCount : int, wrongLeaveCount : int, tps : double)
 
-    + Payroll(payrollId : String, payDate : LocalDate, basicSalary : double, allowance : double, bonus : double, deduction : double, employee : Employee)
-
-    + calculateNetSalary() double
-    + generatePayroll() void
-
-    + getPayrollId() String
-    + setPayrollId(payrollId : String) void
-
-    + getNetSalary() double
-
-    + toString() String
+    +getId() String
+    +setId(id : String) void
+    +getVersion() long
+    +setVersion(version : long) void
+    +getYearMonth() String
+    +setYearMonth(yearMonth : String) void
+    +getMechanism() String
+    +setMechanism(mechanism : String) void
+    +getElapsedMs() long
+    +setElapsedMs(elapsedMs : long) void
+    +getSuccessCount() int
+    +setSuccessCount(successCount : int) void
+    +getDoublePaymentCount() int
+    +setDoublePaymentCount(doublePaymentCount : int) void
+    +getWrongLeaveCount() int
+    +setWrongLeaveCount(wrongLeaveCount : int) void
+    +getTps() double
+    +setTps(tps : double) void
+    +toCsvLine() String
+    +fromCsvLine(line : String) void
 }
 
-class PayrollManager {
-    - payrollList : List~Payroll~
+class PayrollRule {
+    +standardWorkingDays : int
+    +workingHoursPerDay : int
+    +overtimeMultiplier : double
+    +attendanceBonus : double
+    +taxRate : double
+    +taxThreshold : double
 
-    + PayrollManager()
+    +PayrollRule()
+    +PayrollRule(standardWorkingDays : int, workingHoursPerDay : int, overtimeMultiplier : double, attendanceBonus : double, taxRate : double, taxThreshold : double)
 
-    + processPayroll(employeeId : String) void
-    + generateMonthlyPayroll() void
-    + searchPayroll(payrollId : String) Payroll
-    + displayPayrolls() void
-
-    + toString() String
+    +getStandardWorkingDays() int
+    +setStandardWorkingDays(standardWorkingDays : int) void
+    +getWorkingHoursPerDay() int
+    +setWorkingHoursPerDay(workingHoursPerDay : int) void
+    +getOvertimeMultiplier() double
+    +setOvertimeMultiplier(overtimeMultiplier : double) void
+    +getAttendanceBonus() double
+    +setAttendanceBonus(attendanceBonus : double) void
+    +getTaxRate() double
+    +setTaxRate(taxRate : double) void
+    +getTaxThreshold() double
+    +setTaxThreshold(taxThreshold : double) void
 }
 
-class Report {
-    - reportId : String
-    - reportName : String
-    - generatedDate : LocalDate
-
-    + Report()
-
-    + Report(reportId : String, reportName : String, generatedDate : LocalDate)
-
-    + generateReport() void
-    + exportCSV() void
-
-    + toString() String
-}
-
-class ReportManager {
-    - reportList : List~Report~
-
-    + ReportManager()
-
-    + createPayrollReport() void
-    + createSimulationReport() void
-    + exportAllReports() void
-
-    + toString() String
-}
-
-class Role {
-    <<enumeration>>
-    ADMIN
-    HR
-    EMPLOYEE
-}
-
-class EmployeeStatus {
-    <<enumeration>>
-    ACTIVE
-    INACTIVE
-    SUSPENDED
-}
-
-class LeaveStatus {
-    <<enumeration>>
-    PENDING
-    APPROVED
-    REJECTED
-}
-
-AuthenticationService --> UserAccount
-AuthenticationService --> Session
-
-UserAccount --> Role
-
-Department "1" --> "*" Employee
 Employee --> Department
-Employee --> EmployeeStatus
-
-EmployeeManager --> Employee
-DepartmentManager --> Department
-
-Employee "1" --> "*" LeaveRequest
+Employee --> AttendanceRecord
+Employee --> LeaveBalance
+Employee --> LeaveRequest
+PayrollEntry --> PayrollStatus
 LeaveRequest --> LeaveStatus
-LeaveManager --> LeaveRequest
+LeaveBalance --> LeaveType
+LeaveRequest --> LeaveType
 
-Employee "1" --> "*" Payroll
-PayrollManager --> Payroll
+BaseEntity <|-- Employee
+BaseEntity <|-- Department
+BaseEntity <|-- AttendanceRecord
+BaseEntity <|-- PayrollEntry
+BaseEntity <|-- PayrollRun
+```
 
-ReportManager --> Report
 ```
