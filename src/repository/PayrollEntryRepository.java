@@ -31,8 +31,8 @@ public class PayrollEntryRepository extends CsvRepository<PayrollEntry> {
     }
 
     @Override
-    protected String getHeader() {
-        File file = new File(filePath);
+    public String getHeader() {
+        File file = new File(getFilePath());
         if (!file.exists()) {
             return PayrollEntry.getFullCsvHeader();
         }
@@ -46,17 +46,17 @@ public class PayrollEntryRepository extends CsvRepository<PayrollEntry> {
     }
 
     @Override
-    protected String getId(PayrollEntry entity) {
+    public String getId(PayrollEntry entity) {
         return entity.getId();
     }
 
     @Override
-    protected String toLine(PayrollEntry entity) {
+    public String toLine(PayrollEntry entity) {
         return entity.toCsvLine();
     }
 
     @Override
-    protected PayrollEntry parseLine(String line) {
+    public PayrollEntry parseLine(String line) {
         return PayrollEntry.parseCsvLine(line);
     }
 
@@ -121,7 +121,7 @@ public class PayrollEntryRepository extends CsvRepository<PayrollEntry> {
      * Cơ chế 2 — FILE_LOCK: khóa toàn bộ file CSV, an toàn nhưng chậm nhất.
      */
     public boolean processWithFileLock(String entryId, String processedBy) {
-        try (RandomAccessFile raf = new RandomAccessFile(filePath, "rw");
+        try (RandomAccessFile raf = new RandomAccessFile(getFilePath(), "rw");
                 FileChannel channel = raf.getChannel();
                 FileLock lock = channel.lock()) {
 
