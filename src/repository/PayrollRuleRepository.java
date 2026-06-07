@@ -1,3 +1,4 @@
+import model.PayrollRule;
 import java.util.List;
 
 public class PayrollRuleRepository extends CsvRepository<PayrollRule> {
@@ -9,7 +10,7 @@ public class PayrollRuleRepository extends CsvRepository<PayrollRule> {
     public PayrollRule getConfig() {
         List<PayrollRule> rules = findAll();
         if (rules.isEmpty()) {
-            return new PayrollRule("R001", 1L, 1.5, 0.1, 500000.0);
+            return new PayrollRule("R_DEFAULT", 1L, 1.5, 0.1, 500000.0);
         }
         return rules.get(rules.size() - 1);
     }
