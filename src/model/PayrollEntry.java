@@ -1,5 +1,4 @@
 
-
 public class PayrollEntry extends BaseEntity {
 
     private String employeeId;
@@ -73,7 +72,6 @@ public class PayrollEntry extends BaseEntity {
         this.status = PayrollStatus.PROCESSED;
         setVersion(getVersion() + 1);
     }
-
 
     // ==================== CSV — theo schema chính thức ====================
 
