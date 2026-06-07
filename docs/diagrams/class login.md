@@ -2,8 +2,8 @@
 classDiagram
 
 class BaseEntity {
-    +String id
-    +long version
+    -String id
+    -long version
     +String getId()
     +void setId(String id)
     +long getVersion()
@@ -13,13 +13,13 @@ class BaseEntity {
 }
 
 class Employee {
-    +String id
-    +long version
-    +String name
-    +String email
-    +String departmentId
-    +Enums.EmploymentType employmentType
-    +double baseSalary
+    -String id
+    -long version
+    -String name
+    -String email
+    -String departmentId
+    -Enums.EmploymentType employmentType
+    -double baseSalary
 
     +Employee()
     +Employee(String id, long version, String name, String email, String departmentId)
@@ -42,10 +42,10 @@ class Employee {
 }
 
 class Department {
-    +String id
-    +long version
-    +String name
-    +String managerId
+    -String id
+    -long version
+    -String name
+    -String managerId
 
     +Department()
     +Department(String id, long version, String name, String managerId)
@@ -62,11 +62,11 @@ class Department {
 }
 
 class AttendanceRecord {
-    +String id
-    +long version
-    +String employeeId
-    +int workDays
-    +double overtimeHours
+    -String id
+    -long version
+    -String employeeId
+    -int workDays
+    -double overtimeHours
 
     +AttendanceRecord()
     +AttendanceRecord(String id, long version, String employeeId, int workDays, double overtimeHours)
@@ -85,13 +85,13 @@ class AttendanceRecord {
 }
 
 class LeaveBalance {
-    +String balanceId
-    +String employeeId
-    +LeaveType leaveType
-    +int totalLeaveDays
-    +int usedLeaveDays
-    +int remainingLeaveDays
-    +int version
+    -String balanceId
+    -String employeeId
+    -LeaveType leaveType
+    -int totalLeaveDays
+    -int usedLeaveDays
+    -int remainingLeaveDays
+    -int version
 
     +LeaveBalance()
     +LeaveBalance(String balanceId, String employeeId, LeaveType leaveType, int totalLeaveDays)
@@ -119,14 +119,14 @@ class LeaveBalance {
 }
 
 class LeaveRequest {
-    +String leaveId
-    +String employeeId
-    +LeaveType leaveType
-    +LocalDate startDate
-    +LocalDate endDate
-    +String reason
-    +LeaveStatus status
-    +String approvedBy
+    -String leaveId
+    -String employeeId
+    -LeaveType leaveType
+    -LocalDate startDate
+    -LocalDate endDate
+    -String reason
+    -LeaveStatus status
+    -String approvedBy
 
     +LeaveRequest()
     +LeaveRequest(String leaveId, String employeeId, LeaveType leaveType, LocalDate startDate, LocalDate endDate, String reason)
@@ -156,11 +156,11 @@ class LeaveRequest {
 }
 
 class PayrollEntry {
-    +String id
-    +long version
-    +String employeeId
-    +double netSalary
-    +PayrollStatus status
+    -String id
+    -long version
+    -String employeeId
+    -double netSalary
+    -PayrollStatus status
 
     +PayrollEntry()
     +PayrollEntry(String id, String employeeId)
@@ -184,15 +184,15 @@ class PayrollEntry {
 }
 
 class PayrollRun {
-    +String id
-    +long version
-    +String yearMonth
-    +String mechanism
-    +long elapsedMs
-    +int successCount
-    +int doublePaymentCount
-    +int wrongLeaveCount
-    +double tps
+    -String id
+    -long version
+    -String yearMonth
+    -String mechanism
+    -long elapsedMs
+    -int successCount
+    -int doublePaymentCount
+    -int wrongLeaveCount
+    -double tps
 
     +PayrollRun()
     +PayrollRun(String runId, long version, String yearMonth, String mechanism, long elapsedMs, int successCount, int doublePaymentCount, int wrongLeaveCount, double tps)
@@ -218,12 +218,12 @@ class PayrollRun {
 }
 
 class PayrollRule {
-    +int standardWorkingDays
-    +int workingHoursPerDay
-    +double overtimeMultiplier
-    +double attendanceBonus
-    +double taxRate
-    +double taxThreshold
+    -int standardWorkingDays
+    -int workingHoursPerDay
+    -double overtimeMultiplier
+    -double attendanceBonus
+    -double taxRate
+    -double taxThreshold
 
     +PayrollRule()
     +PayrollRule(int standardWorkingDays, int workingHoursPerDay, double overtimeMultiplier, double attendanceBonus, double taxRate, double taxThreshold)
