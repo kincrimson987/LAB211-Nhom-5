@@ -2,278 +2,278 @@
 classDiagram
 
 class CsvRepository~T~ {
-    +String getFilePath()
-    +List~T~ findAll()
-    +T findById(String id)
-    +void save(T entity)
-    +void update(T entity)
-    +void delete(String id)
-    -String getHeader()
-    -String getId(T entity)
-    -String toLine(T entity)
-    -T parseLine(String line)
-    -List~T~ readAllLines()
-    -void writeAllLines(List~T~ entities)
+    +getFilePath() : String
+    +findAll() : List~T~
+    +findById(id : String) : T
+    +save(entity : T) : void
+    +update(entity : T) : void
+    +delete(id : String) : void
+    +getHeader() : String
+    +getId(entity : T) : String
+    +toLine(entity : T) : String
+    +parseLine(line : String) : T
+    +readAllLines() : List~T~
+    +writeAllLines(entities : List~T~) : void
 }
 
 class PayrollEntryRepository {
     +PayrollEntryRepository()
-    +PayrollEntryRepository(String filePath)
-    +PayrollEntry findByEmployeeAndMonth(String empId, String yearMonth)
-    +List~PayrollEntry~ findByStatus(PayrollStatus status)
-    +List~PayrollEntry~ findByDeptAndMonth(String deptId, String yearMonth)
-    +long countProcessedByEmployee(String employeeId)
-    +boolean processWithNoLock(String entryId, String processedBy)
-    +boolean processWithFileLock(String entryId, String processedBy)
-    +boolean processWithSync(String entryId, String processedBy)
-    +boolean processWithOptimistic(String entryId, String processedBy)
-    -boolean updateIfVersionMatch(PayrollEntry updated, long expectedVersion)
-    -static PayrollEntry findInList(List~PayrollEntry~ entries, String entryId)
-    -static void markProcessed(PayrollEntry entry, String processedBy)
-    -static void sleepWithBackoff(int attempt)
-    -Set~String~ loadEmployeeIdsByDepartment(String deptId)
+    +PayrollEntryRepository(filePath : String)
+    +findByEmployeeAndMonth(empId : String, yearMonth : String) : PayrollEntry
+    +findByStatus(status : PayrollStatus) : List~PayrollEntry~
+    +findByDeptAndMonth(deptId : String, yearMonth : String) : List~PayrollEntry~
+    +countProcessedByEmployee(employeeId : String) : long
+    +processWithNoLock(entryId : String, processedBy : String) : boolean
+    +processWithFileLock(entryId : String, processedBy : String) : boolean
+    +processWithSync(entryId : String, processedBy : String) : boolean
+    +processWithOptimistic(entryId : String, processedBy : String) : boolean
+    ~updateIfVersionMatch(updated : PayrollEntry, expectedVersion : long) : boolean
+    -findInList(entries : List~PayrollEntry~, String : entryId :) : PayrollEntry
+    -markProcessed(PayrollEntry : entry :, String : processedBy :) : void
+    -sleepWithBackoff(int : attempt :) : void
+    -loadEmployeeIdsByDepartment(deptId : String) : Set~String~
 }
 
 class PayrollEntry {
-    +String id
-    +long version
-    +String employeeId
-    +double netSalary
-    +PayrollStatus status
+    -id : String
+    -version : long
+    -employeeId : String
+    -netSalary : double
+    -status : PayrollStatus
 
     +PayrollEntry()
-    +PayrollEntry(String id, String employeeId)
-    +PayrollEntry(String id, long version, String employeeId, double netSalary, PayrollStatus status)
-    +String getEntryId()
-    +void setEntryId(String entryId)
-    +String getEmployeeId()
-    +void setEmployeeId(String employeeId)
-    +double getNetSalary()
-    +void setNetSalary(double netSalary)
-    +PayrollStatus getStatus()
-    +void setStatus(PayrollStatus status)
-    +void process()
-    +static String getFullCsvHeader()
-    +String getCsvHeader()
-    +String toCsvLine()
-    +static PayrollEntry parseCsvLine(String line)
-    +void fromCsvLine(String line)
-    +static String extractYearMonthFromId(String id)
-    +String toString()
+    +PayrollEntry(id : String, employeeId : String)
+    +PayrollEntry(id : String, version : long, employeeId : String, netSalary : double, status : PayrollStatus)
+    +getEntryId() : String
+    +setEntryId(entryId : String) : void
+    +getEmployeeId() : String
+    +setEmployeeId(employeeId : String) : void
+    +getNetSalary() : double
+    +setNetSalary(netSalary : double) : void
+    +getStatus() : PayrollStatus
+    +setStatus(status : PayrollStatus) : void
+    +process() : void
+    +getFullCsvHeader() : String
+    +getCsvHeader() : String
+    +toCsvLine() : String
+    +parseCsvLine(String : line :) : PayrollEntry
+    +fromCsvLine(line : String) : void
+    +extractYearMonthFromId(String : id :) : String
+    +toString() : String
 }
 
 class PayrollRun {
-    +String id
-    +long version
-    +String yearMonth
-    +String mechanism
-    +long elapsedMs
-    +int successCount
-    +int doublePaymentCount
-    +int wrongLeaveCount
-    +double tps
+    -id : String
+    -version : long
+    -yearMonth : String
+    -mechanism : String
+    -elapsedMs : long
+    -successCount : int
+    -doublePaymentCount : int
+    -wrongLeaveCount : int
+    -tps : double
 
     +PayrollRun()
-    +PayrollRun(String runId, long version, String yearMonth, String mechanism, long elapsedMs, int successCount, int doublePaymentCount, int wrongLeaveCount, double tps)
-    +String getRunId()
-    +void setRunId(String runId)
-    +String getYearMonth()
-    +void setYearMonth(String yearMonth)
-    +String getMechanism()
-    +void setMechanism(String mechanism)
-    +long getElapsedMs()
-    +void setElapsedMs(long elapsedMs)
-    +int getSuccessCount()
-    +void setSuccessCount(int successCount)
-    +int getDoublePaymentCount()
-    +void setDoublePaymentCount(int doublePaymentCount)
-    +int getWrongLeaveCount()
-    +void setWrongLeaveCount(int wrongLeaveCount)
-    +double getTps()
-    +void setTps(double tps)
-    +String toCsvLine()
-    +void fromCsvLine(String line)
-    +String toString()
+    +PayrollRun(runId : String, version : long, yearMonth : String, mechanism : String, elapsedMs : long, successCount : int, doublePaymentCount : int, wrongLeaveCount : int, tps : double)
+    +getRunId() : String
+    +setRunId(runId : String) : void
+    +getYearMonth() : String
+    +setYearMonth(yearMonth : String) : void
+    +getMechanism() : String
+    +setMechanism(mechanism : String) : void
+    +getElapsedMs() : long
+    +setElapsedMs(elapsedMs : long) : void
+    +getSuccessCount() : int
+    +setSuccessCount(successCount : int) : void
+    +getDoublePaymentCount() : int
+    +setDoublePaymentCount(doublePaymentCount : int) : void
+    +getWrongLeaveCount() : int
+    +setWrongLeaveCount(wrongLeaveCount : int) : void
+    +getTps() : double
+    +setTps(tps : double) : void
+    +toCsvLine() : String
+    +fromCsvLine(line : String) : void
+    +toString() : String
 }
 
 class PayrollRule {
-    +int standardWorkingDays
-    +int workingHoursPerDay
-    +double overtimeMultiplier
-    +double attendanceBonus
-    +double taxRate
-    +double taxThreshold
+    -standardWorkingDays : int
+    -workingHoursPerDay : int
+    -overtimeMultiplier : double
+    -attendanceBonus : double
+    -taxRate : double
+    -taxThreshold : double
 
     +PayrollRule()
-    +PayrollRule(int standardWorkingDays, int workingHoursPerDay, double overtimeMultiplier, double attendanceBonus, double taxRate, double taxThreshold)
-    +int getStandardWorkingDays()
-    +void setStandardWorkingDays(int standardWorkingDays)
-    +int getWorkingHoursPerDay()
-    +void setWorkingHoursPerDay(int workingHoursPerDay)
-    +double getOvertimeMultiplier()
-    +void setOvertimeMultiplier(double overtimeMultiplier)
-    +double getAttendanceBonus()
-    +void setAttendanceBonus(double attendanceBonus)
-    +double getTaxRate()
-    +void setTaxRate(double taxRate)
-    +double getTaxThreshold()
-    +void setTaxThreshold(double taxThreshold)
-    +String toString()
+    +PayrollRule(standardWorkingDays : int, workingHoursPerDay : int, overtimeMultiplier : double, attendanceBonus : double, taxRate : double, taxThreshold : double)
+    +getStandardWorkingDays() : int
+    +setStandardWorkingDays(standardWorkingDays : int) : void
+    +getWorkingHoursPerDay() : int
+    +setWorkingHoursPerDay(workingHoursPerDay : int) : void
+    +getOvertimeMultiplier() : double
+    +setOvertimeMultiplier(overtimeMultiplier : double) : void
+    +getAttendanceBonus() : double
+    +setAttendanceBonus(attendanceBonus : double) : void
+    +getTaxRate() : double
+    +setTaxRate(taxRate : double) : void
+    +getTaxThreshold() : double
+    +setTaxThreshold(taxThreshold : double) : void
+    +toString() : String
 }
 
 class SalaryCalculator {
-    +static double calcBaseSalary(Employee employee, AttendanceRecord attendance, PayrollRule rule)
-    +static double calcOvertime(Employee employee, AttendanceRecord attendance, PayrollRule rule)
-    +static double calcDeduction(Employee employee, AttendanceRecord attendance, PayrollRule rule)
-    +static double calcBonus(AttendanceRecord attendance, PayrollRule rule)
-    +static double calcGross(Employee employee, AttendanceRecord attendance, PayrollRule rule)
-    +static double calcTax(Employee employee, AttendanceRecord attendance, PayrollRule rule)
-    +static double calcNetSalary(Employee employee, AttendanceRecord attendance, PayrollRule rule)
+    +calcBaseSalary(Employee : employee :, AttendanceRecord : attendance :, PayrollRule : rule :) : double
+    +calcOvertime(Employee : employee :, AttendanceRecord : attendance :, PayrollRule : rule :) : double
+    +calcDeduction(Employee : employee :, AttendanceRecord : attendance :, PayrollRule : rule :) : double
+    +calcBonus(AttendanceRecord : attendance :, PayrollRule : rule :) : double
+    +calcGross(Employee : employee :, AttendanceRecord : attendance :, PayrollRule : rule :) : double
+    +calcTax(Employee : employee :, AttendanceRecord : attendance :, PayrollRule : rule :) : double
+    +calcNetSalary(Employee : employee :, AttendanceRecord : attendance :, PayrollRule : rule :) : double
 }
 
 class Employee {
-    +String id
-    +long version
-    +String name
-    +String email
-    +String departmentId
-    +Enums.EmploymentType employmentType
-    +double baseSalary
+    -id : String
+    -version : long
+    -name : String
+    -email : String
+    -departmentId : String
+    -employmentType : Enums.EmploymentType
+    -baseSalary : double
 
     +Employee()
-    +Employee(String id, long version, String name, String email, String departmentId)
-    +String getId()
-    +void setId(String id)
-    +long getVersion()
-    +void setVersion(long version)
-    +String getName()
-    +void setName(String name)
-    +String getEmail()
-    +void setEmail(String email)
-    +String getDepartmentId()
-    +void setDepartmentId(String departmentId)
-    +Enums.EmploymentType getEmploymentType()
-    +void setEmploymentType(Enums.EmploymentType employmentType)
-    +double getBaseSalary()
-    +void setBaseSalary(double baseSalary)
-    +String toCsvLine()
-    +void fromCsvLine(String line)
+    +Employee(id : String, version : long, name : String, email : String, departmentId : String)
+    +getId() : String
+    +setId(id : String) : void
+    +getVersion() : long
+    +setVersion(version : long) : void
+    +getName() : String
+    +setName(name : String) : void
+    +getEmail() : String
+    +setEmail(email : String) : void
+    +getDepartmentId() : String
+    +setDepartmentId(departmentId : String) : void
+    +getEmploymentType() : Enums.EmploymentType
+    +setEmploymentType(employmentType : Enums.EmploymentType) : void
+    +getBaseSalary() : double
+    +setBaseSalary(baseSalary : double) : void
+    +toCsvLine() : String
+    +fromCsvLine(line : String) : void
 }
 
 class AttendanceRecord {
-    +String id
-    +long version
-    +String employeeId
-    +int workDays
-    +double overtimeHours
+    -id : String
+    -version : long
+    -employeeId : String
+    -workDays : int
+    -overtimeHours : double
 
     +AttendanceRecord()
-    +AttendanceRecord(String id, long version, String employeeId, int workDays, double overtimeHours)
-    +String getId()
-    +void setId(String id)
-    +long getVersion()
-    +void setVersion(long version)
-    +String getEmployeeId()
-    +void setEmployeeId(String employeeId)
-    +int getWorkDays()
-    +void setWorkDays(int workDays)
-    +double getOvertimeHours()
-    +void setOvertimeHours(double overtimeHours)
-    +String toCsvLine()
-    +void fromCsvLine(String line)
+    +AttendanceRecord(id : String, version : long, employeeId : String, workDays : int, overtimeHours : double)
+    +getId() : String
+    +setId(id : String) : void
+    +getVersion() : long
+    +setVersion(version : long) : void
+    +getEmployeeId() : String
+    +setEmployeeId(employeeId : String) : void
+    +getWorkDays() : int
+    +setWorkDays(workDays : int) : void
+    +getOvertimeHours() : double
+    +setOvertimeHours(overtimeHours : double) : void
+    +toCsvLine() : String
+    +fromCsvLine(line : String) : void
 }
 
 class LeaveBalance {
-    +String balanceId
-    +String employeeId
-    +Enums.LeaveType leaveType
-    +int totalLeaveDays
-    +int usedLeaveDays
-    +int remainingLeaveDays
-    +int version
+    -balanceId : String
+    -employeeId : String
+    -leaveType : Enums.LeaveType
+    -totalLeaveDays : int
+    -usedLeaveDays : int
+    -remainingLeaveDays : int
+    -version : int
 
     +LeaveBalance()
-    +LeaveBalance(int totalLeaveDays, int usedLeaveDays, int remainingLeaveDays)
-    +LeaveBalance(String balanceId, String employeeId, Enums.LeaveType leaveType, int totalLeaveDays)
-    +String getBalanceId()
-    +void setBalanceId(String balanceId)
-    +String getEmployeeId()
-    +void setEmployeeId(String employeeId)
-    +Enums.LeaveType getLeaveType()
-    +void setLeaveType(Enums.LeaveType leaveType)
-    +int getTotalLeaveDays()
-    +void setTotalLeaveDays(int totalLeaveDays)
-    +int getUsedLeaveDays()
-    +void setUsedLeaveDays(int usedLeaveDays)
-    +int getRemainingLeaveDays()
-    +void setRemainingLeaveDays(int remainingLeaveDays)
-    +int getVersion()
-    +void setVersion(int version)
-    +void deductLeave(int days)
-    +void addLeave(int days)
-    +int checkRemaining()
-    +String getCsvHeader()
-    +String toCsvLine()
-    +static LeaveBalance fromCsvLine(String line)
-    +String toString()
+    +LeaveBalance(totalLeaveDays : int, usedLeaveDays : int, remainingLeaveDays : int)
+    +LeaveBalance(balanceId : String, employeeId : String, leaveType : Enums.LeaveType, totalLeaveDays : int)
+    +getBalanceId() : String
+    +setBalanceId(balanceId : String) : void
+    +getEmployeeId() : String
+    +setEmployeeId(employeeId : String) : void
+    +getLeaveType() : Enums.LeaveType
+    +setLeaveType(leaveType : Enums.LeaveType) : void
+    +getTotalLeaveDays() : int
+    +setTotalLeaveDays(totalLeaveDays : int) : void
+    +getUsedLeaveDays() : int
+    +setUsedLeaveDays(usedLeaveDays : int) : void
+    +getRemainingLeaveDays() : int
+    +setRemainingLeaveDays(remainingLeaveDays : int) : void
+    +getVersion() : int
+    +setVersion(version : int) : void
+    +deductLeave(days : int) : void
+    +addLeave(days : int) : void
+    +checkRemaining() : int
+    +getCsvHeader() : String
+    +toCsvLine() : String
+    +fromCsvLine(String : line :) : LeaveBalance
+    +toString() : String
 }
 
 class LeaveRequest {
-    +String leaveId
-    +String employeeId
-    +Enums.LeaveType leaveType
-    +LocalDate startDate
-    +LocalDate endDate
-    +String reason
-    +Enums.LeaveStatus status
-    +String approvedBy
+    -leaveId : String
+    -employeeId : String
+    -leaveType : Enums.LeaveType
+    -startDate : LocalDate
+    -endDate : LocalDate
+    -reason : String
+    -status : Enums.LeaveStatus
+    -approvedBy : String
 
     +LeaveRequest()
-    +LeaveRequest(String leaveId, Enums.LeaveType leaveType, LocalDate startDate, LocalDate endDate, String reason, Enums.LeaveStatus status)
-    +LeaveRequest(String leaveId, String employeeId, Enums.LeaveType leaveType, LocalDate startDate, LocalDate endDate, String reason)
-    +String getLeaveId()
-    +void setLeaveId(String leaveId)
-    +String getEmployeeId()
-    +void setEmployeeId(String employeeId)
-    +Enums.LeaveType getLeaveType()
-    +void setLeaveType(Enums.LeaveType leaveType)
-    +LocalDate getStartDate()
-    +void setStartDate(LocalDate startDate)
-    +LocalDate getEndDate()
-    +void setEndDate(LocalDate endDate)
-    +String getReason()
-    +void setReason(String reason)
-    +Enums.LeaveStatus getStatus()
-    +void setStatus(Enums.LeaveStatus status)
-    +String getApprovedBy()
-    +void setApprovedBy(String approvedBy)
-    +void approve()
-    +void reject()
-    +int getDays()
-    +String getCsvHeader()
-    +String toCsvLine()
-    +static LeaveRequest fromCsvLine(String line)
-    +String toString()
+    +LeaveRequest(leaveId : String, leaveType : Enums.LeaveType, startDate : LocalDate, endDate : LocalDate, reason : String, status : Enums.LeaveStatus)
+    +LeaveRequest(leaveId : String, employeeId : String, leaveType : Enums.LeaveType, startDate : LocalDate, endDate : LocalDate, reason : String)
+    +getLeaveId() : String
+    +setLeaveId(leaveId : String) : void
+    +getEmployeeId() : String
+    +setEmployeeId(employeeId : String) : void
+    +getLeaveType() : Enums.LeaveType
+    +setLeaveType(leaveType : Enums.LeaveType) : void
+    +getStartDate() : LocalDate
+    +setStartDate(startDate : LocalDate) : void
+    +getEndDate() : LocalDate
+    +setEndDate(endDate : LocalDate) : void
+    +getReason() : String
+    +setReason(reason : String) : void
+    +getStatus() : Enums.LeaveStatus
+    +setStatus(status : Enums.LeaveStatus) : void
+    +getApprovedBy() : String
+    +setApprovedBy(approvedBy : String) : void
+    +approve() : void
+    +reject() : void
+    +getDays() : int
+    +getCsvHeader() : String
+    +toCsvLine() : String
+    +fromCsvLine(String : line :) : LeaveRequest
+    +toString() : String
 }
 
 class Department {
-    +String id
-    +long version
-    +String name
-    +String managerId
+    -id : String
+    -version : long
+    -name : String
+    -managerId : String
 
     +Department()
-    +Department(String id, long version, String name, String managerId)
-    +String getId()
-    +void setId(String id)
-    +long getVersion()
-    +void setVersion(long version)
-    +String getName()
-    +void setName(String name)
-    +String getManagerId()
-    +void setManagerId(String managerId)
-    +String toCsvLine()
-    +void fromCsvLine(String line)
+    +Department(id : String, version : long, name : String, managerId : String)
+    +getId() : String
+    +setId(id : String) : void
+    +getVersion() : long
+    +setVersion(version : long) : void
+    +getName() : String
+    +setName(name : String) : void
+    +getManagerId() : String
+    +setManagerId(managerId : String) : void
+    +toCsvLine() : String
+    +fromCsvLine(line : String) : void
 }
 
 CsvRepository <|-- PayrollEntryRepository
