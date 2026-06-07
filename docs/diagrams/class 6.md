@@ -2,13 +2,13 @@
 classDiagram
 
 class Employee {
-    +String id
-    +long version
-    +String name
-    +String email
-    +String departmentId
-    +Enums.EmploymentType employmentType
-    +double baseSalary
+    -String id
+    -long version
+    -String name
+    -String email
+    -String departmentId
+    -Enums.EmploymentType employmentType
+    -double baseSalary
 
     +String getId()
     +void setId(String id)
@@ -27,10 +27,10 @@ class Employee {
 }
 
 class Department {
-    +String id
-    +long version
-    +String name
-    +String managerId
+    -String id
+    -long version
+    -String name
+    -String managerId
 
     +String getId()
     +void setId(String id)
@@ -43,11 +43,11 @@ class Department {
 }
 
 class AttendanceRecord {
-    +String id
-    +long version
-    +String employeeId
-    +int workDays
-    +double overtimeHours
+    -String id
+    -long version
+    -String employeeId
+    -int workDays
+    -double overtimeHours
 
     +String getId()
     +void setId(String id)
@@ -62,13 +62,13 @@ class AttendanceRecord {
 }
 
 class LeaveBalance {
-    +String balanceId
-    +String employeeId
-    +LeaveType leaveType
-    +int totalLeaveDays
-    +int usedLeaveDays
-    +int remainingLeaveDays
-    +int version
+    -String balanceId
+    -String employeeId
+    -LeaveType leaveType
+    -int totalLeaveDays
+    -int usedLeaveDays
+    -int remainingLeaveDays
+    -int version
 
     +LeaveBalance()
     +LeaveBalance(int totalLeaveDays, int usedLeaveDays, int remainingLeaveDays)
@@ -97,14 +97,14 @@ class LeaveBalance {
 }
 
 class LeaveRequest {
-    +String leaveId
-    +String employeeId
-    +LeaveType leaveType
-    +LocalDate startDate
-    +LocalDate endDate
-    +String reason
-    +LeaveStatus status
-    +String approvedBy
+    -String leaveId
+    -String employeeId
+    -LeaveType leaveType
+    -LocalDate startDate
+    -LocalDate endDate
+    -String reason
+    -LeaveStatus status
+    -String approvedBy
 
     +LeaveRequest()
     +LeaveRequest(String leaveId, LeaveType leaveType, LocalDate startDate, LocalDate endDate, String reason, LeaveStatus status)
@@ -135,11 +135,11 @@ class LeaveRequest {
 }
 
 class PayrollEntry {
-    +String id
-    +long version
-    +String employeeId
-    +double netSalary
-    +PayrollStatus status
+    -String id
+    -long version
+    -String employeeId
+    -double netSalary
+    -PayrollStatus status
 
     +PayrollEntry()
     +PayrollEntry(String id, String employeeId)
@@ -163,15 +163,15 @@ class PayrollEntry {
 }
 
 class PayrollRun {
-    +String id
-    +long version
-    +String yearMonth
-    +String mechanism
-    +long elapsedMs
-    +int successCount
-    +int doublePaymentCount
-    +int wrongLeaveCount
-    +double tps
+    -String id
+    -long version
+    -String yearMonth
+    -String mechanism
+    -long elapsedMs
+    -int successCount
+    -int doublePaymentCount
+    -int wrongLeaveCount
+    -double tps
 
     +PayrollRun()
     +PayrollRun(String runId, long version, String yearMonth, String mechanism, long elapsedMs, int successCount, int doublePaymentCount, int wrongLeaveCount, double tps)
