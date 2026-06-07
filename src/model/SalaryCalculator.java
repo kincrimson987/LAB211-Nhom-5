@@ -39,20 +39,23 @@ public class SalaryCalculator {
         return dailySalary * absentDays;
     }
 
-    public static double calcBonus(AttendanceRecord attendance, PayrollRule rule) {
-        if (attendance == null || rule == null) {
-            return 0.0;
-        }
-
-        int absentDays = rule.getStandardWorkingDays() - attendance.getWorkDays();
-
-        if (absentDays == 0) {
-            return rule.getAttendanceBonus();
-        }
-
+   public static double calcBonus(AttendanceRecord attendance, PayrollRule rule) {
+    if (attendance == null || rule == null) {
         return 0.0;
     }
 
+    int absentDays = rule.getStandardWorkingDays() - attendance.getWorkDays();
+
+    if (absentDays < 0) {
+        absentDays = 0;
+    }
+
+    if (absentDays == 0) {
+        return rule.getAttendanceBonus();
+    }
+
+    return 0.0;
+}
     public static double calcGross(Employee employee, AttendanceRecord attendance, PayrollRule rule) {
         double baseSalaryPaid = calcBaseSalary(employee, attendance, rule);
         double overtimePay = calcOvertime(employee, attendance, rule);
