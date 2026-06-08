@@ -1,8 +1,8 @@
 import java.io.File;
 import java.io.FileWriter;
-import java.io.Scanner;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Scanner;
+
+
 
 class LocalTest {
     private String id;
