@@ -52,7 +52,7 @@ public class TestSalaryCalculator {
 
         assertEqual(result2, expected2, "PARTTIME absent 3 days + no bonus");
 
-        // Case 3: FULLTIME lương cao + có thuế
+        // Case 3: FULLTIME lương cao + đi đủ + có thuế
         Employee e3 = new Employee("E003", 1, "Carol", "carol@company.com", "D002");
         e3.setEmploymentType(Enums.EmploymentType.FULLTIME);
         e3.setBaseSalary(20000000);
@@ -66,7 +66,7 @@ public class TestSalaryCalculator {
 
         assertEqual(result3, expected3, "FULLTIME high salary + tax");
 
-        // Case 4: PARTTIME lương thấp + không thuế
+        // Case 4: PARTTIME lương thấp + đi đủ + không thuế
         Employee e4 = new Employee("E004", 1, "Dan", "dan@company.com", "D003");
         e4.setEmploymentType(Enums.EmploymentType.PARTTIME);
         e4.setBaseSalary(10000000);
