@@ -3,8 +3,8 @@
 classDiagram
 
 class BaseEntity {
-    +id : String
-    +version : long
+    -id : String
+    -version : long
 
     +getId() String
     +setId(id : String) void
@@ -15,13 +15,13 @@ class BaseEntity {
 }
 
 class Employee {
-    +id : String
-    +version : long
-    +name : String
-    +email : String
-    +departmentId : String
-    +employmentType : Enums.EmploymentType
-    +baseSalary : double
+    -id : String
+    -version : long
+    -name : String
+    -email : String
+    -departmentId : String
+    -employmentType : Enums.EmploymentType
+    -baseSalary : double
 
     +Employee()
     +Employee(id : String, version : long, name : String, email : String, departmentId : String)
@@ -45,10 +45,10 @@ class Employee {
 }
 
 class Department {
-    +id : String
-    +version : long
-    +name : String
-    +managerId : String
+    -id : String
+    -version : long
+    -name : String
+    -managerId : String
 
     +Department()
     +Department(id : String, version : long, name : String, managerId : String)
@@ -66,11 +66,11 @@ class Department {
 }
 
 class AttendanceRecord {
-    +id : String
-    +version : long
-    +employeeId : String
-    +workDays : int
-    +overtimeHours : double
+    -id : String
+    -version : long
+    -employeeId : String
+    -workDays : int
+    -overtimeHours : double
 
     +AttendanceRecord()
     +AttendanceRecord(id : String, version : long, employeeId : String, workDays : int, overtimeHours : double)
@@ -90,13 +90,13 @@ class AttendanceRecord {
 }
 
 class LeaveBalance {
-    +balanceId : String
-    +employeeId : String
-    +leaveType : LeaveType
-    +totalLeaveDays : int
-    +usedLeaveDays : int
-    +remainingLeaveDays : int
-    +version : int
+    -balanceId : String
+    -employeeId : String
+    -leaveType : LeaveType
+    -totalLeaveDays : int
+    -usedLeaveDays : int
+    -remainingLeaveDays : int
+    -version : int
 
     +LeaveBalance()
     +LeaveBalance(balanceId : String, employeeId : String, leaveType : LeaveType, totalLeaveDays : int)
@@ -123,14 +123,14 @@ class LeaveBalance {
 }
 
 class LeaveRequest {
-    +leaveId : String
-    +employeeId : String
-    +leaveType : LeaveType
-    +startDate : LocalDate
-    +endDate : LocalDate
-    +reason : String
-    +status : LeaveStatus
-    +approvedBy : String
+    -leaveId : String
+    -employeeId : String
+    -leaveType : LeaveType
+    -startDate : LocalDate
+    -endDate : LocalDate
+    -reason : String
+    -status : LeaveStatus
+    -approvedBy : String
 
     +LeaveRequest()
     +LeaveRequest(leaveId : String, employeeId : String, leaveType : LeaveType, startDate : LocalDate, endDate : LocalDate, reason : String)
@@ -159,11 +159,11 @@ class LeaveRequest {
 }
 
 class PayrollEntry {
-    +id : String
-    +version : long
-    +employeeId : String
-    +netSalary : double
-    +status : PayrollStatus
+    -id : String
+    -version : long
+    -employeeId : String
+    -netSalary : double
+    -status : PayrollStatus
 
     +PayrollEntry()
     +PayrollEntry(id : String, employeeId : String)
@@ -185,15 +185,15 @@ class PayrollEntry {
 }
 
 class PayrollRun {
-    +id : String
-    +version : long
-    +yearMonth : String
-    +mechanism : String
-    +elapsedMs : long
-    +successCount : int
-    +doublePaymentCount : int
-    +wrongLeaveCount : int
-    +tps : double
+    -id : String
+    -version : long
+    -yearMonth : String
+    -mechanism : String
+    -elapsedMs : long
+    -successCount : int
+    -doublePaymentCount : int
+    -wrongLeaveCount : int
+    -tps : double
 
     +PayrollRun()
     +PayrollRun(id : String, version : long, yearMonth : String, mechanism : String, elapsedMs : long, successCount : int, doublePaymentCount : int, wrongLeaveCount : int, tps : double)
@@ -221,12 +221,12 @@ class PayrollRun {
 }
 
 class PayrollRule {
-    +standardWorkingDays : int
-    +workingHoursPerDay : int
-    +overtimeMultiplier : double
-    +attendanceBonus : double
-    +taxRate : double
-    +taxThreshold : double
+    -standardWorkingDays : int
+    -workingHoursPerDay : int
+    -overtimeMultiplier : double
+    -attendanceBonus : double
+    -taxRate : double
+    -taxThreshold : double
 
     +PayrollRule()
     +PayrollRule(standardWorkingDays : int, workingHoursPerDay : int, overtimeMultiplier : double, attendanceBonus : double, taxRate : double, taxThreshold : double)

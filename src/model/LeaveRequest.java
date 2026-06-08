@@ -54,27 +54,27 @@ public class LeaveRequest {
     // ==================== GETTERS — từ diagram ====================
 
     public String getLeaveId() {
-        return leaveId;
+        return this.leaveId;
     }
 
     public LeaveType getLeaveType() {
-        return leaveType;
+        return this.leaveType;
     }
 
     public LocalDate getStartDate() {
-        return startDate;
+        return this.startDate;
     }
 
     public LocalDate getEndDate() {
-        return endDate;
+        return this.endDate;
     }
 
     public String getReason() {
-        return reason;
+        return this.reason;
     }
 
     public LeaveStatus getStatus() {
-        return status;
+        return this.status;
     }
 
     // ==================== SETTERS — từ diagram ====================
@@ -106,11 +106,11 @@ public class LeaveRequest {
     // ==================== GETTERS/SETTERS — thêm cho dự án ====================
 
     public String getEmployeeId() {
-        return employeeId;
+        return this.employeeId;
     }
 
     public String getApprovedBy() {
-        return approvedBy;
+        return this.approvedBy;
     }
 
     public void setEmployeeId(String employeeId) {
@@ -156,14 +156,14 @@ public class LeaveRequest {
 
     public String toCsvLine() {
         return String.join(",",
-                leaveId,
-                employeeId != null ? employeeId : "",
-                leaveType != null ? leaveType.name() : "",
-                startDate != null ? startDate.toString() : "",
-                endDate != null ? endDate.toString() : "",
-                reason != null ? reason.replace(",", ";") : "",
-                status != null ? status.name() : "",
-                approvedBy != null ? approvedBy : "");
+                this.leaveId,
+                this.employeeId != null ? this.employeeId : "",
+                this.leaveType != null ? this.leaveType.name() : "",
+                this.startDate != null ? this.startDate.toString() : "",
+                this.endDate != null ? this.endDate.toString() : "",
+                this.reason != null ? this.reason.replace(",", ";") : "",
+                this.status != null ? this.status.name() : "",
+                this.approvedBy != null ? this.approvedBy : "");
     }
 
     public static LeaveRequest fromCsvLine(String line) {
@@ -186,14 +186,14 @@ public class LeaveRequest {
     @Override
     public String toString() {
         return "LeaveRequest{" +
-                "leaveId='" + leaveId + '\'' +
-                ", employeeId='" + employeeId + '\'' +
-                ", leaveType=" + leaveType +
-                ", startDate=" + startDate +
-                ", endDate=" + endDate +
-                ", reason='" + reason + '\'' +
-                ", status=" + status +
-                ", approvedBy='" + approvedBy + '\'' +
+                "leaveId='" + this.leaveId + '\'' +
+                ", employeeId='" + this.employeeId + '\'' +
+                ", leaveType=" + this.leaveType +
+                ", startDate=" + this.startDate +
+                ", endDate=" + this.endDate +
+                ", reason='" + this.reason + '\'' +
+                ", status=" + this.status +
+                ", approvedBy='" + this.approvedBy + '\'' +
                 '}';
     }
 }
