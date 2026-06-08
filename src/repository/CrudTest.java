@@ -1,6 +1,6 @@
 import java.io.File;
 import java.io.FileWriter;
-import java.io.Scanner;
+import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.List;
 
