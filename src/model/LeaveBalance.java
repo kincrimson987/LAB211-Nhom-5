@@ -43,19 +43,19 @@ public class LeaveBalance {
     // ==================== GETTERS — từ diagram ====================
 
     public int getTotalLeaveDays() {
-        return totalLeaveDays;
+        return this.totalLeaveDays;
     }
 
     public int getUsedLeaveDays() {
-        return usedLeaveDays;
+        return this.usedLeaveDays;
     }
 
     public int getRemainingLeaveDays() {
-        return remainingLeaveDays;
+        return this.remainingLeaveDays;
     }
 
     public int getVersion() {
-        return version;
+        return this.version;
     }
 
     // ==================== SETTERS — từ diagram ====================
@@ -79,15 +79,15 @@ public class LeaveBalance {
     // ==================== GETTERS/SETTERS — thêm cho dự án ====================
 
     public String getBalanceId() {
-        return balanceId;
+        return this.balanceId;
     }
 
     public String getEmployeeId() {
-        return employeeId;
+        return this.employeeId;
     }
 
     public LeaveType getLeaveType() {
-        return leaveType;
+        return this.leaveType;
     }
 
     public void setBalanceId(String balanceId) {
@@ -140,13 +140,13 @@ public class LeaveBalance {
 
     public String toCsvLine() {
         return String.join(",",
-                balanceId,
-                employeeId,
-                leaveType != null ? leaveType.name() : "",
-                String.valueOf(totalLeaveDays),
-                String.valueOf(usedLeaveDays),
-                String.valueOf(remainingLeaveDays),
-                String.valueOf(version));
+                this.balanceId,
+                this.employeeId,
+                this.leaveType != null ? this.leaveType.name() : "",
+                String.valueOf(this.totalLeaveDays),
+                String.valueOf(this.usedLeaveDays),
+                String.valueOf(this.remainingLeaveDays),
+                String.valueOf(this.version));
     }
 
     public static LeaveBalance fromCsvLine(String line) {
@@ -167,13 +167,13 @@ public class LeaveBalance {
     @Override
     public String toString() {
         return "LeaveBalance{" +
-                "balanceId='" + balanceId + '\'' +
-                ", employeeId='" + employeeId + '\'' +
-                ", leaveType=" + leaveType +
-                ", totalLeaveDays=" + totalLeaveDays +
-                ", usedLeaveDays=" + usedLeaveDays +
-                ", remainingLeaveDays=" + remainingLeaveDays +
-                ", version=" + version +
+                "balanceId='" + this.balanceId + '\'' +
+                ", employeeId='" + this.employeeId + '\'' +
+                ", leaveType=" + this.leaveType +
+                ", totalLeaveDays=" + this.totalLeaveDays +
+                ", usedLeaveDays=" + this.usedLeaveDays +
+                ", remainingLeaveDays=" + this.remainingLeaveDays +
+                ", version=" + this.version +
                 '}';
     }
 }
