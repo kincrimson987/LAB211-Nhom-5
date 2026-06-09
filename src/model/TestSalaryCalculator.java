@@ -16,7 +16,7 @@ public class TestSalaryCalculator {
 
         // Case 1: FULLTIME đi đủ + 10h OT + có bonus + có thuế
         Employee e1 = new Employee("E001", 1, "Alice", "alice@company.com", "D001");
-        e1.setEmploymentType(Enums.EmploymentType.FULLTIME);
+        e1.setEmploymentType(EmployeeType.FULLTIME);
         e1.setBaseSalary(12000000);
 
         AttendanceRecord a1 = new AttendanceRecord("A001", 1, "E001", 26, 10.0);
@@ -35,7 +35,7 @@ public class TestSalaryCalculator {
 
         // Case 2: PARTTIME vắng 3 ngày + không bonus + không thuế
         Employee e2 = new Employee("E002", 1, "Bob", "bob@company.com", "D001");
-        e2.setEmploymentType(Enums.EmploymentType.PARTTIME);
+        e2.setEmploymentType(EmployeeType.PARTTIME);
         e2.setBaseSalary(8000000);
 
         AttendanceRecord a2 = new AttendanceRecord("A002", 1, "E002", 23, 0.0);
@@ -54,7 +54,7 @@ public class TestSalaryCalculator {
 
         // Case 3: FULLTIME lương cao + có thuế
         Employee e3 = new Employee("E003", 1, "Carol", "carol@company.com", "D002");
-        e3.setEmploymentType(Enums.EmploymentType.FULLTIME);
+        e3.setEmploymentType(EmployeeType.FULLTIME);
         e3.setBaseSalary(20000000);
 
         AttendanceRecord a3 = new AttendanceRecord("A003", 1, "E003", 26, 0.0);
@@ -68,7 +68,7 @@ public class TestSalaryCalculator {
 
         // Case 4: PARTTIME lương thấp + không thuế
         Employee e4 = new Employee("E004", 1, "Dan", "dan@company.com", "D003");
-        e4.setEmploymentType(Enums.EmploymentType.PARTTIME);
+        e4.setEmploymentType(EmployeeType.PARTTIME);
         e4.setBaseSalary(10000000);
 
         AttendanceRecord a4 = new AttendanceRecord("A004", 1, "E004", 26, 0.0);
@@ -81,7 +81,7 @@ public class TestSalaryCalculator {
 
         // Case 5: Vắng nhiều -> lương không âm
         Employee e5 = new Employee("E005", 1, "Eva", "eva@company.com", "D004");
-        e5.setEmploymentType(Enums.EmploymentType.FULLTIME);
+        e5.setEmploymentType(EmployeeType.FULLTIME);
         e5.setBaseSalary(5000000);
 
         AttendanceRecord a5 = new AttendanceRecord("A005", 1, "E005", 0, 0.0);

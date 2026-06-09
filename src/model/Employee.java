@@ -2,7 +2,7 @@ public class Employee extends BaseEntity {
     private String name;
     private String email;
     private String departmentId;
-    private Enums.EmploymentType employmentType = Enums.EmploymentType.FULLTIME;
+    private EmployeeType employmentType = EmployeeType.FULLTIME;
     private double baseSalary = 0.0; // monthly base salary
 
     public Employee() {
@@ -39,17 +39,17 @@ public class Employee extends BaseEntity {
         this.departmentId = departmentId;
     }
 
-    public Enums.EmploymentType getEmploymentType() {
+    public EmployeeType getEmploymentType() {
         return employmentType;
     }
 
-    public void setEmploymentType(Enums.EmploymentType employmentType) {
+    public void setEmploymentType(EmployeeType employmentType) {
         this.employmentType = employmentType;
     }
 
     public double getBaseSalary() {
         if (baseSalary <= 0.0) {
-            return employmentType == Enums.EmploymentType.FULLTIME ? 4000.0 : 2000.0;
+            return employmentType == EmployeeType.FULLTIME ? 4000.0 : 2000.0;
         }
         return baseSalary;
     }
@@ -60,18 +60,31 @@ public class Employee extends BaseEntity {
 
     @Override
     public String toCsvLine() {
-        return String.format("%s,%d,%s,%s,%s", getId(), getVersion(), name, email, departmentId);
+        return String.format("%s,%d,%s,%s,%s,%s,%.2f",
+                getId(), getVersion(), name, email, departmentId,
+                employmentType != null ? employmentType.name() : EmployeeType.FULLTIME.name(),
+                baseSalary);
     }
 
     @Override
     public void fromCsvLine(String line) {
         String[] parts = line.split(",");
-        if (parts.length >= 5) {
-            setId(parts[0]);
-            setVersion(Long.parseLong(parts[1]));
-            this.name = parts[2];
-            this.email = parts[3];
-            this.departmentId = parts[4];
+        if (parts.length >= 7) {
+            setId(parts[0].trim());
+            setVersion(Long.parseLong(parts[1].trim()));
+            this.name = parts[2].trim();
+            this.email = parts[3].trim();
+            this.departmentId = parts[4].trim();
+            this.employmentType = EmployeeType.valueOf(parts[5].trim());
+            this.baseSalary = Double.parseDouble(parts[6].trim());
+        } else if (parts.length >= 5) {
+            setId(parts[0].trim());
+            setVersion(Long.parseLong(parts[1].trim()));
+            this.name = parts[2].trim();
+            this.email = parts[3].trim();
+            this.departmentId = parts[4].trim();
+            this.employmentType = EmployeeType.FULLTIME;
+            this.baseSalary = getBaseSalary();
         }
     }
 }

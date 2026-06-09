@@ -27,7 +27,7 @@ public class PayrollRule {
     }
 
     public int getStandardWorkingDays() {
-        return this.standardWorkingDays;
+        return standardWorkingDays;
     }
 
     public void setStandardWorkingDays(int standardWorkingDays) {
@@ -35,7 +35,7 @@ public class PayrollRule {
     }
 
     public int getWorkingHoursPerDay() {
-        return this.workingHoursPerDay;
+        return workingHoursPerDay;
     }
 
     public void setWorkingHoursPerDay(int workingHoursPerDay) {
@@ -43,7 +43,7 @@ public class PayrollRule {
     }
 
     public double getOvertimeMultiplier() {
-        return this.overtimeMultiplier;
+        return overtimeMultiplier;
     }
 
     public void setOvertimeMultiplier(double overtimeMultiplier) {

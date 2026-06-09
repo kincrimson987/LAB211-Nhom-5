@@ -76,7 +76,7 @@ public class DataGenerator {
         int totalRows = 0;
 
         try (PrintWriter writer = new PrintWriter(new FileWriter(DATA_DIR + "employees.csv"))) {
-            writer.println("id,version,name,email,departmentId");
+            writer.println("id,version,name,email,departmentId,employmentType,baseSalary");
 
             for (int i = 1; i <= NUM_EMPLOYEES; i++) {
                 String firstName = FIRST_NAMES[RANDOM.nextInt(FIRST_NAMES.length)];
@@ -87,9 +87,11 @@ public class DataGenerator {
                         lastName.toLowerCase(),
                         i);
                 String deptId = String.format("D%03d", 1 + RANDOM.nextInt(NUM_DEPARTMENTS));
+                EmployeeType empType = RANDOM.nextBoolean() ? EmployeeType.FULLTIME : EmployeeType.PARTTIME;
+                double baseSalary = empType == EmployeeType.FULLTIME ? 4000.0 : 2000.0;
 
-                writer.println(String.format("E%04d,1,%s,%s,%s",
-                        i, fullName, email, deptId));
+                writer.println(String.format(Locale.US, "E%04d,1,%s,%s,%s,%s,%.1f",
+                        i, fullName, email, deptId, empType.name(), baseSalary));
 
                 totalRows++;
             }

@@ -1,10 +1,9 @@
 
 import java.time.LocalDate;
 
-public class LeaveRequest {
+public class LeaveRequest extends BaseEntity {
 
     // ── Từ diagram ──────────────────────────────
-    private String leaveId;
     private LeaveType leaveType;
     private LocalDate startDate;
     private LocalDate endDate;
@@ -19,6 +18,7 @@ public class LeaveRequest {
 
     /** Từ diagram — status mặc định PENDING */
     public LeaveRequest() {
+        super(null, 0);
         this.status = LeaveStatus.PENDING;
     }
 
@@ -29,7 +29,7 @@ public class LeaveRequest {
             LocalDate endDate,
             String reason,
             LeaveStatus status) {
-        this.leaveId = leaveId;
+        super(leaveId, 0);
         this.leaveType = leaveType;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -42,7 +42,7 @@ public class LeaveRequest {
             LeaveType leaveType,
             LocalDate startDate, LocalDate endDate,
             String reason) {
-        this.leaveId = leaveId;
+        super(leaveId, 0);
         this.employeeId = employeeId;
         this.leaveType = leaveType;
         this.startDate = startDate;
@@ -54,33 +54,33 @@ public class LeaveRequest {
     // ==================== GETTERS — từ diagram ====================
 
     public String getLeaveId() {
-        return this.leaveId;
+        return getId();
     }
 
     public LeaveType getLeaveType() {
-        return this.leaveType;
+        return leaveType;
     }
 
     public LocalDate getStartDate() {
-        return this.startDate;
+        return startDate;
     }
 
     public LocalDate getEndDate() {
-        return this.endDate;
+        return endDate;
     }
 
     public String getReason() {
-        return this.reason;
+        return reason;
     }
 
     public LeaveStatus getStatus() {
-        return this.status;
+        return status;
     }
 
     // ==================== SETTERS — từ diagram ====================
 
     public void setLeaveId(String leaveId) {
-        this.leaveId = leaveId;
+        setId(leaveId);
     }
 
     public void setLeaveType(LeaveType leaveType) {
@@ -106,11 +106,11 @@ public class LeaveRequest {
     // ==================== GETTERS/SETTERS — thêm cho dự án ====================
 
     public String getEmployeeId() {
-        return this.employeeId;
+        return employeeId;
     }
 
     public String getApprovedBy() {
-        return this.approvedBy;
+        return approvedBy;
     }
 
     public void setEmployeeId(String employeeId) {
@@ -154,29 +154,37 @@ public class LeaveRequest {
         return "leaveId,employeeId,leaveType,startDate,endDate,reason,status,approvedBy";
     }
 
+    @Override
     public String toCsvLine() {
         return String.join(",",
-                this.leaveId,
-                this.employeeId != null ? this.employeeId : "",
-                this.leaveType != null ? this.leaveType.name() : "",
-                this.startDate != null ? this.startDate.toString() : "",
-                this.endDate != null ? this.endDate.toString() : "",
-                this.reason != null ? this.reason.replace(",", ";") : "",
-                this.status != null ? this.status.name() : "",
-                this.approvedBy != null ? this.approvedBy : "");
+                getId() != null ? getId() : "",
+                employeeId != null ? employeeId : "",
+                leaveType != null ? leaveType.name() : "",
+                startDate != null ? startDate.toString() : "",
+                endDate != null ? endDate.toString() : "",
+                reason != null ? reason.replace(",", ";") : "",
+                status != null ? status.name() : "",
+                approvedBy != null ? approvedBy : "");
     }
 
-    public static LeaveRequest fromCsvLine(String line) {
+    @Override
+    public void fromCsvLine(String line) {
         String[] p = line.split(",");
+        if (p.length >= 8) {
+            setId(p[0].trim());
+            this.employeeId = p[1].trim();
+            this.leaveType = LeaveType.valueOf(p[2].trim());
+            this.startDate = p[3].trim().isEmpty() ? null : LocalDate.parse(p[3].trim());
+            this.endDate = p[4].trim().isEmpty() ? null : LocalDate.parse(p[4].trim());
+            this.reason = p[5].trim().replace(";", ",");
+            this.status = LeaveStatus.valueOf(p[6].trim());
+            this.approvedBy = p[7].trim().isEmpty() ? null : p[7].trim();
+        }
+    }
+
+    public static LeaveRequest fromCsvLineStatic(String line) {
         LeaveRequest lr = new LeaveRequest();
-        lr.leaveId = p[0].trim();
-        lr.employeeId = p[1].trim();
-        lr.leaveType = LeaveType.valueOf(p[2].trim());
-        lr.startDate = p[3].trim().isEmpty() ? null : LocalDate.parse(p[3].trim());
-        lr.endDate = p[4].trim().isEmpty() ? null : LocalDate.parse(p[4].trim());
-        lr.reason = p[5].trim().replace(";", ",");
-        lr.status = LeaveStatus.valueOf(p[6].trim());
-        lr.approvedBy = p[7].trim().isEmpty() ? null : p[7].trim();
+        lr.fromCsvLine(line);
         return lr;
     }
 
@@ -186,14 +194,14 @@ public class LeaveRequest {
     @Override
     public String toString() {
         return "LeaveRequest{" +
-                "leaveId='" + this.leaveId + '\'' +
-                ", employeeId='" + this.employeeId + '\'' +
-                ", leaveType=" + this.leaveType +
-                ", startDate=" + this.startDate +
-                ", endDate=" + this.endDate +
-                ", reason='" + this.reason + '\'' +
-                ", status=" + this.status +
-                ", approvedBy='" + this.approvedBy + '\'' +
+                "leaveId='" + getId() + '\'' +
+                ", employeeId='" + employeeId + '\'' +
+                ", leaveType=" + leaveType +
+                ", startDate=" + startDate +
+                ", endDate=" + endDate +
+                ", reason='" + reason + '\'' +
+                ", status=" + status +
+                ", approvedBy='" + approvedBy + '\'' +
                 '}';
     }
 }
