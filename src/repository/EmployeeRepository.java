@@ -1,7 +1,6 @@
 import java.util.List;
 import java.util.stream.Collectors;
 
-
 /**
  * Repository cho employees.csv
  */
@@ -34,30 +33,27 @@ public class EmployeeRepository extends CsvRepository<Employee> {
 
     @Override
     public Employee parseLine(String line) {
-        Employee e = new Employee();
-        e.fromCsvLine(line);
-        return e;
+        Employee employee = new Employee();
+        employee.fromCsvLine(line);
+        return employee;
     }
 
     public List<Employee> findByDepartment(String departmentId) {
         return findAll().stream()
-                .filter(e -> departmentId.equals(e.getDepartmentId()))
-                .collect(Collectors.toList());
-    }
-
-    public List<Employee> findByType(Enums.EmploymentType type) {
-        return findAll().stream()
-                .filter(e -> e.getEmploymentType() == type)
+                .filter(employee -> departmentId.equals(employee.getDepartmentId()))
                 .collect(Collectors.toList());
     }
 
     public List<Employee> searchByName(String keyword) {
-        if (keyword == null || keyword.isEmpty()) {
+        if (keyword == null || keyword.trim().isEmpty()) {
             return findAll();
         }
-        String q = keyword.toLowerCase();
+
+        String q = keyword.trim().toLowerCase();
+
         return findAll().stream()
-                .filter(e -> e.getName() != null && e.getName().toLowerCase().contains(q))
+                .filter(employee -> employee.getName() != null
+                        && employee.getName().toLowerCase().contains(q))
                 .collect(Collectors.toList());
     }
 }
