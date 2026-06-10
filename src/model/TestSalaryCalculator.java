@@ -23,9 +23,9 @@ public class TestSalaryCalculator {
 
         double result1 = SalaryCalculator.calcNetSalary(e1, a1, rule);
 
-        double base1 = 12000000.0 * 26 / 26;
-        double ot1 = (12000000.0 / 26 / 8) * 10 * 1.5;
-        double bonus1 = 500000;
+        double base1 = 12_000_000.0 * 26 / 26;
+        double ot1 = (12_000_000.0 / 26 / 8) * 10 * 1.5;
+        double bonus1 = 500_000;
         double deduction1 = 0;
         double gross1 = base1 + ot1 + bonus1 - deduction1;
         double tax1 = gross1 * 0.10;
@@ -42,10 +42,10 @@ public class TestSalaryCalculator {
 
         double result2 = SalaryCalculator.calcNetSalary(e2, a2, rule);
 
-        double base2 = 8000000.0 * 23 / 26;
+        double base2 = 8_000_000.0 * 23 / 26;
         double ot2 = 0;
         double bonus2 = 0;
-        double deduction2 = (8000000.0 / 26) * 3;
+        double deduction2 = (8_000_000.0 / 26) * 3;
         double gross2 = base2 + ot2 + bonus2 - deduction2;
         double tax2 = 0;
         double expected2 = Math.round((gross2 - tax2) * 100.0) / 100.0;
@@ -61,7 +61,7 @@ public class TestSalaryCalculator {
 
         double result3 = SalaryCalculator.calcNetSalary(e3, a3, rule);
 
-        double gross3 = 20000000.0 + 500000;
+        double gross3 = 20_000_000.0 + 500_000;
         double expected3 = Math.round((gross3 - gross3 * 0.10) * 100.0) / 100.0;
 
         assertEqual(result3, expected3, "FULLTIME high salary + tax");
@@ -75,7 +75,7 @@ public class TestSalaryCalculator {
 
         double result4 = SalaryCalculator.calcNetSalary(e4, a4, rule);
 
-        double expected4 = 10000000.0 + 500000;
+        double expected4 = 10_000_000.0 + 500_000;
 
         assertEqual(result4, expected4, "PARTTIME low salary + no tax");
 
