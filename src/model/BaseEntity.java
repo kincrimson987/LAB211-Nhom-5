@@ -29,4 +29,22 @@ public abstract class BaseEntity {
     public abstract String toCsvLine();
 
     public abstract void fromCsvLine(String line);
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        BaseEntity that = (BaseEntity) o;
+        return id != null ? id.equals(that.id) : that.id == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "{id='" + id + "', version=" + version + "}";
+    }
 }

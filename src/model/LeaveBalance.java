@@ -1,14 +1,11 @@
-
-public class LeaveBalance {
+public class LeaveBalance extends BaseEntity {
 
     // ── Từ diagram ──────────────────────────────
     private int totalLeaveDays;
     private int usedLeaveDays;
     private int remainingLeaveDays;
-    private int version;
 
     // ── Thêm cho dự án ──────────────────────────
-    private String balanceId; // khóa chính — đọc/ghi CSV
     private String employeeId; // biết balance này của nhân viên nào
     private LeaveType leaveType; // ANNUAL hay SICK
 
@@ -16,46 +13,42 @@ public class LeaveBalance {
 
     /** Từ diagram */
     public LeaveBalance() {
+        super(null, 0);
     }
 
     /** Từ diagram — giữ nguyên, chỉ sửa version = 0 */
     public LeaveBalance(int totalLeaveDays,
             int usedLeaveDays,
             int remainingLeaveDays) {
+        super(null, 0);
         this.totalLeaveDays = totalLeaveDays;
         this.usedLeaveDays = usedLeaveDays;
         this.remainingLeaveDays = remainingLeaveDays;
-        this.version = 0; // sửa từ 1 → 0 vì DataGenerator sinh ra version=0
     }
 
     /** Thêm — constructor đầy đủ cho dự án */
     public LeaveBalance(String balanceId, String employeeId,
             LeaveType leaveType, int totalLeaveDays) {
-        this.balanceId = balanceId;
+        super(balanceId, 0);
         this.employeeId = employeeId;
         this.leaveType = leaveType;
         this.totalLeaveDays = totalLeaveDays;
         this.usedLeaveDays = 0;
         this.remainingLeaveDays = totalLeaveDays;
-        this.version = 0;
     }
 
     // ==================== GETTERS — từ diagram ====================
 
     public int getTotalLeaveDays() {
-        return this.totalLeaveDays;
+        return totalLeaveDays;
     }
 
     public int getUsedLeaveDays() {
-        return this.usedLeaveDays;
+        return usedLeaveDays;
     }
 
     public int getRemainingLeaveDays() {
-        return this.remainingLeaveDays;
-    }
-
-    public int getVersion() {
-        return this.version;
+        return remainingLeaveDays;
     }
 
     // ==================== SETTERS — từ diagram ====================
@@ -72,26 +65,22 @@ public class LeaveBalance {
         this.remainingLeaveDays = remainingLeaveDays;
     }
 
-    public void setVersion(int version) {
-        this.version = version;
-    }
-
     // ==================== GETTERS/SETTERS — thêm cho dự án ====================
 
     public String getBalanceId() {
-        return this.balanceId;
+        return getId();
     }
 
     public String getEmployeeId() {
-        return this.employeeId;
+        return employeeId;
     }
 
     public LeaveType getLeaveType() {
-        return this.leaveType;
+        return leaveType;
     }
 
     public void setBalanceId(String balanceId) {
-        this.balanceId = balanceId;
+        setId(balanceId);
     }
 
     public void setEmployeeId(String employeeId) {
@@ -114,7 +103,7 @@ public class LeaveBalance {
         }
         this.usedLeaveDays += days;
         this.remainingLeaveDays -= days;
-        this.version++;
+        setVersion(getVersion() + 1);
     }
 
     /** Từ diagram — giữ nguyên code bạn */
@@ -124,7 +113,7 @@ public class LeaveBalance {
         }
         this.totalLeaveDays += days;
         this.remainingLeaveDays += days;
-        this.version++;
+        setVersion(getVersion() + 1);
     }
 
     /** Từ diagram — giữ nguyên code bạn */
@@ -138,27 +127,35 @@ public class LeaveBalance {
         return "balanceId,employeeId,leaveType,totalLeaveDays,usedLeaveDays,remainingLeaveDays,version";
     }
 
+    @Override
     public String toCsvLine() {
         return String.join(",",
-                this.balanceId,
-                this.employeeId,
-                this.leaveType != null ? this.leaveType.name() : "",
-                String.valueOf(this.totalLeaveDays),
-                String.valueOf(this.usedLeaveDays),
-                String.valueOf(this.remainingLeaveDays),
-                String.valueOf(this.version));
+                getId() != null ? getId() : "",
+                employeeId,
+                leaveType != null ? leaveType.name() : "",
+                String.valueOf(totalLeaveDays),
+                String.valueOf(usedLeaveDays),
+                String.valueOf(remainingLeaveDays),
+                String.valueOf(getVersion()));
     }
 
-    public static LeaveBalance fromCsvLine(String line) {
+    @Override
+    public void fromCsvLine(String line) {
         String[] p = line.split(",");
+        if (p.length >= 7) {
+            setId(p[0].trim());
+            this.employeeId = p[1].trim();
+            this.leaveType = LeaveType.valueOf(p[2].trim());
+            this.totalLeaveDays = Integer.parseInt(p[3].trim());
+            this.usedLeaveDays = Integer.parseInt(p[4].trim());
+            this.remainingLeaveDays = Integer.parseInt(p[5].trim());
+            setVersion(Long.parseLong(p[6].trim()));
+        }
+    }
+
+    public static LeaveBalance fromCsvLineStatic(String line) {
         LeaveBalance lb = new LeaveBalance();
-        lb.balanceId = p[0].trim();
-        lb.employeeId = p[1].trim();
-        lb.leaveType = LeaveType.valueOf(p[2].trim());
-        lb.totalLeaveDays = Integer.parseInt(p[3].trim());
-        lb.usedLeaveDays = Integer.parseInt(p[4].trim());
-        lb.remainingLeaveDays = Integer.parseInt(p[5].trim());
-        lb.version = Integer.parseInt(p[6].trim());
+        lb.fromCsvLine(line);
         return lb;
     }
 
@@ -167,13 +164,13 @@ public class LeaveBalance {
     @Override
     public String toString() {
         return "LeaveBalance{" +
-                "balanceId='" + this.balanceId + '\'' +
-                ", employeeId='" + this.employeeId + '\'' +
-                ", leaveType=" + this.leaveType +
-                ", totalLeaveDays=" + this.totalLeaveDays +
-                ", usedLeaveDays=" + this.usedLeaveDays +
-                ", remainingLeaveDays=" + this.remainingLeaveDays +
-                ", version=" + this.version +
+                "balanceId='" + getId() + '\'' +
+                ", employeeId='" + employeeId + '\'' +
+                ", leaveType=" + leaveType +
+                ", totalLeaveDays=" + totalLeaveDays +
+                ", usedLeaveDays=" + usedLeaveDays +
+                ", remainingLeaveDays=" + remainingLeaveDays +
+                ", version=" + getVersion() +
                 '}';
     }
 }
