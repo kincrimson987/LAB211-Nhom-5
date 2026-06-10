@@ -40,7 +40,21 @@ public class LeaveBalanceRepository extends CsvRepository<LeaveBalance> {
 
     @Override
     public LeaveBalance parseLine(String line) {
-        return LeaveBalance.fromCsvLine(line);
+        String[] p = line.split(",");
+
+        LeaveBalance balance = new LeaveBalance();
+
+        if (p.length >= 7) {
+            balance.setBalanceId(p[0].trim());
+            balance.setEmployeeId(p[1].trim());
+            balance.setLeaveType(LeaveType.valueOf(p[2].trim()));
+            balance.setTotalLeaveDays(Integer.parseInt(p[3].trim()));
+            balance.setUsedLeaveDays(Integer.parseInt(p[4].trim()));
+            balance.setRemainingLeaveDays(Integer.parseInt(p[5].trim()));
+            balance.setVersion(Long.parseLong(p[6].trim()));
+        }
+
+        return balance;
     }
 
     public List<LeaveBalance> findByEmployee(String employeeId) {
@@ -115,7 +129,7 @@ public class LeaveBalanceRepository extends CsvRepository<LeaveBalance> {
                 return false;
             }
 
-            int expectedVersion = balance.getVersion();
+            long expectedVersion = balance.getVersion();
 
             try {
                 balance.deductLeave(days);
@@ -165,7 +179,7 @@ public class LeaveBalanceRepository extends CsvRepository<LeaveBalance> {
     /**
      * Chi update neu version trong file van dung bang expectedVersion.
      */
-    boolean updateIfVersionMatch(LeaveBalance updated, int expectedVersion) {
+    boolean updateIfVersionMatch(LeaveBalance updated, long expectedVersion) {
         List<LeaveBalance> all = readAllLines();
 
         for (int i = 0; i < all.size(); i++) {
