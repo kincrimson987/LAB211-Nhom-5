@@ -1,0 +1,54 @@
+public class FullTimeEmployee extends Employee {
+
+    public FullTimeEmployee() {
+        setEmploymentType(EmployeeType.FULLTIME);
+    }
+
+    public FullTimeEmployee(String id,
+            long version,
+            String name,
+            String email,
+            String departmentId,
+            double baseSalary) {
+
+        super(id, version, name, email,
+                departmentId, baseSalary);
+
+        setEmploymentType(EmployeeType.FULLTIME);
+    }
+
+    @Override
+    public double calculateSalary(
+            AttendanceRecord attendance,
+            PayrollRule rule) {
+
+        double base = getBaseSalary()
+                * attendance.getWorkDays()
+                / rule.getStandardWorkingDays();
+
+        double overtime = (getBaseSalary()
+                / rule.getStandardWorkingDays()
+                / rule.getWorkingHoursPerDay())
+                * attendance.getOvertimeHours()
+                * rule.getOvertimeMultiplier();
+
+        double bonus = attendance.getWorkDays() >= rule.getStandardWorkingDays()
+                ? rule.getAttendanceBonus()
+                : 0;
+
+        double deduction = (getBaseSalary()
+                / rule.getStandardWorkingDays())
+                * Math.max(
+                        0,
+                        rule.getStandardWorkingDays()
+                                - attendance.getWorkDays());
+
+        double gross = base + overtime + bonus - deduction;
+
+        double tax = gross > rule.getTaxThreshold()
+                ? gross * rule.getTaxRate()
+                : 0;
+
+        return Math.max(0, gross - tax);
+    }
+}
