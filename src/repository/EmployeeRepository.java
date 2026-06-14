@@ -1,7 +1,6 @@
 import java.util.List;
 import java.util.stream.Collectors;
 
-
 /**
  * Repository cho employees.csv
  */
@@ -19,7 +18,7 @@ public class EmployeeRepository extends CsvRepository<Employee> {
 
     @Override
     public String getHeader() {
-        return "id,version,name,email,departmentId";
+        return "id,version,name,email,departmentId,employmentType,baseSalary";
     }
 
     @Override
@@ -34,30 +33,48 @@ public class EmployeeRepository extends CsvRepository<Employee> {
 
     @Override
     public Employee parseLine(String line) {
-        Employee e = new Employee();
-        e.fromCsvLine(line);
-        return e;
+        String[] parts = line.split(",");
+
+        Employee employee;
+
+        if (parts.length >= 7) {
+            EmployeeType type = EmployeeType.valueOf(parts[5].trim());
+
+            if (type == EmployeeType.FULLTIME) {
+                employee = new FullTimeEmployee();
+            } else {
+                employee = new PartTimeEmployee();
+            }
+        } else {
+            employee = new FullTimeEmployee();
+        }
+
+        employee.fromCsvLine(line);
+        return employee;
     }
 
     public List<Employee> findByDepartment(String departmentId) {
         return findAll().stream()
-                .filter(e -> departmentId.equals(e.getDepartmentId()))
+                .filter(employee -> departmentId.equals(employee.getDepartmentId()))
                 .collect(Collectors.toList());
     }
 
-    public List<Employee> findByType(Enums.EmploymentType type) {
+    public List<Employee> findByType(EmployeeType type) {
         return findAll().stream()
-                .filter(e -> e.getEmploymentType() == type)
+                .filter(employee -> employee.getEmploymentType() == type)
                 .collect(Collectors.toList());
     }
 
     public List<Employee> searchByName(String keyword) {
-        if (keyword == null || keyword.isEmpty()) {
+        if (keyword == null || keyword.trim().isEmpty()) {
             return findAll();
         }
-        String q = keyword.toLowerCase();
+
+        String q = keyword.trim().toLowerCase();
+
         return findAll().stream()
-                .filter(e -> e.getName() != null && e.getName().toLowerCase().contains(q))
+                .filter(employee -> employee.getName() != null
+                        && employee.getName().toLowerCase().contains(q))
                 .collect(Collectors.toList());
     }
 }

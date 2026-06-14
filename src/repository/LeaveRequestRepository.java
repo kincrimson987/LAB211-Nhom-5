@@ -1,3 +1,4 @@
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,7 +35,34 @@ public class LeaveRequestRepository extends CsvRepository<LeaveRequest> {
 
     @Override
     public LeaveRequest parseLine(String line) {
-        return LeaveRequest.fromCsvLine(line);
+        String[] p = line.split(",", -1);
+
+        LeaveRequest request = new LeaveRequest();
+
+        if (p.length >= 8) {
+            request.setLeaveId(p[0].trim());
+            request.setEmployeeId(p[1].trim());
+            request.setLeaveType(LeaveType.valueOf(p[2].trim()));
+
+            if (!p[3].trim().isEmpty()) {
+                request.setStartDate(LocalDate.parse(p[3].trim()));
+            }
+
+            if (!p[4].trim().isEmpty()) {
+                request.setEndDate(LocalDate.parse(p[4].trim()));
+            }
+
+            request.setReason(p[5].trim().replace(";", ","));
+            request.setStatus(LeaveStatus.valueOf(p[6].trim()));
+
+            if (!p[7].trim().isEmpty()) {
+                request.setApprovedBy(p[7].trim());
+            } else {
+                request.setApprovedBy(null);
+            }
+        }
+
+        return request;
     }
 
     public List<LeaveRequest> findByEmployee(String employeeId) {

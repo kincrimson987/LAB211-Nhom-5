@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Repository doc/ghi leave_balances.csv.
- * Trong tam: ngan Wrong Leave Deduction bang synchronized va optimistic locking.
+ * Repository đọc/ghi leave_balances.csv.
+ * Ngăn Wrong Leave Deduction bằng synchronized và optimistic locking.
  */
 public class LeaveBalanceRepository extends CsvRepository<LeaveBalance> {
 
@@ -40,7 +40,9 @@ public class LeaveBalanceRepository extends CsvRepository<LeaveBalance> {
 
     @Override
     public LeaveBalance parseLine(String line) {
-        return LeaveBalance.fromCsvLine(line);
+        LeaveBalance balance = new LeaveBalance();
+        balance.fromCsvLine(line);
+        return balance;
     }
 
     public List<LeaveBalance> findByEmployee(String employeeId) {
@@ -58,19 +60,12 @@ public class LeaveBalanceRepository extends CsvRepository<LeaveBalance> {
     }
 
     /**
-     * NO_LOCK: co tinh khong khoa.
-     * Dung cho simulation de thay race condition co the xay ra.
+     * NO_LOCK: cố ý không khóa để thấy race condition.
      */
     public boolean deductWithNoLock(String employeeId, LeaveType leaveType, int days) {
         LeaveBalance balance = findByEmployeeAndType(employeeId, leaveType);
-
-        if (balance == null) {
-            return false;
-        }
-
-        if (balance.getRemainingLeaveDays() < days) {
-            return false;
-        }
+        if (balance == null) return false;
+        if (balance.getRemainingLeaveDays() < days) return false;
 
         balance.deductLeave(days);
         update(balance);
@@ -78,20 +73,13 @@ public class LeaveBalanceRepository extends CsvRepository<LeaveBalance> {
     }
 
     /**
-     * SYNCHRONIZED: khoa theo tung employee + leaveType.
-     * Dam bao chi 1 thread duoc tru phep cua cung 1 nhan vien tai 1 thoi diem.
+     * SYNCHRONIZED: khóa theo từng employee + leaveType.
      */
     public boolean deductWithSync(String employeeId, LeaveType leaveType, int days) {
         synchronized ((employeeId + "_" + leaveType.name()).intern()) {
             LeaveBalance balance = findByEmployeeAndType(employeeId, leaveType);
-
-            if (balance == null) {
-                return false;
-            }
-
-            if (balance.getRemainingLeaveDays() < days) {
-                return false;
-            }
+            if (balance == null) return false;
+            if (balance.getRemainingLeaveDays() < days) return false;
 
             balance.deductLeave(days);
             update(balance);
@@ -100,22 +88,15 @@ public class LeaveBalanceRepository extends CsvRepository<LeaveBalance> {
     }
 
     /**
-     * OPTIMISTIC: dung version de tranh ghi de.
-     * Neu version bi thread khac doi thi retry.
+     * OPTIMISTIC: dùng version để tránh ghi đè.
      */
     public boolean deductWithOptimistic(String employeeId, LeaveType leaveType, int days) {
         for (int attempt = 0; attempt < OPTIMISTIC_MAX_RETRIES; attempt++) {
             LeaveBalance balance = findByEmployeeAndType(employeeId, leaveType);
+            if (balance == null) return false;
+            if (balance.getRemainingLeaveDays() < days) return false;
 
-            if (balance == null) {
-                return false;
-            }
-
-            if (balance.getRemainingLeaveDays() < days) {
-                return false;
-            }
-
-            int expectedVersion = balance.getVersion();
+            long expectedVersion = balance.getVersion();
 
             try {
                 balance.deductLeave(days);
@@ -129,13 +110,11 @@ public class LeaveBalanceRepository extends CsvRepository<LeaveBalance> {
 
             sleepWithBackoff(attempt);
         }
-
         return false;
     }
 
     /**
-     * FILE_LOCK: khoa ca file CSV.
-     * An toan nhung co the cham hon vi moi lan thao tac khoa toan bo file.
+     * FILE_LOCK: khóa cả file CSV.
      */
     public boolean deductWithFileLock(String employeeId, LeaveType leaveType, int days) {
         try (RandomAccessFile raf = new RandomAccessFile(getFilePath(), "rw");
@@ -144,14 +123,8 @@ public class LeaveBalanceRepository extends CsvRepository<LeaveBalance> {
 
             List<LeaveBalance> all = readAllLines();
             LeaveBalance balance = findInList(all, employeeId, leaveType);
-
-            if (balance == null) {
-                return false;
-            }
-
-            if (balance.getRemainingLeaveDays() < days) {
-                return false;
-            }
+            if (balance == null) return false;
+            if (balance.getRemainingLeaveDays() < days) return false;
 
             balance.deductLeave(days);
             writeAllLines(all);
@@ -163,44 +136,37 @@ public class LeaveBalanceRepository extends CsvRepository<LeaveBalance> {
     }
 
     /**
-     * Chi update neu version trong file van dung bang expectedVersion.
+     * Chỉ update nếu version trong file vẫn đúng bằng expectedVersion.
      */
-    boolean updateIfVersionMatch(LeaveBalance updated, int expectedVersion) {
+    boolean updateIfVersionMatch(LeaveBalance updated, long expectedVersion) {
         List<LeaveBalance> all = readAllLines();
-
         for (int i = 0; i < all.size(); i++) {
             LeaveBalance current = all.get(i);
-
-            if (!current.getBalanceId().equals(updated.getBalanceId())) {
-                continue;
-            }
-
-            if (current.getVersion() != expectedVersion) {
-                return false;
-            }
-
+            if (!current.getBalanceId().equals(updated.getBalanceId())) continue;
+            if (current.getVersion() != expectedVersion) return false;
             all.set(i, updated);
             writeAllLines(all);
             return true;
         }
-
         return false;
     }
 
-    private static LeaveBalance findInList(List<LeaveBalance> balances,
-                                           String employeeId,
-                                           LeaveType leaveType) {
+    /**
+     * Tìm balance trong list — instance method thay vì static.
+     */
+    private LeaveBalance findInList(List<LeaveBalance> balances,
+                                    String employeeId,
+                                    LeaveType leaveType) {
         for (LeaveBalance balance : balances) {
             if (balance.getEmployeeId().equals(employeeId)
                     && balance.getLeaveType() == leaveType) {
                 return balance;
             }
         }
-
         return null;
     }
 
-    private static void sleepWithBackoff(int attempt) {
+    private void sleepWithBackoff(int attempt) {
         try {
             Thread.sleep(OPTIMISTIC_BASE_BACKOFF_MS * (1L << attempt));
         } catch (InterruptedException e) {

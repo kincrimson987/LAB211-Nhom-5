@@ -1,9 +1,9 @@
-public class Employee extends BaseEntity {
+public abstract class Employee extends BaseEntity {
     private String name;
     private String email;
     private String departmentId;
-    private Enums.EmploymentType employmentType = Enums.EmploymentType.FULLTIME;
-    private double baseSalary = 0.0; // monthly base salary
+    private EmployeeType employmentType = EmployeeType.FULLTIME;
+    private double baseSalary = 0.0;
 
     public Employee() {
     }
@@ -13,6 +13,19 @@ public class Employee extends BaseEntity {
         this.name = name;
         this.email = email;
         this.departmentId = departmentId;
+    }
+
+    public Employee(String id,
+                    long version,
+                    String name,
+                    String email,
+                    String departmentId,
+                    double baseSalary) {
+        super(id, version);
+        this.name = name;
+        this.email = email;
+        this.departmentId = departmentId;
+        this.baseSalary = baseSalary;
     }
 
     public String getName() {
@@ -39,17 +52,17 @@ public class Employee extends BaseEntity {
         this.departmentId = departmentId;
     }
 
-    public Enums.EmploymentType getEmploymentType() {
+    public EmployeeType getEmploymentType() {
         return employmentType;
     }
 
-    public void setEmploymentType(Enums.EmploymentType employmentType) {
+    public void setEmploymentType(EmployeeType employmentType) {
         this.employmentType = employmentType;
     }
 
     public double getBaseSalary() {
         if (baseSalary <= 0.0) {
-            return employmentType == Enums.EmploymentType.FULLTIME ? 4000.0 : 2000.0;
+            return employmentType == EmployeeType.FULLTIME ? 4000.0 : 2000.0;
         }
         return baseSalary;
     }
@@ -58,20 +71,65 @@ public class Employee extends BaseEntity {
         this.baseSalary = baseSalary;
     }
 
+    /**
+     * Bắt buộc attendance phải thuộc đúng nhân viên hiện tại.
+     * Tránh lỗi lấy AttendanceRecord của E002 để tính lương cho E001.
+     */
+    protected void validateAttendance(AttendanceRecord attendance) {
+        if (attendance == null) {
+            throw new IllegalArgumentException("Attendance record cannot be null.");
+        }
+
+        if (attendance.getEmployeeId() == null || !attendance.getEmployeeId().equals(getId())) {
+            throw new IllegalArgumentException(
+                    "Attendance record does not belong to employee " + getId());
+        }
+    }
+
+    protected double roundMoney(double value) {
+        return Math.round(value * 100.0) / 100.0;
+    }
+
     @Override
     public String toCsvLine() {
-        return String.format("%s,%d,%s,%s,%s", getId(), getVersion(), name, email, departmentId);
+        return String.format(java.util.Locale.US, "%s,%d,%s,%s,%s,%s,%.2f",
+                getId(),
+                getVersion(),
+                name,
+                email,
+                departmentId,
+                employmentType != null ? employmentType.name() : EmployeeType.FULLTIME.name(),
+                baseSalary);
     }
 
     @Override
     public void fromCsvLine(String line) {
         String[] parts = line.split(",");
-        if (parts.length >= 5) {
-            setId(parts[0]);
-            setVersion(Long.parseLong(parts[1]));
-            this.name = parts[2];
-            this.email = parts[3];
-            this.departmentId = parts[4];
+
+        if (parts.length >= 7) {
+            setId(parts[0].trim());
+            setVersion(Long.parseLong(parts[1].trim()));
+            this.name = parts[2].trim();
+            this.email = parts[3].trim();
+            this.departmentId = parts[4].trim();
+            this.employmentType = EmployeeType.valueOf(parts[5].trim());
+            this.baseSalary = Double.parseDouble(parts[6].trim());
+        } else if (parts.length >= 5) {
+            setId(parts[0].trim());
+            setVersion(Long.parseLong(parts[1].trim()));
+            this.name = parts[2].trim();
+            this.email = parts[3].trim();
+            this.departmentId = parts[4].trim();
+            this.employmentType = EmployeeType.FULLTIME;
+            this.baseSalary = getBaseSalary();
         }
     }
+
+    /**
+     * Đa hình:
+     * FullTimeEmployee và PartTimeEmployee sẽ override hàm này.
+     */
+    public abstract double calculateSalary(
+            AttendanceRecord attendance,
+            PayrollRule rule);
 }
