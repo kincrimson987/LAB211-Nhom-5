@@ -6,17 +6,15 @@ public class LeaveBalance extends BaseEntity {
     private int remainingLeaveDays;
 
     // ── Thêm cho dự án ──────────────────────────
-    private String employeeId; // biết balance này của nhân viên nào
-    private LeaveType leaveType; // ANNUAL hay SICK
+    private String employeeId;
+    private LeaveType leaveType;
 
     // ==================== CONSTRUCTORS ====================
 
-    /** Từ diagram */
     public LeaveBalance() {
         super(null, 0);
     }
 
-    /** Từ diagram — giữ nguyên, chỉ sửa version = 0 */
     public LeaveBalance(int totalLeaveDays,
             int usedLeaveDays,
             int remainingLeaveDays) {
@@ -26,7 +24,6 @@ public class LeaveBalance extends BaseEntity {
         this.remainingLeaveDays = remainingLeaveDays;
     }
 
-    /** Thêm — constructor đầy đủ cho dự án */
     public LeaveBalance(String balanceId, String employeeId,
             LeaveType leaveType, int totalLeaveDays) {
         super(balanceId, 0);
@@ -93,7 +90,6 @@ public class LeaveBalance extends BaseEntity {
 
     // ==================== BUSINESS METHODS — từ diagram ====================
 
-    /** Từ diagram — giữ nguyên code bạn */
     public void deductLeave(int days) {
         if (days <= 0) {
             throw new IllegalArgumentException("Days must be greater than 0");
@@ -106,7 +102,6 @@ public class LeaveBalance extends BaseEntity {
         setVersion(getVersion() + 1);
     }
 
-    /** Từ diagram — giữ nguyên code bạn */
     public void addLeave(int days) {
         if (days <= 0) {
             throw new IllegalArgumentException("Days must be greater than 0");
@@ -116,12 +111,11 @@ public class LeaveBalance extends BaseEntity {
         setVersion(getVersion() + 1);
     }
 
-    /** Từ diagram — giữ nguyên code bạn */
     public int checkRemaining() {
         return this.remainingLeaveDays;
     }
 
-    // ==================== CSV — thêm cho dự án ====================
+    // ==================== CSV ====================
 
     public String getCsvHeader() {
         return "balanceId,employeeId,leaveType,totalLeaveDays,usedLeaveDays,remainingLeaveDays,version";
@@ -153,13 +147,7 @@ public class LeaveBalance extends BaseEntity {
         }
     }
 
-    public static LeaveBalance fromCsvLineStatic(String line) {
-        LeaveBalance lb = new LeaveBalance();
-        lb.fromCsvLine(line);
-        return lb;
-    }
-
-    // ==================== toString — từ diagram ====================
+    // ==================== toString ====================
 
     @Override
     public String toString() {
