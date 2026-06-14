@@ -14,6 +14,7 @@ public class TestSalaryCalculator {
     public static void main(String[] args) {
         PayrollRule rule = new PayrollRule();
         SalaryCalculator calculator = new SalaryCalculator();
+
         // Case 1: FULLTIME đi đủ + 10h OT + có bonus + có thuế
         Employee e1 = new FullTimeEmployee("E001", 1, "Alice", "alice@company.com", "D001", 12000000);
         e1.setEmploymentType(EmployeeType.FULLTIME);
@@ -26,8 +27,7 @@ public class TestSalaryCalculator {
         double base1 = 12_000_000.0 * 26 / 26;
         double ot1 = (12_000_000.0 / 26 / 8) * 10 * 1.5;
         double bonus1 = 500_000;
-        double deduction1 = 0;
-        double gross1 = base1 + ot1 + bonus1 - deduction1;
+        double gross1 = base1 + ot1 + bonus1;
         double tax1 = gross1 * 0.10;
         double expected1 = Math.round((gross1 - tax1) * 100.0) / 100.0;
 
@@ -44,16 +44,7 @@ public class TestSalaryCalculator {
 
         double base2 = 8_000_000.0 * 23 / 26;
         double ot2 = 0;
-<<<<<<< HEAD
-        double bonus2 = 0;
-        double deduction2 = (8_000_000.0 / 26) * 3;
-        double gross2 = base2 + ot2 + bonus2 - deduction2;
-        double tax2 = 0;
-        double expected2 = Math.round((gross2 - tax2) * 100.0) / 100.0;
-=======
-
         double expected2 = Math.round((base2 + ot2) * 100.0) / 100.0;
->>>>>>> 5002cb8ad7e71bdb80528714e685511fa0b1c7a3
 
         assertEqual(result2, expected2, "PARTTIME absent 3 days + no bonus");
 
@@ -80,11 +71,7 @@ public class TestSalaryCalculator {
 
         double result4 = calculator.calculate(e4, a4, rule);
 
-<<<<<<< HEAD
-        double expected4 = 10_000_000.0 + 500_000;
-=======
-        double expected4 = 10000000.0;
->>>>>>> 5002cb8ad7e71bdb80528714e685511fa0b1c7a3
+        double expected4 = 10_000_000.0;
 
         assertEqual(result4, expected4, "PARTTIME low salary + no tax");
 
