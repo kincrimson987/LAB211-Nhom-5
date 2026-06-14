@@ -181,4 +181,4 @@ public class TestSalaryCalculatorJUnit {
             calculator.calculate(employee, wrongAttendance, rule);
         });
     }
-}
+}       
