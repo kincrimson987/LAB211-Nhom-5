@@ -48,14 +48,14 @@ public class CrudTest {
         }
 
         System.out.println("=================================================");
-        System.out.println("👉 BẮT ĐẦU CHẠY STANDALONE CRUD TEST REPOSITORY 👈");
+        System.out.println("BAT DAU CHAY STANDALONE CRUD TEST REPOSITORY");
         System.out.println("=================================================");
 
         try {
             List<TestEntity> mockDatabase = new ArrayList<>();
             TestEntity item1 = new TestEntity("T_01", 1L, "FPT_Developer");
             
-            // 1. Kiểm thử tính năng CREATE
+            // 1. Kiem thu tinh nang CREATE
             mockDatabase.add(item1);
             try (FileWriter writer = new FileWriter(testFile)) {
                 for (TestEntity entity : mockDatabase) {
@@ -64,12 +64,12 @@ public class CrudTest {
             }
 
             if (testFile.exists() && testFile.length() > 0) {
-                System.out.println("[👉 PASS] 1. CREATE: Khởi tạo và ghi tệp CSV thành công.");
+                System.out.println("[PASS] 1. CREATE: Khoi tao va ghi tep CSV thanh cong.");
             } else {
-                System.out.println("[❌ FAIL] 1. CREATE: Lỗi không ghi được dữ liệu.");
+                System.out.println("[FAIL] 1. CREATE: Loi khong ghi duoc du lieu.");
             }
 
-            // 2. Kiểm thử tính năng READ
+            // 2. Kiem thu tinh nang READ
             TestEntity searchResult = null;
             try (Scanner scanner = new Scanner(testFile)) {
                 if (scanner.hasNextLine()) {
@@ -83,12 +83,12 @@ public class CrudTest {
             }
 
             if (searchResult != null && "FPT_Developer".equals(searchResult.getName())) {
-                System.out.println("[👉 PASS] 2. READ: Tìm thấy thực thể chính xác theo khóa ID.");
+                System.out.println("[PASS] 2. READ: Tim thay thuc the chinh xac theo khoa ID.");
             } else {
-                System.out.println("[❌ FAIL] 2. READ: Thao tác tìm kiếm thất bại.");
+                System.out.println("[FAIL] 2. READ: Thao tac tim kiem that bai.");
             }
 
-            // 3. Kiểm thử tính năng UPDATE
+            // 3. Kiem thu tinh nang UPDATE
             if (searchResult != null) {
                 mockDatabase.clear();
                 mockDatabase.add(new TestEntity("T_01", 2L, "FPT_Leader"));
@@ -107,12 +107,12 @@ public class CrudTest {
             }
 
             if ("FPT_Leader".equals(searchResult.getName())) {
-                System.out.println("[👉 PASS] 3. UPDATE: Đồng bộ thuộc tính mới xuống file CSV hoàn tất.");
+                System.out.println("[PASS] 3. UPDATE: Dong bo thuoc tinh moi xuong file CSV hoan tat.");
             } else {
-                System.out.println("[❌ FAIL] 3. UPDATE: Trạng thái dữ liệu chưa được cập nhật.");
+                System.out.println("[FAIL] 3. UPDATE: Trang thai du lieu chua duoc cap nhat.");
             }
 
-            // 4. Kiểm thử tính năng DELETE
+            // 4. Kiem thu tinh nang DELETE
             mockDatabase.clear();
             try (FileWriter writer = new FileWriter(testFile)) {
                 for (TestEntity entity : mockDatabase) {
@@ -121,15 +121,15 @@ public class CrudTest {
             }
 
             if (testFile.length() == 0) {
-                System.out.println("[👉 PASS] 4. DELETE: Loại bỏ phần tử khỏi file CSV thành công.");
+                System.out.println("[PASS] 4. DELETE: Loai bo phan tu khoi file CSV thanh cong.");
             } else {
-                System.out.println("[❌ FAIL] 4. DELETE: Thực thể chưa được dọn dẹp.");
+                System.out.println("[FAIL] 4. DELETE: Thuc the chua duoc don dep.");
             }
 
-            System.out.println("\n🎉 XUẤT SẮC: Toàn bộ logic lõi Đọc/Ghi CSV của bạn đã ĐÚNG 100%!");
+            System.out.println("\nXUAT SAC: Toan bo logic loi Doc/Ghi CSV cua ban da DUNG 100%!");
 
         } catch (Exception e) {
-            System.err.println("\n[⚠️ LỖI] Quá trình kiểm thử bị gián đoạn:");
+            System.err.println("\n[LOI] Qua trinh kiem thu bi gian doan:");
             e.printStackTrace();
         }
     }
