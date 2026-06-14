@@ -1,4 +1,5 @@
 import java.util.Locale;
+
 public class AttendanceRecord extends BaseEntity {
     private String employeeId;
     private String yearMonth;
@@ -59,6 +60,23 @@ public class AttendanceRecord extends BaseEntity {
         this.overtimeHours = overtimeHours;
     }
 
+    /**
+     * Trích xuất yearMonth từ id — instance method thay vì static.
+     * Ví dụ: A_E0001_06_2023 -> 2023-06
+     */
+    public String extractYearMonthFromId(String id) {
+        if (id == null) {
+            return "";
+        }
+        String[] parts = id.split("_");
+        if (parts.length >= 4) {
+            String month = parts[2];
+            String year = parts[3];
+            return year + "-" + month;
+        }
+        return "";
+    }
+
     @Override
     public String toCsvLine() {
         return String.format(Locale.US, "%s,%d,%s,%s,%d,%.1f",
@@ -69,8 +87,7 @@ public class AttendanceRecord extends BaseEntity {
     public void fromCsvLine(String line) {
         String[] parts = line.split(",");
 
-        // Format mới:
-        // id,version,employeeId,yearMonth,workDays,overtimeHours
+        // Format mới: id,version,employeeId,yearMonth,workDays,overtimeHours
         if (parts.length >= 6) {
             setId(parts[0].trim());
             setVersion(Long.parseLong(parts[1].trim()));
@@ -79,9 +96,7 @@ public class AttendanceRecord extends BaseEntity {
             this.workDays = Integer.parseInt(parts[4].trim());
             this.overtimeHours = Double.parseDouble(parts[5].trim());
         }
-
-        // Format cũ:
-        // id,version,employeeId,workDays,overtimeHours
+        // Format cũ: id,version,employeeId,workDays,overtimeHours
         else if (parts.length >= 5) {
             setId(parts[0].trim());
             setVersion(Long.parseLong(parts[1].trim()));
@@ -90,23 +105,6 @@ public class AttendanceRecord extends BaseEntity {
             this.workDays = Integer.parseInt(parts[3].trim());
             this.overtimeHours = Double.parseDouble(parts[4].trim());
         }
-    }
-
-    public static String extractYearMonthFromId(String id) {
-        // Ví dụ: A_E0001_06_2023 -> 2023-06
-        if (id == null) {
-            return "";
-        }
-
-        String[] parts = id.split("_");
-
-        if (parts.length >= 4) {
-            String month = parts[2];
-            String year = parts[3];
-            return year + "-" + month;
-        }
-
-        return "";
     }
 
     @Override
