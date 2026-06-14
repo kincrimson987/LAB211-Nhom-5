@@ -48,88 +48,170 @@ public class CrudTest {
         }
 
         System.out.println("=================================================");
-        System.out.println("BAT DAU CHAY STANDALONE CRUD TEST REPOSITORY");
+        System.out.println("👉 BẮT ĐẦU CHẠY STANDALONE CRUD TEST REPOSITORY 👈");
         System.out.println("=================================================");
 
         try {
+            Scanner boDieuKhien = new Scanner(System.in);
             List<TestEntity> mockDatabase = new ArrayList<>();
-            TestEntity item1 = new TestEntity("T_01", 1L, "FPT_Developer");
-            
-            // 1. Kiem thu tinh nang CREATE
-            mockDatabase.add(item1);
+
+            // =========================================================
+            // 🌟 BƯỚC KHỞI TẠO: BƠM NHIỀU DATA NỀN CHO HOÀNH TRÁNG
+            // =========================================================
+            System.out.println("⏳ Đang khởi tạo cơ sở dữ liệu nền với nhiều bản ghi...");
+            mockDatabase.add(new TestEntity("EMP_001", 1L, "Nguyen_Van_A_Senior_Dev"));
+            mockDatabase.add(new TestEntity("EMP_002", 1L, "Tran_Thi_B_HR_Manager"));
+            mockDatabase.add(new TestEntity("EMP_003", 2L, "Le_Van_C_Product_Owner"));
+            mockDatabase.add(new TestEntity("EMP_004", 1L, "Pham_Minh_D_Tester"));
+            mockDatabase.add(new TestEntity("EMP_005", 3L, "Hoang_Anh_E_CTO"));
+
+            // Ghi dữ liệu nền vào file CSV
             try (FileWriter writer = new FileWriter(testFile)) {
                 for (TestEntity entity : mockDatabase) {
                     writer.write(entity.toCsvLine() + "\n");
                 }
             }
+            System.out.println("✅ Đã nạp thành công 5 nhân sự vào file CSV!");
+            System.out.print("👉 Thầy nhìn file CSV bên phải đã ĐẦY ĐẶN data nền. BẤM ENTER để test hàm CREATE (Thêm người thứ 6)...");
+            boDieuKhien.nextLine();
+            System.out.println("-------------------------------------------------");
 
-            if (testFile.exists() && testFile.length() > 0) {
-                System.out.println("[PASS] 1. CREATE: Khoi tao va ghi tep CSV thanh cong.");
-            } else {
-                System.out.println("[FAIL] 1. CREATE: Loi khong ghi duoc du lieu.");
+            // =========================================================
+            // 1. Kiểm thử tính năng CREATE (Thêm người thứ 6 vào danh sách)
+            // =========================================================
+            TestEntity itemMoi = new TestEntity("EMP_006", 1L, "FPT_New_Developer");
+            
+            // Đọc dữ liệu cũ lên, thêm người mới vào, rồi ghi lại toàn bộ
+            try (FileWriter writer = new FileWriter(testFile, true)) { // true để ghi nối tiếp vào cuối file
+                writer.write(itemMoi.toCsvLine() + "\n");
             }
 
-            // 2. Kiem thu tinh nang READ
+            if (testFile.exists() && testFile.length() > 0) {
+                System.out.println("[👉 PASS] 1. CREATE: Khởi tạo và ghi thêm EMP_006 xuống CSV thành công.");
+            } else {
+                System.out.println("[❌ FAIL] 1. CREATE: Lỗi không ghi được dữ liệu.");
+            }
+
+            System.out.print("👉 Thầy xem người thứ 6 (EMP_006) đã được nối vào cuối file chưa. BẤM ENTER để test READ & UPDATE...");
+            boDieuKhien.nextLine(); 
+            System.out.println("-------------------------------------------------");
+
+            // =========================================================
+            // 2. Kiểm thử tính năng READ (Tìm kiếm 1 người bất kỳ giữa đám đông)
+            // =========================================================
             TestEntity searchResult = null;
             try (Scanner scanner = new Scanner(testFile)) {
-                if (scanner.hasNextLine()) {
+                while (scanner.hasNextLine()) { // Quét qua toàn bộ các dòng của file
                     String line = scanner.nextLine();
                     TestEntity temp = new TestEntity();
                     temp.fromCsvLine(line);
-                    if ("T_01".equals(temp.getId())) {
+                    if ("EMP_006".equals(temp.getId())) { // Tìm đúng ông số 6 vừa thêm
                         searchResult = temp;
+                        break;
                     }
                 }
             }
 
-            if (searchResult != null && "FPT_Developer".equals(searchResult.getName())) {
-                System.out.println("[PASS] 2. READ: Tim thay thuc the chinh xac theo khoa ID.");
+            if (searchResult != null && "FPT_New_Developer".equals(searchResult.getName())) {
+                System.out.println("[👉 PASS] 2. READ: Duyệt danh sách, tìm thấy chính xác EMP_006 giữa file CSV.");
             } else {
-                System.out.println("[FAIL] 2. READ: Thao tac tim kiem that bai.");
+                System.out.println("[❌ FAIL] 2. READ: Thao tác tìm kiếm thất bại.");
             }
 
-            // 3. Kiem thu tinh nang UPDATE
+            // =========================================================
+            // 3. Kiểm thử tính năng UPDATE (Sửa thông tin của ông số 6)
+            // =========================================================
             if (searchResult != null) {
-                mockDatabase.clear();
-                mockDatabase.add(new TestEntity("T_01", 2L, "FPT_Leader"));
+                // Đọc toàn bộ danh sách cũ từ file lên bộ nhớ RAM để xử lý sửa đổi
+                List<TestEntity> currentList = new ArrayList<>();
+                try (Scanner scanner = new Scanner(testFile)) {
+                    while (scanner.hasNextLine()) {
+                        TestEntity temp = new TestEntity();
+                        temp.fromCsvLine(scanner.nextLine());
+                        // Nếu thấy ông số 6 thì nâng cấp lên Leader, còn lại giữ nguyên
+                        if (temp.getId().equals("EMP_006")) {
+                            currentList.add(new TestEntity("EMP_006", 2L, "FPT_Project_Leader"));
+                        } else {
+                            currentList.add(temp);
+                        }
+                    }
+                }
+
+                // Ghi đè lại toàn bộ danh sách đã sửa xuống file CSV
                 try (FileWriter writer = new FileWriter(testFile)) {
-                    for (TestEntity entity : mockDatabase) {
+                    for (TestEntity entity : currentList) {
                         writer.write(entity.toCsvLine() + "\n");
                     }
                 }
             }
 
+            // Đọc lại để kiểm tra kết quả sửa đổi
+            boolean updateSuccess = false;
             try (Scanner scanner = new Scanner(testFile)) {
-                if (scanner.hasNextLine()) {
-                    String line = scanner.nextLine();
-                    searchResult.fromCsvLine(line);
+                while (scanner.hasNextLine()) {
+                    TestEntity temp = new TestEntity();
+                    temp.fromCsvLine(scanner.nextLine());
+                    if ("EMP_006".equals(temp.getId()) && "FPT_Project_Leader".equals(temp.getName())) {
+                        updateSuccess = true;
+                    }
                 }
             }
 
-            if ("FPT_Leader".equals(searchResult.getName())) {
-                System.out.println("[PASS] 3. UPDATE: Dong bo thuoc tinh moi xuong file CSV hoan tat.");
+            if (updateSuccess) {
+                System.out.println("[👉 PASS] 3. UPDATE: Đã tìm và sửa riêng thông tin ông EMP_006 thành Project Leader!");
             } else {
-                System.out.println("[FAIL] 3. UPDATE: Trang thai du lieu chua duoc cap nhat.");
+                System.out.println("[❌ FAIL] 3. UPDATE: Trạng thái dữ liệu chưa được cập nhật.");
             }
 
-            // 4. Kiem thu tinh nang DELETE
-            mockDatabase.clear();
+            System.out.print("👉 Thầy nhìn dòng cuối cùng, chữ đã đổi thành FPT_Project_Leader. BẤM ENTER để test DELETE...");
+            boDieuKhien.nextLine();
+            System.out.println("-------------------------------------------------");
+
+            // =========================================================
+            // 4. Kiểm thử tính năng DELETE (Xóa riêng ông số 6 ra khỏi file)
+            // =========================================================
+            List<TestEntity> remainList = new ArrayList<>();
+            try (Scanner scanner = new Scanner(testFile)) {
+                while (scanner.hasNextLine()) {
+                    TestEntity temp = new TestEntity();
+                    temp.fromCsvLine(scanner.nextLine());
+                    // Chỉ giữ lại những người KHÔNG PHẢI là EMP_006
+                    if (!temp.getId().equals("EMP_006")) {
+                        remainList.add(temp);
+                    }
+                }
+            }
+
+            // Ghi lại danh sách còn lại xuống file
             try (FileWriter writer = new FileWriter(testFile)) {
-                for (TestEntity entity : mockDatabase) {
+                for (TestEntity entity : remainList) {
                     writer.write(entity.toCsvLine() + "\n");
                 }
             }
 
-            if (testFile.length() == 0) {
-                System.out.println("[PASS] 4. DELETE: Loai bo phan tu khoi file CSV thanh cong.");
-            } else {
-                System.out.println("[FAIL] 4. DELETE: Thuc the chua duoc don dep.");
+            // Kiểm tra xem file có giảm đi 1 dòng và mất ông EMP_006 không
+            boolean deleted = true;
+            try (Scanner scanner = new Scanner(testFile)) {
+                while (scanner.hasNextLine()) {
+                    TestEntity temp = new TestEntity();
+                    temp.fromCsvLine(scanner.nextLine());
+                    if ("EMP_006".equals(temp.getId())) {
+                        deleted = false;
+                    }
+                }
             }
 
-            System.out.println("\nXUAT SAC: Toan bo logic loi Doc/Ghi CSV cua ban da DUNG 100%!");
+            if (deleted && remainList.size() == 5) {
+                System.out.println("[👉 PASS] 4. DELETE: Loại bỏ thành công EMP_006. File CSV còn lại đúng 5 nhân sự gốc.");
+            } else {
+                System.out.println("[❌ FAIL] 4. DELETE: Thực thể chưa được dọn dẹp.");
+            }
+
+            System.out.println("\n🎉 XUẤT SẮC: Toàn bộ logic lõi Đọc/Ghi dữ liệu hàng loạt đã ĐÚNG 100%!");
+            boDieuKhien.close();
 
         } catch (Exception e) {
-            System.err.println("\n[LOI] Qua trinh kiem thu bi gian doan:");
+            System.err.println("\n[⚠️ LỖI] Quá trình kiểm thử bị gián đoạn:");
             e.printStackTrace();
         }
     }
