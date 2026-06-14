@@ -1,4 +1,4 @@
-public class Employee extends BaseEntity {
+public abstract class Employee extends BaseEntity {
     private String name;
     private String email;
     private String departmentId;
@@ -13,6 +13,20 @@ public class Employee extends BaseEntity {
         this.name = name;
         this.email = email;
         this.departmentId = departmentId;
+    }
+
+    public Employee(String id,
+            long version,
+            String name,
+            String email,
+            String departmentId,
+            double baseSalary) {
+
+        super(id, version);
+        this.name = name;
+        this.email = email;
+        this.departmentId = departmentId;
+        this.baseSalary = baseSalary;
     }
 
     public String getName() {
@@ -87,4 +101,8 @@ public class Employee extends BaseEntity {
             this.baseSalary = getBaseSalary();
         }
     }
+     public abstract double calculateSalary(
+            AttendanceRecord attendance,
+            PayrollRule rule);
 }
+
