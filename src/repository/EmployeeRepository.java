@@ -32,12 +32,25 @@ public class EmployeeRepository extends CsvRepository<Employee> {
     }
 
     @Override
-    public Employee parseLine(String line) {
-        Employee employee = new Employee();
-        employee.fromCsvLine(line);
-        return employee;
+public Employee parseLine(String line) {
+
+    String[] parts = line.split(",");
+
+    EmployeeType type =
+            EmployeeType.valueOf(parts[5].trim());
+
+    Employee employee;
+
+    if (type == EmployeeType.FULLTIME) {
+        employee = new FullTimeEmployee();
+    } else {
+        employee = new PartTimeEmployee();
     }
 
+    employee.fromCsvLine(line);
+
+    return employee;
+}
     public List<Employee> findByDepartment(String departmentId) {
         return findAll().stream()
                 .filter(employee -> departmentId.equals(employee.getDepartmentId()))
