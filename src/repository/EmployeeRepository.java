@@ -18,7 +18,7 @@ public class EmployeeRepository extends CsvRepository<Employee> {
 
     @Override
     public String getHeader() {
-        return "id,version,name,email,departmentId";
+        return "id,version,name,email,departmentId,employmentType,baseSalary";
     }
 
     @Override
@@ -32,28 +32,36 @@ public class EmployeeRepository extends CsvRepository<Employee> {
     }
 
     @Override
-public Employee parseLine(String line) {
+    public Employee parseLine(String line) {
+        String[] parts = line.split(",");
 
-    String[] parts = line.split(",");
+        Employee employee;
 
-    EmployeeType type =
-            EmployeeType.valueOf(parts[5].trim());
+        if (parts.length >= 7) {
+            EmployeeType type = EmployeeType.valueOf(parts[5].trim());
 
-    Employee employee;
+            if (type == EmployeeType.FULLTIME) {
+                employee = new FullTimeEmployee();
+            } else {
+                employee = new PartTimeEmployee();
+            }
+        } else {
+            employee = new FullTimeEmployee();
+        }
 
-    if (type == EmployeeType.FULLTIME) {
-        employee = new FullTimeEmployee();
-    } else {
-        employee = new PartTimeEmployee();
+        employee.fromCsvLine(line);
+        return employee;
     }
 
-    employee.fromCsvLine(line);
-
-    return employee;
-}
     public List<Employee> findByDepartment(String departmentId) {
         return findAll().stream()
                 .filter(employee -> departmentId.equals(employee.getDepartmentId()))
+                .collect(Collectors.toList());
+    }
+
+    public List<Employee> findByType(EmployeeType type) {
+        return findAll().stream()
+                .filter(employee -> employee.getEmploymentType() == type)
                 .collect(Collectors.toList());
     }
 
