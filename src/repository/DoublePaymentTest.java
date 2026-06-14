@@ -73,7 +73,7 @@ public class DoublePaymentTest {
 
     private static void setupTestData(File file) throws Exception {
         try (PrintWriter writer = new PrintWriter(new FileWriter(file))) {
-            writer.println(PayrollEntry.getFullCsvHeader());
+            writer.println(new PayrollEntry().getCsvHeader());
             writer.println("PR_E0001_01_2024,0,E001,0.0,PENDING");
         }
     }
