@@ -1,13 +1,16 @@
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@DisplayName("Salary Calculator JUnit Test Suite")
 public class TestSalaryCalculatorJUnit {
 
     private static final double EPS = 0.01;
 
     @Test
+    @DisplayName("Full-time employee: full attendance, overtime, bonus and tax")
     public void testFullTimeFullAttendanceWithOvertimeBonusAndTax() {
         PayrollRule rule = new PayrollRule();
         SalaryCalculator calculator = new SalaryCalculator();
@@ -38,10 +41,14 @@ public class TestSalaryCalculatorJUnit {
         double tax = gross * 0.10;
         double expected = Math.round((gross - tax) * 100.0) / 100.0;
 
-        assertEquals(expected, actual, EPS);
+        assertEquals(expected, actual, EPS,
+                "Full-time salary should include base salary, overtime, attendance bonus and tax deduction.");
+
+        System.out.println("[PASS] Full-time salary with overtime, bonus and tax");
     }
 
     @Test
+    @DisplayName("Part-time employee: absent 3 days, no bonus and no tax")
     public void testPartTimeAbsentThreeDaysNoBonusNoTax() {
         PayrollRule rule = new PayrollRule();
         SalaryCalculator calculator = new SalaryCalculator();
@@ -68,10 +75,14 @@ public class TestSalaryCalculatorJUnit {
         double base = 8_000_000.0 * 23 / 26;
         double expected = Math.round(base * 100.0) / 100.0;
 
-        assertEquals(expected, actual, EPS);
+        assertEquals(expected, actual, EPS,
+                "Part-time salary should be calculated by actual working days without bonus or tax.");
+
+        System.out.println("[PASS] Part-time salary with absent days");
     }
 
     @Test
+    @DisplayName("Full-time employee: high salary with tax")
     public void testFullTimeHighSalaryWithTax() {
         PayrollRule rule = new PayrollRule();
         SalaryCalculator calculator = new SalaryCalculator();
@@ -98,10 +109,14 @@ public class TestSalaryCalculatorJUnit {
         double gross = 20_000_000.0 + 500_000;
         double expected = Math.round((gross - gross * 0.10) * 100.0) / 100.0;
 
-        assertEquals(expected, actual, EPS);
+        assertEquals(expected, actual, EPS,
+                "Full-time high salary should be taxed when gross salary exceeds the tax threshold.");
+
+        System.out.println("[PASS] Full-time high salary with tax");
     }
 
     @Test
+    @DisplayName("Part-time employee: low salary without tax")
     public void testPartTimeLowSalaryNoTax() {
         PayrollRule rule = new PayrollRule();
         SalaryCalculator calculator = new SalaryCalculator();
@@ -125,10 +140,14 @@ public class TestSalaryCalculatorJUnit {
 
         double actual = calculator.calculate(employee, attendance, rule);
 
-        assertEquals(10_000_000.0, actual, EPS);
+        assertEquals(10_000_000.0, actual, EPS,
+                "Part-time low salary should not be taxed.");
+
+        System.out.println("[PASS] Part-time low salary without tax");
     }
 
     @Test
+    @DisplayName("Full-time employee: salary must not be negative")
     public void testManyAbsentDaysSalaryNotNegative() {
         PayrollRule rule = new PayrollRule();
         SalaryCalculator calculator = new SalaryCalculator();
@@ -152,10 +171,14 @@ public class TestSalaryCalculatorJUnit {
 
         double actual = calculator.calculate(employee, attendance, rule);
 
-        assertEquals(0.0, actual, EPS);
+        assertEquals(0.0, actual, EPS,
+                "Salary should not be negative even when the employee has zero working days.");
+
+        System.out.println("[PASS] Salary is not negative");
     }
 
     @Test
+    @DisplayName("Validation: attendance record must belong to the selected employee")
     public void testAttendanceMustBelongToCorrectEmployee() {
         PayrollRule rule = new PayrollRule();
         SalaryCalculator calculator = new SalaryCalculator();
@@ -179,6 +202,8 @@ public class TestSalaryCalculatorJUnit {
 
         assertThrows(IllegalArgumentException.class, () -> {
             calculator.calculate(employee, wrongAttendance, rule);
-        });
+        }, "The system must reject attendance records that do not belong to the selected employee.");
+
+        System.out.println("[PASS] Invalid attendance record is rejected");
     }
-}       
+}
