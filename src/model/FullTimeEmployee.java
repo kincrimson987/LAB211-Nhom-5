@@ -5,22 +5,22 @@ public class FullTimeEmployee extends Employee {
     }
 
     public FullTimeEmployee(String id,
-            long version,
-            String name,
-            String email,
-            String departmentId,
-            double baseSalary) {
-
-        super(id, version, name, email,
-                departmentId, baseSalary);
-
+                            long version,
+                            String name,
+                            String email,
+                            String departmentId,
+                            double baseSalary) {
+        super(id, version, name, email, departmentId, baseSalary);
         setEmploymentType(EmployeeType.FULLTIME);
     }
 
     @Override
-    public double calculateSalary(
-            AttendanceRecord attendance,
-            PayrollRule rule) {
+    public double calculateSalary(AttendanceRecord attendance, PayrollRule rule) {
+        validateAttendance(attendance);
+
+        if (rule == null) {
+            throw new IllegalArgumentException("Payroll rule cannot be null.");
+        }
 
         double base = getBaseSalary()
                 * attendance.getWorkDays()
@@ -34,21 +34,20 @@ public class FullTimeEmployee extends Employee {
 
         double bonus = attendance.getWorkDays() >= rule.getStandardWorkingDays()
                 ? rule.getAttendanceBonus()
-                : 0;
+                : 0.0;
 
-        double deduction = (getBaseSalary()
-                / rule.getStandardWorkingDays())
-                * Math.max(
-                        0,
-                        rule.getStandardWorkingDays()
-                                - attendance.getWorkDays());
-
-        double gross = base + overtime + bonus - deduction;
+        /*
+         * Không trừ deduction ở đây nữa.
+         * Vì base đã tính theo số ngày làm thực tế rồi.
+         */
+        double gross = base + overtime + bonus;
 
         double tax = gross > rule.getTaxThreshold()
                 ? gross * rule.getTaxRate()
-                : 0;
+                : 0.0;
 
-        return Math.max(0, gross - tax);
+        double netSalary = gross - tax;
+
+        return roundMoney(Math.max(0.0, netSalary));
     }
 }
