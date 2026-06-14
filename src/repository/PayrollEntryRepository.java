@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Repository đọc/ghi payroll_entries.csv — trái tim của Research Question.
+ * Repository đọc/ghi payroll_entries.csv.
  * Cung cấp CRUD + 4 cơ chế đồng bộ chống double payment.
  */
 public class PayrollEntryRepository extends CsvRepository<PayrollEntry> {
@@ -33,14 +33,13 @@ public class PayrollEntryRepository extends CsvRepository<PayrollEntry> {
     public String getHeader() {
         File file = new File(getFilePath());
         if (!file.exists()) {
-            return PayrollEntry.getFullCsvHeader();
+            return new PayrollEntry().getCsvHeader();
         }
-
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String header = reader.readLine();
-            return header != null ? header : PayrollEntry.getFullCsvHeader();
+            return header != null ? header : new PayrollEntry().getCsvHeader();
         } catch (IOException e) {
-            return PayrollEntry.getFullCsvHeader();
+            return new PayrollEntry().getCsvHeader();
         }
     }
 
@@ -56,7 +55,9 @@ public class PayrollEntryRepository extends CsvRepository<PayrollEntry> {
 
     @Override
     public PayrollEntry parseLine(String line) {
-        return PayrollEntry.parseCsvLine(line);
+        PayrollEntry pe = new PayrollEntry();
+        pe.fromCsvLine(line);
+        return pe;
     }
 
     // ==================== TÌM KIẾM ====================
@@ -64,7 +65,7 @@ public class PayrollEntryRepository extends CsvRepository<PayrollEntry> {
     public PayrollEntry findByEmployeeAndMonth(String empId, String yearMonth) {
         for (PayrollEntry entry : findAll()) {
             if (entry.getEmployeeId().equals(empId)
-                    && PayrollEntry.extractYearMonthFromId(entry.getId()).equals(yearMonth)) {
+                    && entry.extractYearMonth().equals(yearMonth)) {
                 return entry;
             }
         }
@@ -81,7 +82,7 @@ public class PayrollEntryRepository extends CsvRepository<PayrollEntry> {
         Set<String> employeeIds = loadEmployeeIdsByDepartment(deptId);
         return findAll().stream()
                 .filter(entry -> employeeIds.contains(entry.getEmployeeId()))
-                .filter(entry -> PayrollEntry.extractYearMonthFromId(entry.getId()).equals(yearMonth))
+                .filter(entry -> entry.extractYearMonth().equals(yearMonth))
                 .collect(Collectors.toList());
     }
 
@@ -95,45 +96,32 @@ public class PayrollEntryRepository extends CsvRepository<PayrollEntry> {
     // ==================== 4 CƠ CHẾ ĐỒNG BỘ ====================
 
     /**
-     * Cơ chế 1 — NO_LOCK: cố ý không đồng bộ để Simulator chứng minh double
-     * payment.
-     *
-     * @return true nếu thread ghi được (kể cả khi race condition xảy ra)
+     * Cơ chế 1 — NO_LOCK: cố ý không đồng bộ để Simulator chứng minh double payment.
      */
     public boolean processWithNoLock(String entryId, String processedBy) {
         PayrollEntry entry = findById(entryId);
-        if (entry == null) {
-            return false;
-        }
+        if (entry == null) return false;
+        if (entry.getStatus() == PayrollStatus.PROCESSED) return false;
 
-        // Không khóa, không re-read — 2 thread có thể cùng thấy PENDING và cùng ghi
-        if (entry.getStatus() == PayrollStatus.PROCESSED) {
-            return false;
-        }
-
-        markProcessed(entry, processedBy);
+        markProcessed(entry);
         update(entry);
         return true;
     }
 
     /**
-     * Cơ chế 2 — FILE_LOCK: khóa toàn bộ file CSV, an toàn nhưng chậm nhất.
+     * Cơ chế 2 — FILE_LOCK: khóa toàn bộ file CSV.
      */
     public boolean processWithFileLock(String entryId, String processedBy) {
         try (RandomAccessFile raf = new RandomAccessFile(getFilePath(), "rw");
-                FileChannel channel = raf.getChannel();
-                FileLock lock = channel.lock()) {
+             FileChannel channel = raf.getChannel();
+             FileLock lock = channel.lock()) {
 
             List<PayrollEntry> all = readAllLines();
             PayrollEntry entry = findInList(all, entryId);
-            if (entry == null) {
-                return false;
-            }
-            if (entry.getStatus() == PayrollStatus.PROCESSED) {
-                return false;
-            }
+            if (entry == null) return false;
+            if (entry.getStatus() == PayrollStatus.PROCESSED) return false;
 
-            markProcessed(entry, processedBy);
+            markProcessed(entry);
             writeAllLines(all);
             return true;
         } catch (IOException e) {
@@ -146,20 +134,14 @@ public class PayrollEntryRepository extends CsvRepository<PayrollEntry> {
      */
     public boolean processWithSync(String entryId, String processedBy) {
         PayrollEntry snapshot = findById(entryId);
-        if (snapshot == null) {
-            return false;
-        }
+        if (snapshot == null) return false;
 
         synchronized (snapshot.getEmployeeId().intern()) {
             PayrollEntry entry = findById(entryId);
-            if (entry == null) {
-                return false;
-            }
-            if (entry.getStatus() == PayrollStatus.PROCESSED) {
-                return false;
-            }
+            if (entry == null) return false;
+            if (entry.getStatus() == PayrollStatus.PROCESSED) return false;
 
-            markProcessed(entry, processedBy);
+            markProcessed(entry);
             update(entry);
             return true;
         }
@@ -171,15 +153,11 @@ public class PayrollEntryRepository extends CsvRepository<PayrollEntry> {
     public boolean processWithOptimistic(String entryId, String processedBy) {
         for (int attempt = 0; attempt < OPTIMISTIC_MAX_RETRIES; attempt++) {
             PayrollEntry entry = findById(entryId);
-            if (entry == null) {
-                return false;
-            }
-            if (entry.getStatus() == PayrollStatus.PROCESSED) {
-                return false;
-            }
+            if (entry == null) return false;
+            if (entry.getStatus() == PayrollStatus.PROCESSED) return false;
 
             long expectedVersion = entry.getVersion();
-            markProcessed(entry, processedBy);
+            markProcessed(entry);
 
             if (updateIfVersionMatch(entry, expectedVersion)) {
                 return true;
@@ -197,12 +175,8 @@ public class PayrollEntryRepository extends CsvRepository<PayrollEntry> {
         List<PayrollEntry> all = readAllLines();
         for (int i = 0; i < all.size(); i++) {
             PayrollEntry current = all.get(i);
-            if (!current.getId().equals(updated.getId())) {
-                continue;
-            }
-            if (current.getVersion() != expectedVersion) {
-                return false;
-            }
+            if (!current.getId().equals(updated.getId())) continue;
+            if (current.getVersion() != expectedVersion) return false;
             all.set(i, updated);
             writeAllLines(all);
             return true;
@@ -212,7 +186,10 @@ public class PayrollEntryRepository extends CsvRepository<PayrollEntry> {
 
     // ==================== HELPERS ====================
 
-    private static PayrollEntry findInList(List<PayrollEntry> entries, String entryId) {
+    /**
+     * Tìm entry trong list theo entryId — instance method thay vì static.
+     */
+    private PayrollEntry findInList(List<PayrollEntry> entries, String entryId) {
         for (PayrollEntry entry : entries) {
             if (entry.getId().equals(entryId)) {
                 return entry;
@@ -221,12 +198,15 @@ public class PayrollEntryRepository extends CsvRepository<PayrollEntry> {
         return null;
     }
 
-    private static void markProcessed(PayrollEntry entry, String processedBy) {
+    /**
+     * Đánh dấu entry là đã xử lý — instance method thay vì static.
+     */
+    private void markProcessed(PayrollEntry entry) {
         entry.setStatus(PayrollStatus.PROCESSED);
         entry.setVersion(entry.getVersion() + 1);
     }
 
-    private static void sleepWithBackoff(int attempt) {
+    private void sleepWithBackoff(int attempt) {
         try {
             Thread.sleep(OPTIMISTIC_BASE_BACKOFF_MS * (1L << attempt));
         } catch (InterruptedException e) {
@@ -237,9 +217,7 @@ public class PayrollEntryRepository extends CsvRepository<PayrollEntry> {
     private Set<String> loadEmployeeIdsByDepartment(String deptId) {
         Set<String> ids = new HashSet<>();
         File empFile = new File(EMPLOYEES_PATH);
-        if (!empFile.exists()) {
-            return ids;
-        }
+        if (!empFile.exists()) return ids;
 
         try (BufferedReader reader = new BufferedReader(new FileReader(empFile))) {
             reader.readLine(); // skip header
