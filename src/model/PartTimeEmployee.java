@@ -5,22 +5,22 @@ public class PartTimeEmployee extends Employee {
     }
 
     public PartTimeEmployee(String id,
-            long version,
-            String name,
-            String email,
-            String departmentId,
-            double baseSalary) {
-
-        super(id, version, name, email,
-                departmentId, baseSalary);
-
+                            long version,
+                            String name,
+                            String email,
+                            String departmentId,
+                            double baseSalary) {
+        super(id, version, name, email, departmentId, baseSalary);
         setEmploymentType(EmployeeType.PARTTIME);
     }
 
     @Override
-    public double calculateSalary(
-            AttendanceRecord attendance,
-            PayrollRule rule) {
+    public double calculateSalary(AttendanceRecord attendance, PayrollRule rule) {
+        validateAttendance(attendance);
+
+        if (rule == null) {
+            throw new IllegalArgumentException("Payroll rule cannot be null.");
+        }
 
         double base = getBaseSalary()
                 * attendance.getWorkDays()
@@ -32,6 +32,8 @@ public class PartTimeEmployee extends Employee {
                 * attendance.getOvertimeHours()
                 * rule.getOvertimeMultiplier();
 
-        return base + overtime;
+        double gross = base + overtime;
+
+        return roundMoney(Math.max(0.0, gross));
     }
 }
