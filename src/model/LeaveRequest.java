@@ -1,4 +1,3 @@
-
 import java.time.LocalDate;
 
 public class LeaveRequest extends BaseEntity {
@@ -11,18 +10,16 @@ public class LeaveRequest extends BaseEntity {
     private LeaveStatus status;
 
     // ── Thêm cho dự án ──────────────────────────
-    private String employeeId; // biết đơn này của nhân viên nào
-    private String approvedBy; // hrId đã duyệt/từ chối
+    private String employeeId;
+    private String approvedBy;
 
     // ==================== CONSTRUCTORS ====================
 
-    /** Từ diagram — status mặc định PENDING */
     public LeaveRequest() {
         super(null, 0);
         this.status = LeaveStatus.PENDING;
     }
 
-    /** Từ diagram — giữ nguyên */
     public LeaveRequest(String leaveId,
             LeaveType leaveType,
             LocalDate startDate,
@@ -37,7 +34,6 @@ public class LeaveRequest extends BaseEntity {
         this.status = status;
     }
 
-    /** Thêm — constructor đầy đủ cho dự án */
     public LeaveRequest(String leaveId, String employeeId,
             LeaveType leaveType,
             LocalDate startDate, LocalDate endDate,
@@ -123,7 +119,6 @@ public class LeaveRequest extends BaseEntity {
 
     // ==================== BUSINESS METHODS — từ diagram ====================
 
-    /** Từ diagram — giữ nguyên, thêm ghi approvedBy */
     public void approve() {
         if (this.status != LeaveStatus.PENDING) {
             throw new IllegalStateException(
@@ -132,7 +127,6 @@ public class LeaveRequest extends BaseEntity {
         this.status = LeaveStatus.APPROVED;
     }
 
-    /** Từ diagram — giữ nguyên, thêm ghi approvedBy */
     public void reject() {
         if (this.status != LeaveStatus.PENDING) {
             throw new IllegalStateException(
@@ -141,14 +135,12 @@ public class LeaveRequest extends BaseEntity {
         this.status = LeaveStatus.REJECTED;
     }
 
-    /** Thêm — tính số ngày nghỉ */
     public int getDays() {
-        if (startDate == null || endDate == null)
-            return 0;
+        if (startDate == null || endDate == null) return 0;
         return (int) (endDate.toEpochDay() - startDate.toEpochDay()) + 1;
     }
 
-    // ==================== CSV — thêm cho dự án ====================
+    // ==================== CSV ====================
 
     public String getCsvHeader() {
         return "leaveId,employeeId,leaveType,startDate,endDate,reason,status,approvedBy";
@@ -169,7 +161,7 @@ public class LeaveRequest extends BaseEntity {
 
     @Override
     public void fromCsvLine(String line) {
-        String[] p = line.split(",");
+        String[] p = line.split(",", -1);
         if (p.length >= 8) {
             setId(p[0].trim());
             this.employeeId = p[1].trim();
@@ -182,15 +174,8 @@ public class LeaveRequest extends BaseEntity {
         }
     }
 
-    public static LeaveRequest fromCsvLineStatic(String line) {
-        LeaveRequest lr = new LeaveRequest();
-        lr.fromCsvLine(line);
-        return lr;
-    }
+    // ==================== toString ====================
 
-    // ==================== toString — từ diagram ====================
-
-    /** Từ diagram — giữ nguyên code bạn */
     @Override
     public String toString() {
         return "LeaveRequest{" +
