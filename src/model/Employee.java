@@ -3,7 +3,7 @@ public abstract class Employee extends BaseEntity {
     private String email;
     private String departmentId;
     private EmployeeType employmentType = EmployeeType.FULLTIME;
-    private double baseSalary = 0.0; // monthly base salary
+    private double baseSalary = 0.0;
 
     public Employee() {
     }
@@ -16,12 +16,11 @@ public abstract class Employee extends BaseEntity {
     }
 
     public Employee(String id,
-            long version,
-            String name,
-            String email,
-            String departmentId,
-            double baseSalary) {
-
+                    long version,
+                    String name,
+                    String email,
+                    String departmentId,
+                    double baseSalary) {
         super(id, version);
         this.name = name;
         this.email = email;
@@ -72,10 +71,33 @@ public abstract class Employee extends BaseEntity {
         this.baseSalary = baseSalary;
     }
 
+    /**
+     * Bắt buộc attendance phải thuộc đúng nhân viên hiện tại.
+     * Tránh lỗi lấy AttendanceRecord của E002 để tính lương cho E001.
+     */
+    protected void validateAttendance(AttendanceRecord attendance) {
+        if (attendance == null) {
+            throw new IllegalArgumentException("Attendance record cannot be null.");
+        }
+
+        if (attendance.getEmployeeId() == null || !attendance.getEmployeeId().equals(getId())) {
+            throw new IllegalArgumentException(
+                    "Attendance record does not belong to employee " + getId());
+        }
+    }
+
+    protected double roundMoney(double value) {
+        return Math.round(value * 100.0) / 100.0;
+    }
+
     @Override
     public String toCsvLine() {
-        return String.format("%s,%d,%s,%s,%s,%s,%.2f",
-                getId(), getVersion(), name, email, departmentId,
+        return String.format(java.util.Locale.US, "%s,%d,%s,%s,%s,%s,%.2f",
+                getId(),
+                getVersion(),
+                name,
+                email,
+                departmentId,
                 employmentType != null ? employmentType.name() : EmployeeType.FULLTIME.name(),
                 baseSalary);
     }
@@ -83,6 +105,7 @@ public abstract class Employee extends BaseEntity {
     @Override
     public void fromCsvLine(String line) {
         String[] parts = line.split(",");
+
         if (parts.length >= 7) {
             setId(parts[0].trim());
             setVersion(Long.parseLong(parts[1].trim()));
@@ -101,8 +124,12 @@ public abstract class Employee extends BaseEntity {
             this.baseSalary = getBaseSalary();
         }
     }
-     public abstract double calculateSalary(
+
+    /**
+     * Đa hình:
+     * FullTimeEmployee và PartTimeEmployee sẽ override hàm này.
+     */
+    public abstract double calculateSalary(
             AttendanceRecord attendance,
             PayrollRule rule);
 }
-
