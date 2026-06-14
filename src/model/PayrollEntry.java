@@ -1,4 +1,3 @@
-
 public class PayrollEntry extends BaseEntity {
 
     private String employeeId;
@@ -59,10 +58,9 @@ public class PayrollEntry extends BaseEntity {
         this.status = status;
     }
 
-    // ==================== BUSINESS METHODS — từ diagram ====================
+    // ==================== BUSINESS METHODS ====================
 
     /**
-     * Từ diagram — giữ nguyên logic bạn.
      * Chốt lương — chỉ được gọi đúng 1 lần.
      */
     public void process() {
@@ -73,14 +71,24 @@ public class PayrollEntry extends BaseEntity {
         setVersion(getVersion() + 1);
     }
 
-    // ==================== CSV — theo schema chính thức ====================
+    // ==================== CSV ====================
 
-    public static String getFullCsvHeader() {
+    public String getCsvHeader() {
         return "id,version,employeeId,netSalary,status";
     }
 
-    public String getCsvHeader() {
-        return getFullCsvHeader();
+    /**
+     * Trích xuất yearMonth từ id của chính entry này.
+     * Ví dụ: PR_E0001_01_2024 -> 2024-01
+     */
+    public String extractYearMonth() {
+        String id = getId();
+        if (id == null) return "";
+        String[] parts = id.split("_");
+        if (parts.length >= 4) {
+            return parts[3] + "-" + parts[2];
+        }
+        return "";
     }
 
     @Override
@@ -93,43 +101,20 @@ public class PayrollEntry extends BaseEntity {
                 status != null ? status.name() : PayrollStatus.PENDING.name());
     }
 
-    public static PayrollEntry parseCsvLine(String line) {
+    @Override
+    public void fromCsvLine(String line) {
         String[] parts = line.split(",");
         if (parts.length < 5) {
             throw new IllegalArgumentException("Invalid payroll entry CSV line: " + line);
         }
-
-        PayrollEntry pe = new PayrollEntry();
-        pe.setId(parts[0].trim());
-        pe.setVersion(Long.parseLong(parts[1].trim()));
-        pe.employeeId = parts[2].trim();
-        pe.netSalary = Double.parseDouble(parts[3].trim());
-        pe.status = PayrollStatus.valueOf(parts[4].trim());
-        return pe;
+        setId(parts[0].trim());
+        setVersion(Long.parseLong(parts[1].trim()));
+        this.employeeId = parts[2].trim();
+        this.netSalary = Double.parseDouble(parts[3].trim());
+        this.status = PayrollStatus.valueOf(parts[4].trim());
     }
 
-    @Override
-    public void fromCsvLine(String line) {
-        PayrollEntry parsed = parseCsvLine(line);
-        setId(parsed.getId());
-        setVersion(parsed.getVersion());
-        this.employeeId = parsed.employeeId;
-        this.netSalary = parsed.netSalary;
-        this.status = parsed.status;
-    }
-
-    public static String extractYearMonthFromId(String id) {
-        if (id == null) {
-            return "";
-        }
-        String[] parts = id.split("_");
-        if (parts.length >= 4) {
-            return parts[3] + "-" + parts[2];
-        }
-        return "";
-    }
-
-    // ==================== toString — từ diagram ====================
+    // ==================== toString ====================
 
     @Override
     public String toString() {
