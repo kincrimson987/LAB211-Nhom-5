@@ -5,8 +5,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Unit test chống double payment — rubric bắt buộc.
- * 2 thread cùng gọi processWithSync() cho E001 → chỉ 1 thread thành công.
+ * Unit test chong double payment - rubric bat buoc.
+ * 2 thread cung goi processWithSync() cho E001 -> chi 1 thread thanh cong.
  */
 public class DoublePaymentTest {
 
@@ -19,7 +19,7 @@ public class DoublePaymentTest {
         PayrollEntryRepository repo = new PayrollEntryRepository(testFile.getAbsolutePath());
         PayrollEntry entry = repo.findByEmployeeAndMonth("E001", "2024-01");
         if (entry == null) {
-            System.err.println("[FAIL] Không tìm thấy entry test cho E001/2024-01");
+            System.err.println("[FAIL] Khong tim thay entry test cho E001/2024-01");
             System.exit(1);
         }
 
@@ -53,19 +53,19 @@ public class DoublePaymentTest {
         PayrollEntry finalEntry = repo.findById(entry.getEntryId());
 
         System.out.println("========================================");
-        System.out.println("  DoublePaymentTest — processWithSync()");
+        System.out.println("  DoublePaymentTest - processWithSync()");
         System.out.println("========================================");
-        System.out.printf("Thread thành công: %d / 2%n", successCount.get());
-        System.out.printf("Số entry PROCESSED của E001 trong CSV: %d%n", processedCount);
-        System.out.printf("Version cuối: %d | Status: %s%n",
+        System.out.printf("Thread thanh cong: %d / 2%n", successCount.get());
+        System.out.printf("So entry PROCESSED cua E001 trong CSV: %d%n", processedCount);
+        System.out.printf("Version cuoi: %d | Status: %s%n",
                 finalEntry.getVersion(), finalEntry.getStatus());
 
         if (successCount.get() == 1 && processedCount == 1
                 && finalEntry.getStatus() == PayrollStatus.PROCESSED) {
-            System.out.println("Thread-1 thành công, Thread-2 bị bỏ qua → 0 double payment ✅");
+            System.out.println("Thread-1 thanh cong, Thread-2 bi bo qua -> 0 double payment OK");
             System.out.println("[PASS] DoublePaymentTest");
         } else {
-            System.err.println("[FAIL] Double payment detected — success="
+            System.err.println("[FAIL] Double payment detected - success="
                     + successCount.get() + ", processed=" + processedCount);
             System.exit(1);
         }
