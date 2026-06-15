@@ -16,11 +16,11 @@ public abstract class Employee extends BaseEntity {
     }
 
     public Employee(String id,
-                    long version,
-                    String name,
-                    String email,
-                    String departmentId,
-                    double baseSalary) {
+            long version,
+            String name,
+            String email,
+            String departmentId,
+            double baseSalary) {
         super(id, version);
         this.name = name;
         this.email = email;
@@ -62,7 +62,7 @@ public abstract class Employee extends BaseEntity {
 
     public double getBaseSalary() {
         if (baseSalary <= 0.0) {
-           return employmentType == EmployeeType.FULLTIME ? 12000000.0 : 8000000.0;
+            return employmentType == EmployeeType.FULLTIME ? 12000000.0 : 8000000.0;
         }
         return baseSalary;
     }
@@ -75,18 +75,42 @@ public abstract class Employee extends BaseEntity {
      * Bắt buộc attendance phải thuộc đúng nhân viên hiện tại.
      * Tránh lỗi lấy AttendanceRecord của E002 để tính lương cho E001.
      */
-    protected void validateAttendance(AttendanceRecord attendance) {
+    /*
+     * protected void validateAttendance(AttendanceRecord attendance) {
+     * if (attendance == null) {
+     * throw new IllegalArgumentException("Attendance record cannot be null.");
+     * }
+     * 
+     * if (attendance.getEmployeeId() == null ||
+     * !attendance.getEmployeeId().equals(getId())) {
+     * throw new IllegalArgumentException(
+     * "Attendance record does not belong to employee " + getId());
+     * }
+     * }
+     * 
+     * protected double roundMoney(double value) {
+     * return Math.round(value * 100.0) / 100.0;
+     * }
+     */
+    public void validateAttendance(
+            AttendanceRecord attendance) {
+
         if (attendance == null) {
-            throw new IllegalArgumentException("Attendance record cannot be null.");
+            throw new IllegalArgumentException(
+                    "Attendance record cannot be null.");
         }
 
-        if (attendance.getEmployeeId() == null || !attendance.getEmployeeId().equals(getId())) {
+        if (attendance.getEmployeeId() == null
+                || !attendance.getEmployeeId().equals(getId())) {
+
             throw new IllegalArgumentException(
-                    "Attendance record does not belong to employee " + getId());
+                    "Attendance record does not belong to employee "
+                            + getId());
         }
     }
 
-    protected double roundMoney(double value) {
+    public double roundMoney(double value) {
+
         return Math.round(value * 100.0) / 100.0;
     }
 
