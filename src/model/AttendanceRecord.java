@@ -96,15 +96,7 @@ public class AttendanceRecord extends BaseEntity {
             this.workDays = Integer.parseInt(parts[4].trim());
             this.overtimeHours = Double.parseDouble(parts[5].trim());
         }
-        // Format cũ: id,version,employeeId,workDays,overtimeHours
-        else if (parts.length >= 5) {
-            setId(parts[0].trim());
-            setVersion(Long.parseLong(parts[1].trim()));
-            this.employeeId = parts[2].trim();
-            this.yearMonth = extractYearMonthFromId(getId());
-            this.workDays = Integer.parseInt(parts[3].trim());
-            this.overtimeHours = Double.parseDouble(parts[4].trim());
-        }
+    
     }
 
     @Override
