@@ -71,27 +71,7 @@ public abstract class Employee extends BaseEntity {
         this.baseSalary = baseSalary;
     }
 
-    /**
-     * Bắt buộc attendance phải thuộc đúng nhân viên hiện tại.
-     * Tránh lỗi lấy AttendanceRecord của E002 để tính lương cho E001.
-     */
-    /*
-     * protected void validateAttendance(AttendanceRecord attendance) {
-     * if (attendance == null) {
-     * throw new IllegalArgumentException("Attendance record cannot be null.");
-     * }
-     * 
-     * if (attendance.getEmployeeId() == null ||
-     * !attendance.getEmployeeId().equals(getId())) {
-     * throw new IllegalArgumentException(
-     * "Attendance record does not belong to employee " + getId());
-     * }
-     * }
-     * 
-     * protected double roundMoney(double value) {
-     * return Math.round(value * 100.0) / 100.0;
-     * }
-     */
+
     public void validateAttendance(
             AttendanceRecord attendance) {
 
