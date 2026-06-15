@@ -62,7 +62,7 @@ public abstract class Employee extends BaseEntity {
 
     public double getBaseSalary() {
         if (baseSalary <= 0.0) {
-            return employmentType == EmployeeType.FULLTIME ? 4000.0 : 2000.0;
+           return employmentType == EmployeeType.FULLTIME ? 12000000.0 : 8000000.0;
         }
         return baseSalary;
     }
