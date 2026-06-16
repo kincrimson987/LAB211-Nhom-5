@@ -3,11 +3,15 @@ import java.util.List;
 
 public class PayrollRunRepository extends CsvRepository<PayrollRun> {
 
-    private static final String DEFAULT_PATH = "data/payroll_runs.csv";
+    /*private static final String DEFAULT_PATH = "data/payroll_runs.csv";
 
     public PayrollRunRepository() {
         this(DEFAULT_PATH);
+    }*/
+    public PayrollRunRepository() {
+        super("data/payroll_runs.csv");
     }
+
 
     public PayrollRunRepository(String filePath) {
         super(filePath);
