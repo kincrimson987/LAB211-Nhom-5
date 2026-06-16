@@ -1,12 +1,15 @@
 
-
-
 public class DepartmentRepository extends CsvRepository<Department> {
 
-    private static final String DEFAULT_PATH = "data/departments.csv";
-
+    /*
+     * private static final String DEFAULT_PATH = "data/departments.csv";
+     * 
+     * public DepartmentRepository() {
+     * this(DEFAULT_PATH);
+     * }
+     */
     public DepartmentRepository() {
-        this(DEFAULT_PATH);
+        super("data/departments.csv");
     }
 
     public DepartmentRepository(String filePath) {
@@ -36,7 +39,8 @@ public class DepartmentRepository extends CsvRepository<Department> {
     }
 
     public Department findByName(String name) {
-        if (name == null) return null;
+        if (name == null)
+            return null;
         String q = name.trim().toLowerCase();
         return findAll().stream()
                 .filter(d -> d.getName() != null && d.getName().trim().toLowerCase().equals(q))
