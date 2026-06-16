@@ -3,10 +3,15 @@ import java.util.List;
 
 public class PayrollRuleRepository extends CsvRepository<PayrollRule> {
 
-    private static final String DEFAULT_PATH = "data/payroll_rules.csv";
-
+    /*
+     * private static final String DEFAULT_PATH = "data/payroll_rules.csv";
+     * 
+     * public PayrollRuleRepository() {
+     * this(DEFAULT_PATH);
+     * }
+     */
     public PayrollRuleRepository() {
-        this(DEFAULT_PATH);
+        super("data/payroll_rules.csv");
     }
 
     public PayrollRuleRepository(String filePath) {
@@ -54,8 +59,7 @@ public class PayrollRuleRepository extends CsvRepository<PayrollRule> {
                 overtimeMultiplier,
                 attendanceBonus,
                 taxRate,
-                taxThreshold
-        );
+                taxThreshold);
     }
 
     public PayrollRule getConfig() {
