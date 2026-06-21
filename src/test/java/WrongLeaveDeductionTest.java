@@ -1,5 +1,4 @@
 
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -152,6 +151,133 @@ public class WrongLeaveDeductionTest {
 
         assertEquals(10, expectedRemaining);
         assertFalse(isWrong, "Expected balance is correct, so wrong deduction should not be detected");
+    }
+
+    @Test
+    @DisplayName("Cannot deduct more leave days than available")
+    public void testDeductMoreThanAvailable() throws Exception {
+
+        File testFile = File.createTempFile("exceed_leave_test_", ".csv");
+        testFile.deleteOnExit();
+
+        setupTestData(testFile);
+
+        LeaveBalanceRepository repo = new LeaveBalanceRepository(testFile.getAbsolutePath());
+
+        boolean success = repo.deductWithSync(
+                "E001",
+                LeaveType.ANNUAL,
+                15);
+
+        LeaveBalance finalBalance = repo.findByEmployeeAndType(
+                "E001",
+                LeaveType.ANNUAL);
+
+        boolean isWrong = finalBalance.getRemainingLeaveDays() != 12
+                || finalBalance.getUsedLeaveDays() != 0;
+
+        System.out.println("======================================");
+        System.out.println("TEST: Deduct More Than Available");
+        System.out.println("Employee ID: E001");
+        System.out.println("Initial leave balance: 12");
+        System.out.println("Requested leave days: 15");
+        System.out.println("Deduction success: " + success);
+        System.out.println("Remaining leave days: " + finalBalance.getRemainingLeaveDays());
+        System.out.println("Used leave days: " + finalBalance.getUsedLeaveDays());
+        System.out.println("Result: " + (!isWrong ? "PASSED" : "FAILED"));
+        System.out.println("======================================");
+
+        assertFalse(success);
+
+        assertEquals(
+                12,
+                finalBalance.getRemainingLeaveDays());
+
+        assertEquals(
+                0,
+                finalBalance.getUsedLeaveDays());
+    }
+
+    @Test
+    @DisplayName("Deduct exactly all remaining leave days")
+    public void testDeductAllRemainingLeave() throws Exception {
+
+        File testFile = File.createTempFile("all_leave_test_", ".csv");
+        testFile.deleteOnExit();
+
+        setupTestData(testFile);
+
+        LeaveBalanceRepository repo = new LeaveBalanceRepository(testFile.getAbsolutePath());
+
+        boolean success = repo.deductWithSync(
+                "E001",
+                LeaveType.ANNUAL,
+                12);
+
+        LeaveBalance finalBalance = repo.findByEmployeeAndType(
+                "E001",
+                LeaveType.ANNUAL);
+
+        boolean isWrong = finalBalance.getRemainingLeaveDays() != 0
+                || finalBalance.getUsedLeaveDays() != 12;
+
+        System.out.println("======================================");
+        System.out.println("TEST: Deduct All Remaining Leave");
+        System.out.println("Employee ID: E001");
+        System.out.println("Initial leave balance: 12");
+        System.out.println("Requested leave days: 12");
+        System.out.println("Deduction success: " + success);
+        System.out.println("Remaining leave days: " + finalBalance.getRemainingLeaveDays());
+        System.out.println("Used leave days: " + finalBalance.getUsedLeaveDays());
+        System.out.println("Result: " + (!isWrong ? "PASSED" : "FAILED"));
+        System.out.println("======================================");
+
+        assertTrue(success);
+
+        assertEquals(
+                0,
+                finalBalance.getRemainingLeaveDays());
+
+        assertEquals(
+                12,
+                finalBalance.getUsedLeaveDays());
+    }
+
+    @Test
+    @DisplayName("Employee does not exist")
+    public void testEmployeeNotFound()
+            throws Exception {
+
+        File testFile = File.createTempFile(
+                "employee_test_",
+                ".csv");
+
+        testFile.deleteOnExit();
+
+        setupTestData(testFile);
+
+        LeaveBalanceRepository repo = new LeaveBalanceRepository(
+                testFile.getAbsolutePath());
+
+        boolean success = repo.deductWithSync(
+                "E999",
+                LeaveType.ANNUAL,
+                3);
+
+        LeaveBalance finalBalance = repo.findByEmployeeAndType(
+                "E999",
+                LeaveType.ANNUAL);
+        System.out.println("======================================");
+        System.out.println("TEST: Employee Not Found");
+        System.out.println("Employee ID: E999");
+        System.out.println("Deduction success: " + success);
+        System.out.println("Employee exists: " + (finalBalance != null));
+        System.out.println("Result: " + (!success ? "PASSED" : "FAILED"));
+        System.out.println("======================================");
+
+        assertFalse(success);
+
+        assertNull(finalBalance);
     }
 
     private int calculateExpectedRemaining(int oldBalance, int leaveDays) {
