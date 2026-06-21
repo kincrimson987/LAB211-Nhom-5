@@ -92,6 +92,8 @@ public class LeaveBalanceRepository extends CsvRepository<LeaveBalance> {
      */
     public boolean deductWithSync(String employeeId, LeaveType leaveType, int days) {
         synchronized ((employeeId + "_" + leaveType.name()).intern()) {
+            if (days <= 0)
+                return false;
             LeaveBalance balance = findByEmployeeAndType(employeeId, leaveType);
             if (balance == null)
                 return false;
