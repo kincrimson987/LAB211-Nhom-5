@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Attendance CSV Repository Test Suite")
 public class AttendanceCsvRepositoryTest {
 
-    private static final String FILE_PATH = "data/attendance.csv";
+    private String FILE_PATH = "data/attendance.csv";
 
     @Test
     @DisplayName("Read attendance.csv with at least 12000 rows")
