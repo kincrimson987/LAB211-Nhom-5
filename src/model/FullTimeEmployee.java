@@ -36,10 +36,7 @@ public class FullTimeEmployee extends Employee {
                 ? rule.getAttendanceBonus()
                 : 0.0;
 
-        /*
-         * Không trừ deduction ở đây nữa.
-         * Vì base đã tính theo số ngày làm thực tế rồi.
-         */
+       
         double gross = base + overtime + bonus;
 
         double tax = gross > rule.getTaxThreshold()

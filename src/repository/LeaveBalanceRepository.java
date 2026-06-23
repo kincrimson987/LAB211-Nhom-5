@@ -11,12 +11,25 @@ import java.util.stream.Collectors;
  */
 public class LeaveBalanceRepository extends CsvRepository<LeaveBalance> {
 
-    private static final String DEFAULT_PATH = "data/leave_balances.csv";
-    private static final int OPTIMISTIC_MAX_RETRIES = 10;
-    private static final long OPTIMISTIC_BASE_BACKOFF_MS = 50L;
+    /*
+     * private static final String DEFAULT_PATH = "data/leave_balances.csv";
+     * 
+     * public LeaveBalanceRepository() {
+     * this(DEFAULT_PATH);
+     * }
+     * 
+     * private static final int OPTIMISTIC_MAX_RETRIES = 10;
+     * private static final long OPTIMISTIC_BASE_BACKOFF_MS = 50L;
+     * 
+     * public LeaveBalanceRepository() {
+     * this(DEFAULT_PATH);
+     * }
+     */
+    private int OPTIMISTIC_MAX_RETRIES = 10;
+    private long OPTIMISTIC_BASE_BACKOFF_MS = 50L;
 
     public LeaveBalanceRepository() {
-        this(DEFAULT_PATH);
+        super("data/leave_balances.csv");
     }
 
     public LeaveBalanceRepository(String filePath) {
@@ -64,8 +77,10 @@ public class LeaveBalanceRepository extends CsvRepository<LeaveBalance> {
      */
     public boolean deductWithNoLock(String employeeId, LeaveType leaveType, int days) {
         LeaveBalance balance = findByEmployeeAndType(employeeId, leaveType);
-        if (balance == null) return false;
-        if (balance.getRemainingLeaveDays() < days) return false;
+        if (balance == null)
+            return false;
+        if (balance.getRemainingLeaveDays() < days)
+            return false;
 
         balance.deductLeave(days);
         update(balance);
@@ -77,9 +92,13 @@ public class LeaveBalanceRepository extends CsvRepository<LeaveBalance> {
      */
     public boolean deductWithSync(String employeeId, LeaveType leaveType, int days) {
         synchronized ((employeeId + "_" + leaveType.name()).intern()) {
+            if (days <= 0)
+                return false;
             LeaveBalance balance = findByEmployeeAndType(employeeId, leaveType);
-            if (balance == null) return false;
-            if (balance.getRemainingLeaveDays() < days) return false;
+            if (balance == null)
+                return false;
+            if (balance.getRemainingLeaveDays() < days)
+                return false;
 
             balance.deductLeave(days);
             update(balance);
@@ -93,8 +112,10 @@ public class LeaveBalanceRepository extends CsvRepository<LeaveBalance> {
     public boolean deductWithOptimistic(String employeeId, LeaveType leaveType, int days) {
         for (int attempt = 0; attempt < OPTIMISTIC_MAX_RETRIES; attempt++) {
             LeaveBalance balance = findByEmployeeAndType(employeeId, leaveType);
-            if (balance == null) return false;
-            if (balance.getRemainingLeaveDays() < days) return false;
+            if (balance == null)
+                return false;
+            if (balance.getRemainingLeaveDays() < days)
+                return false;
 
             long expectedVersion = balance.getVersion();
 
@@ -118,13 +139,15 @@ public class LeaveBalanceRepository extends CsvRepository<LeaveBalance> {
      */
     public boolean deductWithFileLock(String employeeId, LeaveType leaveType, int days) {
         try (RandomAccessFile raf = new RandomAccessFile(getFilePath(), "rw");
-             FileChannel channel = raf.getChannel();
-             FileLock lock = channel.lock()) {
+                FileChannel channel = raf.getChannel();
+                FileLock lock = channel.lock()) {
 
             List<LeaveBalance> all = readAllLines();
             LeaveBalance balance = findInList(all, employeeId, leaveType);
-            if (balance == null) return false;
-            if (balance.getRemainingLeaveDays() < days) return false;
+            if (balance == null)
+                return false;
+            if (balance.getRemainingLeaveDays() < days)
+                return false;
 
             balance.deductLeave(days);
             writeAllLines(all);
@@ -142,8 +165,10 @@ public class LeaveBalanceRepository extends CsvRepository<LeaveBalance> {
         List<LeaveBalance> all = readAllLines();
         for (int i = 0; i < all.size(); i++) {
             LeaveBalance current = all.get(i);
-            if (!current.getBalanceId().equals(updated.getBalanceId())) continue;
-            if (current.getVersion() != expectedVersion) return false;
+            if (!current.getBalanceId().equals(updated.getBalanceId()))
+                continue;
+            if (current.getVersion() != expectedVersion)
+                return false;
             all.set(i, updated);
             writeAllLines(all);
             return true;
@@ -155,8 +180,8 @@ public class LeaveBalanceRepository extends CsvRepository<LeaveBalance> {
      * Tìm balance trong list — instance method thay vì static.
      */
     private LeaveBalance findInList(List<LeaveBalance> balances,
-                                    String employeeId,
-                                    LeaveType leaveType) {
+            String employeeId,
+            LeaveType leaveType) {
         for (LeaveBalance balance : balances) {
             if (balance.getEmployeeId().equals(employeeId)
                     && balance.getLeaveType() == leaveType) {

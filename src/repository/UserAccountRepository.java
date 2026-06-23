@@ -3,10 +3,15 @@ import java.util.List;
 
 public class UserAccountRepository extends CsvRepository<UserAccount> {
 
-    private static final String DEFAULT_PATH = "data/user_accounts.csv";
-
+    /*
+     * private static final String DEFAULT_PATH = "data/user_accounts.csv";
+     * 
+     * public UserAccountRepository() {
+     * this(DEFAULT_PATH);
+     * }
+     */
     public UserAccountRepository() {
-        this(DEFAULT_PATH);
+        super("data/user_accounts.csv");
     }
 
     public UserAccountRepository(String filePath) {

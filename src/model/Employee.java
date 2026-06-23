@@ -16,11 +16,11 @@ public abstract class Employee extends BaseEntity {
     }
 
     public Employee(String id,
-                    long version,
-                    String name,
-                    String email,
-                    String departmentId,
-                    double baseSalary) {
+            long version,
+            String name,
+            String email,
+            String departmentId,
+            double baseSalary) {
         super(id, version);
         this.name = name;
         this.email = email;
@@ -62,7 +62,7 @@ public abstract class Employee extends BaseEntity {
 
     public double getBaseSalary() {
         if (baseSalary <= 0.0) {
-            return employmentType == EmployeeType.FULLTIME ? 4000.0 : 2000.0;
+            return employmentType == EmployeeType.FULLTIME ? 12000000.0 : 8000000.0;
         }
         return baseSalary;
     }
@@ -71,22 +71,25 @@ public abstract class Employee extends BaseEntity {
         this.baseSalary = baseSalary;
     }
 
-    /**
-     * Bắt buộc attendance phải thuộc đúng nhân viên hiện tại.
-     * Tránh lỗi lấy AttendanceRecord của E002 để tính lương cho E001.
-     */
-    protected void validateAttendance(AttendanceRecord attendance) {
+    public void validateAttendance(
+            AttendanceRecord attendance) {
+
         if (attendance == null) {
-            throw new IllegalArgumentException("Attendance record cannot be null.");
+            throw new IllegalArgumentException(
+                    "Attendance record cannot be null.");
         }
 
-        if (attendance.getEmployeeId() == null || !attendance.getEmployeeId().equals(getId())) {
+        if (attendance.getEmployeeId() == null
+                || !attendance.getEmployeeId().equals(getId())) {
+
             throw new IllegalArgumentException(
-                    "Attendance record does not belong to employee " + getId());
+                    "Attendance record does not belong to employee "
+                            + getId());
         }
     }
 
-    protected double roundMoney(double value) {
+    public double roundMoney(double value) {
+
         return Math.round(value * 100.0) / 100.0;
     }
 
@@ -112,7 +115,7 @@ public abstract class Employee extends BaseEntity {
             this.name = parts[2].trim();
             this.email = parts[3].trim();
             this.departmentId = parts[4].trim();
-            this.employmentType = EmployeeType.valueOf(parts[5].trim());
+            this.employmentType = EmployeeType.valueOf(parts[5].trim().toUpperCase());
             this.baseSalary = Double.parseDouble(parts[6].trim());
         } else if (parts.length >= 5) {
             setId(parts[0].trim());

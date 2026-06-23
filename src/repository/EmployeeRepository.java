@@ -6,10 +6,15 @@ import java.util.stream.Collectors;
  */
 public class EmployeeRepository extends CsvRepository<Employee> {
 
-    private static final String DEFAULT_PATH = "data/employees.csv";
-
+    /*
+     * private static final String DEFAULT_PATH = "data/employees.csv";
+     * 
+     * public EmployeeRepository() {
+     * this(DEFAULT_PATH);
+     * }
+     */
     public EmployeeRepository() {
-        this(DEFAULT_PATH);
+        super("data/employees.csv");
     }
 
     public EmployeeRepository(String filePath) {

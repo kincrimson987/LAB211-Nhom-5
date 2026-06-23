@@ -8,14 +8,19 @@ import java.util.stream.Collectors;
  */
 public class LeaveRequestRepository extends CsvRepository<LeaveRequest> {
 
-    private static final String DEFAULT_PATH = "data/leave_requests.csv";
-
+    /*
+     * private static final String DEFAULT_PATH = "data/leave_requests.csv";
+     * 
+     * public LeaveRequestRepository() {
+     * this(DEFAULT_PATH);
+     * }
+     * 
+     * public LeaveRequestRepository(String filePath) {
+     * super(filePath);
+     * }
+     */
     public LeaveRequestRepository() {
-        this(DEFAULT_PATH);
-    }
-
-    public LeaveRequestRepository(String filePath) {
-        super(filePath);
+        super("data/leave_requests.csv");
     }
 
     @Override

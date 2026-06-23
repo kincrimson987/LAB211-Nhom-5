@@ -7,10 +7,15 @@ import java.util.stream.Collectors;
  */
 public class AttendanceRepository extends CsvRepository<AttendanceRecord> {
 
-    private static final String DEFAULT_PATH = "data/attendance.csv";
-
+    /*
+     * private static final String DEFAULT_PATH = "data/attendance.csv";
+     * 
+     * public AttendanceRepository() {
+     * this(DEFAULT_PATH);
+     * }
+     */
     public AttendanceRepository() {
-        this(DEFAULT_PATH);
+        super("data/attendance.csv");
     }
 
     public AttendanceRepository(String filePath) {

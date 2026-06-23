@@ -12,7 +12,7 @@ import java.util.List;
  */
 public abstract class CsvRepository<T> {
 
-    private final String filePath;
+    private String filePath;
 
     public CsvRepository(String filePath) {
         this.filePath = filePath;
