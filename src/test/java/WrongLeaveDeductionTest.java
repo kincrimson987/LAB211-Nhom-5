@@ -83,7 +83,7 @@ public class WrongLeaveDeductionTest {
         assertFalse(isWrong, "No wrong leave deduction should occur when using deductWithSync()");
         assertEquals(expectedRemaining, finalBalance.getRemainingLeaveDays());
         assertEquals(expectedUsed, finalBalance.getUsedLeaveDays());
-        assertTrue(finalBalance.getRemainingLeaveDays() >= 0);
+        assertTrue(finalBalance.getRemainingLeaveDays() >=0 );
     }
 
     @Test
