@@ -23,6 +23,10 @@ public class LeaveRequestRepository extends CsvRepository<LeaveRequest> {
         super("data/leave_requests.csv");
     }
 
+    public LeaveRequestRepository(String filePath) {
+        super(filePath);
+    }
+
     @Override
     public String getHeader() {
         return "leaveId,employeeId,leaveType,startDate,endDate,reason,status,approvedBy";
