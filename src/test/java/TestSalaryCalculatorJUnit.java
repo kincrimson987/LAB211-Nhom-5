@@ -4,6 +4,10 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+/**
+ * Test tính lương gọi trực tiếp qua đa hình (Polymorphism).
+ * Đã bỏ SalaryCalculator — logic tính lương nằm trong FullTimeEmployee / PartTimeEmployee.
+ */
 @DisplayName("Salary Calculator JUnit Test Suite")
 public class TestSalaryCalculatorJUnit {
 
@@ -13,8 +17,8 @@ public class TestSalaryCalculatorJUnit {
     @DisplayName("Full-time employee salary calculation")
     public void testFullTimeSalary() {
         PayrollRule rule = new PayrollRule();
-        SalaryCalculator calculator = new SalaryCalculator();
 
+        // Dùng đa hình: FullTimeEmployee tự tính lương theo công thức riêng
         Employee employee = new FullTimeEmployee(
                 "E001",
                 1,
@@ -32,7 +36,7 @@ public class TestSalaryCalculatorJUnit {
                 10.0
         );
 
-        double actual = calculator.calculate(employee, attendance, rule);
+        double actual = employee.calculateSalary(attendance, rule);
 
         double base = 12_000_000.0;
         double overtime = (12_000_000.0 / 26 / 8) * 10 * 1.5;
@@ -48,8 +52,8 @@ public class TestSalaryCalculatorJUnit {
     @DisplayName("Part-time employee salary calculation")
     public void testPartTimeSalary() {
         PayrollRule rule = new PayrollRule();
-        SalaryCalculator calculator = new SalaryCalculator();
 
+        // Dùng đa hình: PartTimeEmployee tự tính lương theo công thức riêng (không có thuế, không bonus)
         Employee employee = new PartTimeEmployee(
                 "E002",
                 1,
@@ -67,7 +71,7 @@ public class TestSalaryCalculatorJUnit {
                 0.0
         );
 
-        double actual = calculator.calculate(employee, attendance, rule);
+        double actual = employee.calculateSalary(attendance, rule);
 
         double expected = Math.round((8_000_000.0 * 23 / 26) * 100.0) / 100.0;
 
@@ -78,7 +82,6 @@ public class TestSalaryCalculatorJUnit {
     @DisplayName("High salary full-time employee with tax")
     public void testHighSalary() {
         PayrollRule rule = new PayrollRule();
-        SalaryCalculator calculator = new SalaryCalculator();
 
         Employee employee = new FullTimeEmployee(
                 "E003",
@@ -97,7 +100,7 @@ public class TestSalaryCalculatorJUnit {
                 0.0
         );
 
-        double actual = calculator.calculate(employee, attendance, rule);
+        double actual = employee.calculateSalary(attendance, rule);
 
         double gross = 20_000_000.0 + 500_000;
         double expected = Math.round((gross - gross * 0.10) * 100.0) / 100.0;
@@ -109,7 +112,6 @@ public class TestSalaryCalculatorJUnit {
     @DisplayName("Salary must not be negative")
     public void testSalaryNotNegative() {
         PayrollRule rule = new PayrollRule();
-        SalaryCalculator calculator = new SalaryCalculator();
 
         Employee employee = new FullTimeEmployee(
                 "E005",
@@ -128,7 +130,7 @@ public class TestSalaryCalculatorJUnit {
                 0.0
         );
 
-        double actual = calculator.calculate(employee, attendance, rule);
+        double actual = employee.calculateSalary(attendance, rule);
 
         assertEquals(192307.69, actual, EPS);
     }
@@ -137,7 +139,6 @@ public class TestSalaryCalculatorJUnit {
     @DisplayName("Invalid attendance must throw exception")
     public void testInvalidAttendance() {
         PayrollRule rule = new PayrollRule();
-        SalaryCalculator calculator = new SalaryCalculator();
 
         Employee employee = new FullTimeEmployee(
                 "E001",
@@ -148,6 +149,7 @@ public class TestSalaryCalculatorJUnit {
                 12_000_000
         );
 
+        // Attendance có employeeId khác => validateAttendance() sẽ throw exception
         AttendanceRecord wrong = new AttendanceRecord(
                 "A999",
                 1,
@@ -157,7 +159,7 @@ public class TestSalaryCalculatorJUnit {
         );
 
         assertThrows(IllegalArgumentException.class, () -> {
-            calculator.calculate(employee, wrong, rule);
+            employee.calculateSalary(wrong, rule);
         });
     }
 }
