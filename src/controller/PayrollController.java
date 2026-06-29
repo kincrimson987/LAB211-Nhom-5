@@ -1,19 +1,15 @@
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Tuần 5 — PayrollController (NO_LOCK, đơn luồng)
- * tích hợp thêm hàm bổ trợ Tuần 5-6
- */
+
 public class PayrollController {
 
     private final EmployeeRepository employeeRepo;
     private final AttendanceRepository attendanceRepo;
     private final PayrollRuleRepository ruleRepo;
     private final PayrollEntryRepository entryRepo;
-    private ReportView view; // Thêm thuộc tính hỗ trợ View của bạn
+    private ReportView view;
 
-    // Constructor gốc của nhóm (Giữ nguyên)
     public PayrollController(EmployeeRepository employeeRepo,
                              AttendanceRepository attendanceRepo,
                              PayrollRuleRepository ruleRepo,
@@ -24,7 +20,6 @@ public class PayrollController {
         this.entryRepo = entryRepo;
     }
 
-    // Constructor bổ sung phục vụ riêng cho file test của bạn (Tuần 6 MVC)
     public PayrollController(ReportView view) {
         this.employeeRepo = null;
         this.attendanceRepo = null;
@@ -33,9 +28,6 @@ public class PayrollController {
         this.view = view;
     }
 
-    /**
-     * Chạy tính lương cho tất cả nhân viên trong 1 tháng. (Code gốc của nhóm)
-     */
     public List<PayrollEntry> runPayroll(String yearMonth) {
         List<PayrollEntry> results = new ArrayList<>();
         PayrollRule rule = ruleRepo.getConfig();
@@ -71,16 +63,10 @@ public class PayrollController {
         return results;
     }
 
-    /**
-     * Lấy tất cả PayrollEntry đã có. (Code gốc của nhóm)
-     */
     public List<PayrollEntry> getAllEntries() {
         return entryRepo.findAll();
     }
 
-    /**
-     * Lấy PayrollEntry theo tháng. (Code gốc của nhóm)
-     */
     public List<PayrollEntry> getEntriesByMonth(String yearMonth) {
         List<PayrollEntry> all = entryRepo.findAll();
         List<PayrollEntry> result = new ArrayList<>();
@@ -92,17 +78,12 @@ public class PayrollController {
         return result;
     }
 
-    /**
-     * Tìm tên nhân viên theo ID. (Code gốc của nhóm)
-     */
+   
     public Employee findEmployeeById(String employeeId) {
         return employeeRepo.findById(employeeId);
     }
 
-    // =========================================================================
-    // PHẦN CODE TIẾN ĐỘ TUẦN 5-6 CỦA BẠN (Chèn thêm vào cuối để không lỗi nhóm)
-    // =========================================================================
-    
+  
     public int processSingleThreadPayroll(String[] employees) {
         int count = 0;
         for (String emp : employees) {

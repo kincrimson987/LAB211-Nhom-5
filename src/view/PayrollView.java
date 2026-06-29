@@ -1,11 +1,6 @@
 import java.util.List;
 
-/**
- * Tuần 6 — PayrollView (bảng lương ASCII)
- * 
- * View chỉ chịu trách nhiệm HIỂN THỊ dữ liệu.
- * KHÔNG chứa logic tính lương — mọi dữ liệu lấy từ PayrollController.
- */
+
 public class PayrollView {
 
     private final PayrollController payrollController;
@@ -14,9 +9,7 @@ public class PayrollView {
         this.payrollController = payrollController;
     }
 
-    /**
-     * Hiển thị bảng lương của tất cả nhân viên (tất cả tháng).
-     */
+
     public void displayAllEntries() {
         List<PayrollEntry> entries = payrollController.getAllEntries();
         System.out.println();
@@ -24,11 +17,6 @@ public class PayrollView {
         printPayrollTable(entries);
     }
 
-    /**
-     * Hiển thị bảng lương theo tháng.
-     *
-     * @param yearMonth ví dụ: "2024-01"
-     */
     public void displayByMonth(String yearMonth) {
         List<PayrollEntry> entries = payrollController.getEntriesByMonth(yearMonth);
         System.out.println();
@@ -36,10 +24,7 @@ public class PayrollView {
         printPayrollTable(entries);
     }
 
-    /**
-     * In bảng ASCII cho danh sách PayrollEntry.
-     * View KHÔNG tính lương — chỉ lấy dữ liệu đã tính sẵn từ Controller.
-     */
+
     private void printPayrollTable(List<PayrollEntry> entries) {
         if (entries.isEmpty()) {
             System.out.println("Không có dữ liệu lương.");
@@ -67,9 +52,6 @@ public class PayrollView {
         System.out.printf("Tổng số: %d phiếu lương%n", entries.size());
     }
 
-    /**
-     * Hiển thị bảng lương chi tiết (có tên nhân viên).
-     */
     public void displayDetailByMonth(String yearMonth) {
         List<PayrollEntry> entries = payrollController.getEntriesByMonth(yearMonth);
         System.out.println();
@@ -111,17 +93,10 @@ public class PayrollView {
                 entries.size(), formatMoney(totalSalary));
     }
 
-    /**
-     * Format số tiền có dấu phân cách hàng nghìn.
-     * Ví dụ: 12500000.0 -> "12,500,000"
-     */
     private String formatMoney(double amount) {
         return String.format("%,.0f", amount);
     }
 
-    /**
-     * Cắt chuỗi nếu dài hơn maxLen.
-     */
     private String truncate(String text, int maxLen) {
         if (text == null) return "";
         if (text.length() <= maxLen) return text;
