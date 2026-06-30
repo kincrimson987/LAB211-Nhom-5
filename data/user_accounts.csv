@@ -1,0 +1,4 @@
+﻿id,version,username,password,role,active
+U001,1,admin,admin123,ADMIN,true
+U002,1,hr01,hr123,HR,true
+U003,1,emp01,emp123,EMPLOYEE,true

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="PayrollAndLeaveTest" time="0.013" tests="1" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="WrongLeaveDeductionTest" time="0.064" tests="6" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="17"/>
     <property name="sun.cpu.isalist" value="amd64"/>
@@ -57,24 +57,88 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="61.0"/>
   </properties>
-  <testcase name="testPayrollAndLeaveFlowViaController" classname="PayrollAndLeaveTest" time="0.003">
-    <system-out><![CDATA[[Single-Thread] Week 5 File I/O scanning for: E001
-[Single-Thread] Week 5 File I/O scanning for: E002
-[Single-Thread] Week 5 File I/O scanning for: E003
-
-=======================================================
-          PAYROLL SYSTEM - REPORT VIEW (WEEK 5-6)      
-=======================================================
- [CONFIG] Progress Mode  : Week 5 (File I/O) & Week 6 (MVC)
--------------------------------------------------------
- SUMMARY STATISTICS:
-  - Total Employees Processed  : 3
-  - Approved Leave Days        : 3 Days
--------------------------------------------------------
-=======================================================
-
-[Leave Flow] Logic validated -> APPROVED.
-[Leave Flow] Logic validated -> REJECTED.
+  <testcase name="testWrongLeaveDeductionWithTwoThreads" classname="WrongLeaveDeductionTest" time="0.017">
+    <system-out><![CDATA[======================================
+TEST: Detect Wrong Leave Deduction With Two Threads
+Employee ID: E001
+Leave type: ANNUAL
+Initial remaining leave days: 12
+Deduct days per thread: 3
+Threads started: 2
+Successful threads: 2 / 2
+Expected remaining leave days: 6
+Actual remaining leave days: 6
+Expected used leave days: 6
+Actual used leave days: 6
+Final version: 2
+Wrong deduction detected: false
+Result: PASSED
+======================================
+]]></system-out>
+  </testcase>
+  <testcase name="testDeductMoreThanAvailable" classname="WrongLeaveDeductionTest" time="0.005">
+    <system-out><![CDATA[======================================
+TEST: Deduct More Than Available
+Employee ID: E001
+Initial leave balance: 12
+Requested leave days: 15
+Deduction success: false
+Remaining leave days: 12
+Used leave days: 0
+Result: PASSED
+======================================
+]]></system-out>
+  </testcase>
+  <testcase name="testDeductAllRemainingLeave" classname="WrongLeaveDeductionTest" time="0.009">
+    <system-out><![CDATA[======================================
+TEST: Deduct All Remaining Leave
+Employee ID: E001
+Initial leave balance: 12
+Requested leave days: 12
+Deduction success: true
+Remaining leave days: 0
+Used leave days: 12
+Result: PASSED
+======================================
+]]></system-out>
+  </testcase>
+  <testcase name="testCorrectSingleLeaveDeduction" classname="WrongLeaveDeductionTest" time="0.009">
+    <system-out><![CDATA[======================================
+TEST: Correct Single Leave Deduction
+Employee ID: E001
+Leave type: ANNUAL
+Old leave balance: 12
+Leave days requested: 2
+Deduction success: true
+Expected remaining leave days: 10
+Actual remaining leave days: 10
+Expected used leave days: 2
+Actual used leave days: 2
+Wrong deduction detected: false
+Result: PASSED
+======================================
+]]></system-out>
+  </testcase>
+  <testcase name="testCalculateExpectedLeaveBalance" classname="WrongLeaveDeductionTest" time="0.002">
+    <system-out><![CDATA[======================================
+TEST: Calculate Expected Leave Balance
+Old leave balance: 15
+Leave days requested: 5
+Expected remaining leave days: 10
+Actual remaining leave days: 10
+Wrong deduction detected: false
+Result: PASSED
+======================================
+]]></system-out>
+  </testcase>
+  <testcase name="testEmployeeNotFound" classname="WrongLeaveDeductionTest" time="0.01">
+    <system-out><![CDATA[======================================
+TEST: Employee Not Found
+Employee ID: E999
+Deduction success: false
+Employee exists: false
+Result: PASSED
+======================================
 ]]></system-out>
   </testcase>
 </testsuite>

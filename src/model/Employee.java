@@ -128,10 +128,6 @@ public abstract class Employee extends BaseEntity {
         }
     }
 
-    /**
-     * Đa hình:
-     * FullTimeEmployee và PartTimeEmployee sẽ override hàm này.
-     */
     public abstract double calculateSalary(
             AttendanceRecord attendance,
             PayrollRule rule);
