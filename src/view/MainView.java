@@ -1,80 +1,59 @@
-import java.util.List;
+
+/*import java.util.List;
 import java.util.Scanner;
 
-/**
- * MainView — giao diện CLI chính.
- * Cấu trúc 7 khu vực theo Use Case Diagram.
- * View chỉ hiển thị / nhận input — toàn bộ logic ủy thác cho Controller.
- */
 public class MainView {
 
-    // ── ANSI ─────────────────────────────────────────────────────────────
-    private static final String RESET  = "\u001B[0m";
-    private static final String BOLD   = "\u001B[1m";
-    private static final String GREEN  = "\u001B[32m";
-    private static final String CYAN   = "\u001B[36m";
+    private static final String RESET = "\u001B[0m";
+    private static final String BOLD = "\u001B[1m";
+    private static final String GREEN = "\u001B[32m";
+    private static final String CYAN = "\u001B[36m";
     private static final String YELLOW = "\u001B[33m";
-    private static final String RED    = "\u001B[31m";
-    private static final String DIM    = "\u001B[2m";
+    private static final String RED = "\u001B[31m";
+    private static final String DIM = "\u001B[2m";
 
-    // ── Controllers ───────────────────────────────────────────────────────
-    private final AuthController         authController;
-    private final EmployeeController     employeeController;
-    private final DepartmentController   departmentController;
-    private final AttendanceController   attendanceController;
-    private final LeaveController        leaveController;
-    private final PayrollController      payrollController;
-    private final ReportController       reportController;
-    private final SimulationController   simulationController;
+    private final UserAccountRepository userRepo;
+    private final EmployeeController employeeController;
+    private final DepartmentController departmentController;
+    private final AttendanceController attendanceController;
+    private final LeaveController leaveController;
+    private final PayrollController payrollController;
+    private final ReportController reportController;
+    private final SimulationController simulationController;
 
     private final Scanner scanner;
+    private AuthController currentSession = null;
 
-    /** Tài khoản đang đăng nhập (null = chưa login). */
-    private UserAccount currentUser = null;
-
-    // ─────────────────────────────────────────
-    // CONSTRUCTOR
-    // ─────────────────────────────────────────
-
-    public MainView(AuthController authController,
-                    EmployeeController employeeController,
-                    DepartmentController departmentController,
-                    AttendanceController attendanceController,
-                    LeaveController leaveController,
-                    PayrollController payrollController,
-                    ReportController reportController,
-                    SimulationController simulationController) {
-        this.authController       = authController;
-        this.employeeController   = employeeController;
+    public MainView(UserAccountRepository userRepo,
+            EmployeeController employeeController,
+            DepartmentController departmentController,
+            AttendanceController attendanceController,
+            LeaveController leaveController,
+            PayrollController payrollController,
+            ReportController reportController,
+            SimulationController simulationController) {
+        this.userRepo = userRepo;
+        this.employeeController = employeeController;
         this.departmentController = departmentController;
         this.attendanceController = attendanceController;
-        this.leaveController      = leaveController;
-        this.payrollController    = payrollController;
-        this.reportController     = reportController;
+        this.leaveController = leaveController;
+        this.payrollController = payrollController;
+        this.reportController = reportController;
         this.simulationController = simulationController;
         this.scanner = new Scanner(System.in);
     }
 
-    // ─────────────────────────────────────────
-    // ENTRY POINT
-    // ─────────────────────────────────────────
-
     public void run() {
         printBanner();
-
-        // Bắt buộc login trước khi vào Main Menu
         if (!handleLogin()) {
-            printError("Đăng nhập thất bại. Thoát chương trình.");
+            printError("Login failed. Exiting.");
             scanner.close();
             return;
         }
-
         boolean running = true;
         while (running) {
             printMainMenu();
-            String choice = prompt("Choose").trim();
-
-            switch (choice) {
+            switch (prompt("Choose").trim()) {
                 case "1" -> handleLogin();
                 case "2" -> showEmployeeManagement();
                 case "3" -> showAttendanceManagement();
@@ -83,13 +62,12 @@ public class MainView {
                 case "6" -> showReports();
                 case "7" -> showSyncAndSimulation();
                 case "0" -> {
-                    printSuccess("Goodbye! / Tạm biệt!");
+                    printSuccess("Goodbye!");
                     running = false;
                 }
-                default  -> printError("Invalid choice. Please try again.");
+                default -> printError("Invalid choice.");
             }
         }
-
         scanner.close();
     }
 
@@ -99,17 +77,14 @@ public class MainView {
 
     private boolean handleLogin() {
         printSectionHeader("LOGIN");
-
         int attempts = 0;
         while (attempts < 3) {
             String username = prompt("Username");
-            String password = promptPassword("Password");
-
+            String password = prompt("Password");
             try {
-                UserAccount user = authController.login(username, password);
-                this.currentUser = user;
-                printSuccess("Login successful! Welcome, " + user.getUsername()
-                        + " [" + user.getRole() + "]");
+                currentSession = AuthController.login(userRepo, username, password);
+                printSuccess("Welcome, " + currentSession.getUsername()
+                        + " [" + currentSession.getRole() + "]");
                 return true;
             } catch (IllegalArgumentException | IllegalStateException ex) {
                 attempts++;
@@ -117,7 +92,6 @@ public class MainView {
                         + (attempts < 3 ? " (" + (3 - attempts) + " attempts left)" : ""));
             }
         }
-
         return false;
     }
 
@@ -128,60 +102,46 @@ public class MainView {
     private void showEmployeeManagement() {
         boolean back = false;
         while (!back) {
-            printSubMenu("EMPLOYEE MANAGEMENT", new String[]{
-                "Add Employee",
-                "Update Employee",
-                "Delete Employee",
-                "Search Employee",
-                "View Employee Detail",
-                "---",
-                "Add Department",
-                "Update Department",
-                "Delete Department",
-                "Search Department",
-                "View Departments",
-                "---",
-                "Save CSV Data",
-                "Load CSV Data",
-                "Generate Test Dataset"
+            printSubMenu("EMPLOYEE MANAGEMENT", new String[] {
+                    "Add Employee", "Update Employee", "Delete Employee",
+                    "Search Employee", "View Employee Detail", "---",
+                    "Add Department", "Update Department", "Delete Department",
+                    "Search Department", "View Departments", "---",
+                    "Save CSV Data", "Load CSV Data", "Generate Test Dataset"
             });
-
             switch (prompt("Choose").trim()) {
-                case "1"  -> handleAddEmployee();
-                case "2"  -> handleUpdateEmployee();
-                case "3"  -> handleDeleteEmployee();
-                case "4"  -> handleSearchEmployee();
-                case "5"  -> handleViewEmployeeDetail();
-                case "6"  -> handleAddDepartment();
-                case "7"  -> handleUpdateDepartment();
-                case "8"  -> handleDeleteDepartment();
-                case "9"  -> handleSearchDepartment();
+                case "1" -> handleAddEmployee();
+                case "2" -> handleUpdateEmployee();
+                case "3" -> handleDeleteEmployee();
+                case "4" -> handleSearchEmployee();
+                case "5" -> handleViewEmployeeDetail();
+                case "6" -> handleAddDepartment();
+                case "7" -> handleUpdateDepartment();
+                case "8" -> handleDeleteDepartment();
+                case "9" -> handleSearchDepartment();
                 case "10" -> handleViewDepartments();
-                case "11" -> handleSaveCsv();
-                case "12" -> handleLoadCsv();
-                case "13" -> handleGenerateTestDataset();
-                case "0"  -> back = true;
-                default   -> printError("Invalid choice.");
+                case "11" -> printInfo("Data is auto-saved via Repository.");
+                case "12" -> printInfo("Data is auto-loaded via Repository.");
+                case "13" -> printInfo("Generate test dataset: not implemented yet.");
+                case "0" -> back = true;
+                default -> printError("Invalid choice.");
             }
         }
     }
 
-    // ── Employee CRUD ─────────────────────────
-
     private void handleAddEmployee() {
         printSectionHeader("ADD EMPLOYEE");
         try {
-            String name         = prompt("Full name");
-            String email        = prompt("Email");
+            String name = prompt("Full name");
+            String email = prompt("Email");
             String departmentId = prompt("Department ID");
-            System.out.println("  Employment type:  1. FULLTIME   2. PARTTIME");
-            EmployeeType type   = prompt("Choose").equals("2")
-                                  ? EmployeeType.PARTTIME : EmployeeType.FULLTIME;
-            double baseSalary   = promptDouble("Base salary (VND, 0 = default)");
-
-            Employee created = employeeController.addEmployee(
-                    name, email, departmentId, type, baseSalary);
-            printSuccess("Employee added successfully!");
+            System.out.println("  1. FULLTIME   2. PARTTIME");
+            EmployeeType type = prompt("Choose").equals("2")
+                    ? EmployeeType.PARTTIME
+                    : EmployeeType.FULLTIME;
+            double baseSalary = promptDouble("Base salary (VND, 0 = default)");
+            Employee created = employeeController.addEmployee(name, email, departmentId, type, baseSalary);
+            printSuccess("Employee added!");
             printEmployeeDetail(created);
         } catch (IllegalArgumentException ex) {
             printError(ex.getMessage());
@@ -194,15 +154,13 @@ public class MainView {
         try {
             printEmployeeDetail(employeeController.getEmployeeById(id));
             printInfo("Press Enter to keep current value.");
-            String name         = promptOptional("New name");
-            String email        = promptOptional("New email");
+            String name = promptOptional("New name");
+            String email = promptOptional("New email");
             String departmentId = promptOptional("New department ID");
-            String salaryStr    = promptOptional("New base salary");
-            double salary       = (salaryStr != null) ? parseDouble(salaryStr) : -1;
-
-            Employee updated = employeeController.updateEmployee(
-                    id, name, email, departmentId, salary);
-            printSuccess("Updated successfully!");
+            String salaryStr = promptOptional("New base salary");
+            double salary = salaryStr != null ? parseDoubleVal(salaryStr, -1) : -1;
+            Employee updated = employeeController.updateEmployee(id, name, email, departmentId, salary);
+            printSuccess("Updated!");
             printEmployeeDetail(updated);
         } catch (IllegalArgumentException ex) {
             printError(ex.getMessage());
@@ -216,7 +174,7 @@ public class MainView {
             printEmployeeDetail(employeeController.getEmployeeById(id));
             if (confirm("Confirm delete?")) {
                 employeeController.deleteEmployee(id);
-                printSuccess("Employee " + id + " deleted.");
+                printSuccess("Deleted.");
             } else {
                 printInfo("Cancelled.");
             }
@@ -227,27 +185,19 @@ public class MainView {
 
     private void handleSearchEmployee() {
         printSectionHeader("SEARCH EMPLOYEE");
-        System.out.println("  1. Search by name");
-        System.out.println("  2. Search by department");
-        System.out.println("  3. Filter by type (FULLTIME/PARTTIME)");
-
+        System.out.println("  1. By name   2. By department   3. By type");
         switch (prompt("Choose").trim()) {
-            case "1" -> {
-                String kw = prompt("Keyword");
-                List<Employee> res = employeeController.searchByName(kw);
-                printEmployeeTable(res);
-            }
+            case "1" -> printEmployeeTable(employeeController.searchByName(prompt("Keyword")));
             case "2" -> {
-                String deptId = prompt("Department ID");
                 try {
-                    List<Employee> res = employeeController.getEmployeesByDepartment(deptId);
-                    printEmployeeTable(res);
-                } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
+                    printEmployeeTable(employeeController.getEmployeesByDepartment(prompt("Department ID")));
+                } catch (IllegalArgumentException ex) {
+                    printError(ex.getMessage());
+                }
             }
             case "3" -> {
                 System.out.println("  1. FULLTIME   2. PARTTIME");
-                EmployeeType type = prompt("Choose").equals("2")
-                                    ? EmployeeType.PARTTIME : EmployeeType.FULLTIME;
+                EmployeeType type = prompt("Choose").equals("2") ? EmployeeType.PARTTIME : EmployeeType.FULLTIME;
                 printEmployeeTable(employeeController.getEmployeesByType(type));
             }
             default -> printError("Invalid choice.");
@@ -256,22 +206,19 @@ public class MainView {
 
     private void handleViewEmployeeDetail() {
         printSectionHeader("VIEW EMPLOYEE DETAIL");
-        String id = prompt("Employee ID");
         try {
-            printEmployeeDetail(employeeController.getEmployeeById(id));
+            printEmployeeDetail(employeeController.getEmployeeById(prompt("Employee ID")));
         } catch (IllegalArgumentException ex) {
             printError(ex.getMessage());
         }
     }
 
-    // ── Department CRUD ───────────────────────
-
     private void handleAddDepartment() {
         printSectionHeader("ADD DEPARTMENT");
         try {
-            String name      = prompt("Department name");
-            String managerId = promptOptional("Manager employee ID (Enter to skip)");
-            Department dept  = departmentController.addDepartment(name, managerId);
+            String name = prompt("Department name");
+            String managerId = promptOptional("Manager ID (Enter to skip)");
+            Department dept = departmentController.addDepartment(name, managerId);
             printSuccess("Department added: " + dept.getId() + " — " + dept.getName());
         } catch (IllegalArgumentException ex) {
             printError(ex.getMessage());
@@ -282,13 +229,10 @@ public class MainView {
         printSectionHeader("UPDATE DEPARTMENT");
         String id = prompt("Department ID");
         try {
-            Department d = departmentController.getDepartmentById(id);
-            printDepartmentDetail(d);
-            printInfo("Press Enter to keep current value.");
-            String name      = promptOptional("New name");
-            String managerId = promptOptional("New manager ID");
-            Department updated = departmentController.updateDepartment(id, name, managerId);
-            printSuccess("Updated: " + updated.getId() + " — " + updated.getName());
+            printDepartmentDetail(departmentController.getDepartmentById(id));
+            Department updated = departmentController.updateDepartment(
+                    id, promptOptional("New name"), promptOptional("New manager ID"));
+            printSuccess("Updated: " + updated.getName());
         } catch (IllegalArgumentException ex) {
             printError(ex.getMessage());
         }
@@ -298,14 +242,12 @@ public class MainView {
         printSectionHeader("DELETE DEPARTMENT");
         String id = prompt("Department ID");
         try {
-            Department d = departmentController.getDepartmentById(id);
-            printDepartmentDetail(d);
+            printDepartmentDetail(departmentController.getDepartmentById(id));
             if (confirm("Confirm delete?")) {
                 departmentController.deleteDepartment(id);
-                printSuccess("Department " + id + " deleted.");
-            } else {
+                printSuccess("Deleted.");
+            } else
                 printInfo("Cancelled.");
-            }
         } catch (IllegalArgumentException ex) {
             printError(ex.getMessage());
         }
@@ -313,14 +255,12 @@ public class MainView {
 
     private void handleSearchDepartment() {
         printSectionHeader("SEARCH DEPARTMENT");
-        String keyword = prompt("Department name keyword");
         try {
-            List<Department> list = departmentController.searchByName(keyword);
-            if (list.isEmpty()) {
+            List<Department> list = departmentController.searchByName(prompt("Keyword"));
+            if (list.isEmpty())
                 printInfo("No departments found.");
-                return;
-            }
-            printDepartmentTable(list);
+            else
+                printDepartmentTable(list);
         } catch (IllegalArgumentException ex) {
             printError(ex.getMessage());
         }
@@ -329,49 +269,11 @@ public class MainView {
     private void handleViewDepartments() {
         printSectionHeader("ALL DEPARTMENTS");
         List<Department> list = departmentController.getAllDepartments();
-        if (list.isEmpty()) {
+        if (list.isEmpty())
             printInfo("No departments yet.");
-            return;
-        }
-        printDepartmentTable(list);
-        printInfo("Total: " + list.size() + " departments.");
-    }
-
-    // ── CSV Data ──────────────────────────────
-
-    private void handleSaveCsv() {
-        printSectionHeader("SAVE CSV DATA");
-        try {
-            employeeController.saveCsv();
-            departmentController.saveCsv();
-            printSuccess("All data saved to CSV files.");
-        } catch (Exception ex) {
-            printError("Save failed: " + ex.getMessage());
-        }
-    }
-
-    private void handleLoadCsv() {
-        printSectionHeader("LOAD CSV DATA");
-        try {
-            employeeController.loadCsv();
-            departmentController.loadCsv();
-            printSuccess("Data loaded from CSV files.");
-        } catch (Exception ex) {
-            printError("Load failed: " + ex.getMessage());
-        }
-    }
-
-    private void handleGenerateTestDataset() {
-        printSectionHeader("GENERATE TEST DATASET");
-        String countStr = promptOptional("Number of employees to generate (Enter = 50)");
-        int count = (countStr != null) ? parseInt(countStr, 50) : 50;
-        if (confirm("Generate " + count + " test employees?")) {
-            try {
-                employeeController.generateTestDataset(count);
-                printSuccess("Generated " + count + " test employees.");
-            } catch (Exception ex) {
-                printError("Generation failed: " + ex.getMessage());
-            }
+        else {
+            printDepartmentTable(list);
+            printInfo("Total: " + list.size());
         }
     }
 
@@ -382,17 +284,1935 @@ public class MainView {
     private void showAttendanceManagement() {
         boolean back = false;
         while (!back) {
-            printSubMenu("ATTENDANCE MANAGEMENT", new String[]{
-                "Check In",
-                "Check Out",
-                "View Attendance Record",
-                "View Attendance Summary",
-                "Submit Attendance Adjustment Request",
-                "Review Attendance Adjustment Request",
-                "Approve Attendance Adjustment",
-                "Reject Attendance Adjustment"
+            printSubMenu("ATTENDANCE MANAGEMENT", new String[] {
+                    "Check In", "Check Out", "View Attendance Record",
+                    "View Attendance Summary", "Submit Attendance Adjustment Request",
+                    "Review Attendance Adjustment Request",
+                    "Approve Attendance Adjustment", "Reject Attendance Adjustment"
             });
+            switch (prompt("Choose").trim()) {
+                case "1" -> handleCheckIn();
+                case "2" -> handleCheckOut();
+                case "3" -> handleViewAttendanceRecord();
+                case "4" -> handleViewAttendanceSummary();
+                case "5" -> handleSubmitAttendanceAdjustment();
+                case "6" -> handleReviewAttendanceAdjustment();
+                case "7" -> handleApproveAttendanceAdjustment();
+                case "8" -> handleRejectAttendanceAdjustment();
+                case "0" -> back = true;
+                default -> printError("Invalid choice.");
+            }
+        }
+    }
 
+    private void handleCheckIn() {
+        printSectionHeader("CHECK IN");
+        try {
+            AttendanceRecord r = attendanceController.checkIn(prompt("Employee ID"));
+            printSuccess("Checked in. Work days: " + r.getWorkDays());
+        } catch (IllegalArgumentException ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleCheckOut() {
+        printSectionHeader("CHECK OUT");
+        try {
+            AttendanceRecord r = attendanceController.checkOut(
+                    prompt("Employee ID"), promptDouble("Overtime hours (0 if none)"));
+            printSuccess("Checked out. Overtime: " + r.getOvertimeHours() + "h");
+        } catch (IllegalArgumentException ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleViewAttendanceRecord() {
+        printSectionHeader("VIEW ATTENDANCE RECORD");
+        try {
+            AttendanceRecord r = attendanceController.getRecord(
+                    prompt("Employee ID"), prompt("Year-Month (YYYY-MM)"));
+            if (r == null)
+                printInfo("No record found.");
+            else
+                printAttendanceDetail(r);
+        } catch (IllegalArgumentException ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleViewAttendanceSummary() {
+        printSectionHeader("VIEW ATTENDANCE SUMMARY");
+        List<AttendanceRecord> list = attendanceController.getSummaryByMonth(prompt("Year-Month (YYYY-MM)"));
+        if (list.isEmpty())
+            printInfo("No records found.");
+        else
+            printAttendanceTable(list);
+    }
+
+    private void handleSubmitAttendanceAdjustment() {
+        printSectionHeader("SUBMIT ATTENDANCE ADJUSTMENT");
+        try {
+            String empId = prompt("Employee ID");
+            String yearMonth = prompt("Year-Month (YYYY-MM)");
+
+            // Hiển thị số liệu hiện tại để HR biết đang sửa từ đâu
+            AttendanceRecord current = attendanceController.getRecord(empId, yearMonth);
+            int curWorkDays = (current != null) ? current.getWorkDays() : 0;
+            double curOvertime = (current != null) ? current.getOvertimeHours() : 0;
+
+            System.out.println("  Current: Work Days = " + curWorkDays
+                    + ", Overtime = " + curOvertime + "h");
+            printInfo("Press Enter to keep current value.");
+
+            String reason = prompt("Reason");
+
+            String workDaysStr = promptOptional("New work days [" + curWorkDays + "]");
+            int workDays = (workDaysStr != null) ? parseInt(workDaysStr, curWorkDays) : curWorkDays;
+
+            String overtimeStr = promptOptional("New overtime hours [" + curOvertime + "]");
+            double overtime = (overtimeStr != null) ? parseDoubleVal(overtimeStr, curOvertime) : curOvertime;
+
+            attendanceController.submitAdjustmentRequest(empId, yearMonth, reason, workDays, overtime);
+            printSuccess("Adjustment submitted: " + curWorkDays + " → " + workDays + " days");
+        } catch (IllegalArgumentException ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleReviewAttendanceAdjustment() {
+        printSectionHeader("REVIEW ATTENDANCE ADJUSTMENT");
+        List<AttendanceRecord> list = attendanceController.getPendingAdjustments();
+        if (list.isEmpty())
+            printInfo("No pending adjustments.");
+        else
+            printAttendanceTable(list);
+    }
+
+    private void handleApproveAttendanceAdjustment() {
+        printSectionHeader("APPROVE ATTENDANCE ADJUSTMENT");
+        try {
+            attendanceController.approveAdjustment(
+                    prompt("Record ID"), currentSession.getAccount().getId());
+            printSuccess("Approved.");
+        } catch (IllegalArgumentException ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleRejectAttendanceAdjustment() {
+        printSectionHeader("REJECT ATTENDANCE ADJUSTMENT");
+        try {
+            attendanceController.rejectAdjustment(
+                    prompt("Record ID"), currentSession.getAccount().getId(), prompt("Reason"));
+            printSuccess("Rejected.");
+        } catch (IllegalArgumentException ex) {
+            printError(ex.getMessage());
+        }
+    }
+    // ═════════════════════════════════════════
+    // 4. LEAVE MANAGEMENT
+    // ═════════════════════════════════════════
+
+    private void showLeaveManagement() {
+        boolean back = false;
+        while (!back) {
+            printSubMenu("LEAVE MANAGEMENT", new String[] {
+                    "Submit Leave Request", "Approve Leave Request",
+                    "Reject Leave Request", "View Leave Balance"
+            });
+            switch (prompt("Choose").trim()) {
+                case "1" -> handleSubmitLeaveRequest();
+                case "2" -> handleApproveLeaveRequest();
+                case "3" -> handleRejectLeaveRequest();
+                case "4" -> handleViewLeaveBalance();
+                case "0" -> back = true;
+                default -> printError("Invalid choice.");
+            }
+        }
+    }
+
+    private void handleSubmitLeaveRequest() {
+        printSectionHeader("SUBMIT LEAVE REQUEST");
+        try {
+            String empId = prompt("Employee ID");
+            System.out.println("  1. ANNUAL   2. SICK   3. UNPAID");
+            LeaveType type = switch (prompt("Choose")) {
+                case "2" -> LeaveType.SICK;
+                case "3" -> LeaveType.UNPAID;
+                default -> LeaveType.ANNUAL;
+            };
+            // Gọi đúng tên method: submit() thay vì submitLeaveRequest()
+            LeaveRequest req = leaveController.submit(
+                    empId, type,
+                    java.time.LocalDate.parse(prompt("Start date (YYYY-MM-DD)")),
+                    java.time.LocalDate.parse(prompt("End date (YYYY-MM-DD)")),
+                    prompt("Reason"));
+            printSuccess("Submitted: " + req.getLeaveId() + " (" + req.getDays() + " days)");
+        } catch (Exception ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleApproveLeaveRequest() {
+        printSectionHeader("APPROVE LEAVE REQUEST");
+        List<LeaveRequest> pending = leaveController.getPendingRequests();
+        if (pending.isEmpty()) {
+            printInfo("No pending requests.");
+            return;
+        }
+        printLeaveTable(pending);
+        try {
+            // Gọi đúng tên method: approve() với LockMechanism
+            leaveController.approve(prompt("Leave ID"), currentSession.getAccount().getId(),
+                    LockMechanism.NO_LOCK);
+            printSuccess("Approved.");
+        } catch (Exception ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleRejectLeaveRequest() {
+        printSectionHeader("REJECT LEAVE REQUEST");
+        List<LeaveRequest> pending = leaveController.getPendingRequests();
+        if (pending.isEmpty()) {
+            printInfo("No pending requests.");
+            return;
+        }
+        printLeaveTable(pending);
+        try {
+            // Gọi đúng tên method: reject()
+            leaveController.reject(prompt("Leave ID"), currentSession.getAccount().getId());
+            printSuccess("Rejected.");
+        } catch (Exception ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleViewLeaveBalance() {
+        printSectionHeader("VIEW LEAVE BALANCE");
+        try {
+            // Gọi đúng tên method: getBalancesByEmployee()
+            List<LeaveBalance> balances = leaveController.getBalancesByEmployee(prompt("Employee ID"));
+            if (balances.isEmpty()) {
+                printInfo("No balance records found.");
+                return;
+            }
+            System.out.printf(BOLD + "%-15s %-10s %-8s %-8s %-10s%n" + RESET,
+                    "Employee", "Type", "Total", "Used", "Remaining");
+            System.out.println("─".repeat(55));
+            for (LeaveBalance b : balances) {
+                System.out.printf("%-15s %-10s %-8d %-8d %-10d%n",
+                        b.getEmployeeId(), b.getLeaveType(),
+                        b.getTotalLeaveDays(), b.getUsedLeaveDays(), b.getRemainingLeaveDays());
+            }
+        } catch (IllegalArgumentException ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    // ═════════════════════════════════════════
+    // 5. PAYROLL MANAGEMENT
+    // ═════════════════════════════════════════
+
+    private void showPayrollManagement() {
+        boolean back = false;
+        while (!back) {
+            printSubMenu("PAYROLL MANAGEMENT", new String[] {
+                    "Process Monthly Payroll", "View Payroll History", "Configure Payroll Rules"
+            });
+            switch (prompt("Choose").trim()) {
+                case "1" -> handleProcessMonthlyPayroll();
+                case "2" -> handleViewPayrollHistory();
+                case "3" -> handleConfigurePayrollRules();
+                case "0" -> back = true;
+                default -> printError("Invalid choice.");
+            }
+        }
+    }
+
+    private void handleProcessMonthlyPayroll() {
+        printSectionHeader("PROCESS MONTHLY PAYROLL");
+        try {
+            String yearMonth = prompt("Year-Month (YYYY-MM)");
+            printInfo("Processing...");
+            PayrollRun run = payrollController.processMonthlyPayroll(
+                    yearMonth, currentSession.getAccount().getId());
+            printSuccess("Done!");
+            printPayrollRunSummary(run);
+        } catch (Exception ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleViewPayrollHistory() {
+        printSectionHeader("VIEW PAYROLL HISTORY");
+        try {
+            String empId = promptOptional("Employee ID (Enter = all)");
+            List<PayrollEntry> entries = empId != null
+                    ? payrollController.getPayrollByEmployee(empId)
+                    : payrollController.getAllPayrollEntries();
+            if (entries.isEmpty()) {
+                printInfo("No records.");
+                return;
+            }
+            System.out.printf(BOLD + "%-20s %-12s %-18s %-12s%n" + RESET,
+                    "Entry ID", "Employee", "Net Salary (VND)", "Status");
+            System.out.println("─".repeat(65));
+            for (PayrollEntry e : entries) {
+                System.out.printf("%-20s %-12s %-18s %-12s%n",
+                        e.getId(), e.getEmployeeId(),
+                        String.format("%,.0f", e.getNetSalary()), e.getStatus());
+            }
+            System.out.println("─".repeat(65));
+        } catch (Exception ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleConfigurePayrollRules() {
+        printSectionHeader("CONFIGURE PAYROLL RULES");
+        try {
+            PayrollRule cur = payrollController.getPayrollRule();
+            printPayrollRule(cur);
+            printInfo("Press Enter to keep current value.");
+            PayrollRule updated = new PayrollRule(
+                    parseInt(promptOptional("Standard work days [" + cur.getStandardWorkingDays() + "]"),
+                            cur.getStandardWorkingDays()),
+                    parseInt(promptOptional("Hours/day [" + cur.getWorkingHoursPerDay() + "]"),
+                            cur.getWorkingHoursPerDay()),
+                    parseDoubleVal(promptOptional("Overtime multiplier [" + cur.getOvertimeMultiplier() + "]"),
+                            cur.getOvertimeMultiplier()),
+                    parseDoubleVal(promptOptional("Attendance bonus [" + cur.getAttendanceBonus() + "]"),
+                            cur.getAttendanceBonus()),
+                    parseDoubleVal(promptOptional("Tax rate [" + cur.getTaxRate() + "]"), cur.getTaxRate()),
+                    parseDoubleVal(promptOptional("Tax threshold [" + cur.getTaxThreshold() + "]"),
+                            cur.getTaxThreshold()));
+            payrollController.updatePayrollRule(updated);
+            printSuccess("Payroll rules updated!");
+        } catch (Exception ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    // ═════════════════════════════════════════
+    // 6. REPORTS
+    // ═════════════════════════════════════════
+
+    private void showReports() {
+        boolean back = false;
+        while (!back) {
+            printSubMenu("REPORTS", new String[] {
+                    "Generate Payroll Report", "Generate Attendance Report",
+                    "Generate Simulation Comparison Report", "Export CSV Result", "Import CSV Result"
+            });
+            switch (prompt("Choose").trim()) {
+                case "1" -> {
+                    try {
+                        System.out.println(reportController.generatePayrollReport(prompt("Year-Month (YYYY-MM)")));
+                    } catch (Exception ex) {
+                        printError(ex.getMessage());
+                    }
+                }
+                case "2" -> {
+                    try {
+                        System.out.println(reportController.generateAttendanceReport(prompt("Year-Month (YYYY-MM)")));
+                    } catch (Exception ex) {
+                        printError(ex.getMessage());
+                    }
+                }
+                case "3" -> {
+                    try {
+                        System.out.println(reportController.generateSimulationComparisonReport());
+                    } catch (Exception ex) {
+                        printError(ex.getMessage());
+                    }
+                }
+                case "4" -> {
+                    try {
+                        String p = promptOptional("Path (Enter = reports/export.csv)");
+                        reportController.exportCsv(p != null ? p : "reports/export.csv");
+                        printSuccess("Exported.");
+                    } catch (Exception ex) {
+                        printError(ex.getMessage());
+                    }
+                }
+                case "5" -> {
+                    try {
+                        reportController.importCsv(prompt("File path"));
+                        printSuccess("Imported.");
+                    } catch (Exception ex) {
+                        printError(ex.getMessage());
+                    }
+                }
+                case "0" -> back = true;
+                default -> printError("Invalid choice.");
+            }
+        }
+    }
+
+    // ═════════════════════════════════════════
+    // 7. SYNC & SIMULATION
+    // ═════════════════════════════════════════
+
+    private void showSyncAndSimulation() {
+        boolean back = false;
+        while (!back) {
+            printSubMenu("SYNCHRONIZATION & SIMULATION", new String[] {
+                    "Run Payroll Simulation", "Select Sync Mode",
+                    "Measure TPS / Elapsed Time", "Detect Double Payment",
+                    "Detect Wrong Leave Deduction"
+            });
+            switch (prompt("Choose").trim()) {
+                case "1" -> handleRunSimulation();
+                case "2" -> handleSelectSyncMode();
+                case "3" -> handleMeasureTps();
+                case "4" -> {
+                    try {
+                        List<String> s = simulationController.detectDoublePayment();
+                        if (s.isEmpty())
+                            printSuccess("No double payments.");
+                        else {
+                            printError("Double payments: " + s.size());
+                            s.forEach(x -> System.out.println("  ⚠ " + x));
+                        }
+                    } catch (Exception ex) {
+                        printError(ex.getMessage());
+                    }
+                }
+                case "5" -> {
+                    try {
+                        List<String> s = simulationController.detectWrongLeaveDeduction();
+                        if (s.isEmpty())
+                            printSuccess("No wrong deductions.");
+                        else {
+                            printError("Wrong deductions: " + s.size());
+                            s.forEach(x -> System.out.println("  ⚠ " + x));
+                        }
+                    } catch (Exception ex) {
+                        printError(ex.getMessage());
+                    }
+                }
+                case "0" -> back = true;
+                default -> printError("Invalid choice.");
+            }
+        }
+    }
+
+    private void handleRunSimulation() {
+        printSectionHeader("RUN PAYROLL SIMULATION");
+        try {
+            String yearMonth = prompt("Year-Month (YYYY-MM)");
+            int threads = parseInt(promptOptional("Threads (Enter = 10)"), 10);
+            printInfo("Running with " + threads + " threads, mode: " + simulationController.getCurrentSyncMode());
+            PayrollRun run = simulationController.runSimulation(yearMonth, threads);
+            printSuccess("Done!");
+            printPayrollRunSummary(run);
+        } catch (Exception ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleSelectSyncMode() {
+        printSectionHeader("SELECT SYNC MODE");
+        System.out.println("  1. NO_LOCK      2. FILE_LOCK");
+        System.out.println("  3. SYNCHRONIZED 4. OPTIMISTIC");
+        String mode = switch (prompt("Choose")) {
+            case "1" -> "NO_LOCK";
+            case "2" -> "FILE_LOCK";
+            case "3" -> "SYNCHRONIZED";
+            case "4" -> "OPTIMISTIC";
+            default -> null;
+        };
+        if (mode == null) {
+            printError("Invalid choice.");
+            return;
+        }
+        simulationController.setSyncMode(mode);
+        printSuccess("Mode set to: " + mode);
+    }
+
+    private void handleMeasureTps() {
+        printSectionHeader("MEASURE TPS / ELAPSED TIME");
+        PayrollRun r = simulationController.getLatestRun();
+        if (r == null) {
+            printInfo("No simulation run yet.");
+            return;
+        }
+        printPayrollRunSummary(r);
+    }
+
+    // ═════════════════════════════════════════
+    // DISPLAY HELPERS
+    // ═════════════════════════════════════════
+
+    private void printBanner() {
+        System.out.println(BOLD + CYAN);
+        System.out.println("=========================================");
+        System.out.println("  EMPLOYEE PAYROLL MANAGEMENT SYSTEM");
+        System.out.println("=========================================");
+        System.out.println(RESET);
+    }
+
+    private void printMainMenu() {
+        String user = currentSession != null
+                ? DIM + " [" + currentSession.getUsername() + " | " + currentSession.getRole() + "]" + RESET
+                : "";
+        System.out.println(BOLD + "\n=========================================" + user);
+        System.out.println(" EMPLOYEE PAYROLL MANAGEMENT SYSTEM");
+        System.out.println("=========================================");
+        System.out.println("  1. Login\n  2. Employee Management\n  3. Attendance Management");
+        System.out.println("  4. Leave Management\n  5. Payroll Management\n  6. Reports");
+        System.out.println("  7. Synchronization & Simulation\n  ─────────────────────────────");
+        System.out.println("  0. Exit\n=========================================" + RESET);
+    }
+
+    private void printSubMenu(String title, String[] items) {
+        System.out.println(BOLD + "\n========== " + title + " ==========" + RESET);
+        int n = 1;
+        for (String item : items) {
+            if (item.equals("---"))
+                System.out.println("  ----------------------------");
+            else
+                System.out.printf("  %2d. %s%n", n++, item);
+        }
+        System.out.println("   0. Back");
+        System.out.println(BOLD + "═".repeat(title.length() + 22) + RESET);
+    }
+
+    private void printSectionHeader(String title) {
+        System.out.println(BOLD + CYAN + "\n▶ " + title + RESET);
+        System.out.println("─".repeat(45));
+    }
+
+    private void printEmployeeTable(List<Employee> list) {
+        if (list.isEmpty()) {
+            printInfo("No employees found.");
+            return;
+        }
+        System.out.printf(BOLD + "%-12s %-20s %-25s %-10s %-10s%n" + RESET, "ID", "Name", "Email", "Dept", "Type");
+        System.out.println("─".repeat(80));
+        for (Employee e : list)
+            System.out.printf("%-12s %-20s %-25s %-10s %-10s%n",
+                    e.getId(), trunc(e.getName(), 19), trunc(e.getEmail(), 24), e.getDepartmentId(),
+                    e.getEmploymentType());
+        System.out.println("─".repeat(80));
+        printInfo("Found: " + list.size());
+    }
+
+    private void printEmployeeDetail(Employee e) {
+        System.out.println(CYAN + "┌─── Employee Detail ──────────────────────────┐" + RESET);
+        printRow("ID", e.getId());
+        printRow("Name", e.getName());
+        printRow("Email", e.getEmail());
+        printRow("Department", e.getDepartmentId());
+        printRow("Type", String.valueOf(e.getEmploymentType()));
+        printRow("Base Salary", String.format("%,.0f VND", e.getBaseSalary()));
+        System.out.println(CYAN + "└───────────────────────────────────────────────┘" + RESET);
+    }
+
+    private void printDepartmentTable(List<Department> list) {
+        System.out.printf(BOLD + "%-12s %-25s %-15s%n" + RESET, "ID", "Name", "Manager ID");
+        System.out.println("─".repeat(55));
+        for (Department d : list)
+            System.out.printf("%-12s %-25s %-15s%n", d.getId(), trunc(d.getName(), 24), d.getManagerId());
+        System.out.println("─".repeat(55));
+    }
+
+    private void printDepartmentDetail(Department d) {
+        System.out.println(CYAN + "┌─── Department ────────────────────────────────┐" + RESET);
+        printRow("ID", d.getId());
+        printRow("Name", d.getName());
+        printRow("Manager", d.getManagerId());
+        System.out.println(CYAN + "└───────────────────────────────────────────────┘" + RESET);
+    }
+
+    private void printAttendanceDetail(AttendanceRecord r) {
+        System.out.println(CYAN + "┌─── Attendance Record ─────────────────────────┐" + RESET);
+        printRow("ID", r.getId());
+        printRow("Employee", r.getEmployeeId());
+        printRow("Month", r.getYearMonth());
+        printRow("Work Days", String.valueOf(r.getWorkDays()));
+        printRow("Overtime", r.getOvertimeHours() + "h");
+        System.out.println(CYAN + "└───────────────────────────────────────────────┘" + RESET);
+    }
+
+    private void printAttendanceTable(List<AttendanceRecord> list) {
+        System.out.printf(BOLD + "%-15s %-12s %-10s %-10s %-12s%n" + RESET, "ID", "Employee", "Month", "WorkDays",
+                "Overtime(h)");
+        System.out.println("─".repeat(62));
+        for (AttendanceRecord r : list)
+            System.out.printf("%-15s %-12s %-10s %-10d %-12.1f%n",
+                    trunc(r.getId(), 14), r.getEmployeeId(), r.getYearMonth(), r.getWorkDays(), r.getOvertimeHours());
+        System.out.println("─".repeat(62));
+    }
+
+    private void printLeaveTable(List<LeaveRequest> list) {
+        System.out.printf(BOLD + "%-15s %-12s %-10s %-12s %-12s %-10s%n" + RESET, "Leave ID", "Employee", "Type",
+                "Start", "End", "Status");
+        System.out.println("─".repeat(75));
+        for (LeaveRequest r : list)
+            System.out.printf("%-15s %-12s %-10s %-12s %-12s %-10s%n",
+                    r.getLeaveId(), r.getEmployeeId(), r.getLeaveType(), r.getStartDate(), r.getEndDate(),
+                    r.getStatus());
+        System.out.println("─".repeat(75));
+    }
+
+    private void printPayrollRunSummary(PayrollRun r) {
+        System.out.println(CYAN + "┌─── Payroll Run Summary ───────────────────────┐" + RESET);
+        printRow("Run ID", r.getId());
+        printRow("Month", r.getYearMonth());
+        printRow("Mechanism", r.getMechanism());
+        printRow("Elapsed", r.getElapsedMs() + " ms");
+        printRow("TPS", String.format("%.2f", r.getTps()));
+        printRow("Success", String.valueOf(r.getSuccessCount()));
+        printRow("Double Pay", String.valueOf(r.getDoublePaymentCount()));
+        printRow("Wrong Leave", String.valueOf(r.getWrongLeaveCount()));
+        System.out.println(CYAN + "└───────────────────────────────────────────────┘" + RESET);
+    }
+
+    private void printPayrollRule(PayrollRule r) {
+        System.out.println(CYAN + "┌─── Payroll Rule ──────────────────────────────┐" + RESET);
+        printRow("Work Days", String.valueOf(r.getStandardWorkingDays()));
+        printRow("Hours/Day", String.valueOf(r.getWorkingHoursPerDay()));
+        printRow("OT Multiplier", r.getOvertimeMultiplier() + "x");
+        printRow("Bonus", String.format("%,.0f VND", r.getAttendanceBonus()));
+        printRow("Tax Rate", (r.getTaxRate() * 100) + "%");
+        printRow("Tax Threshold", String.format("%,.0f VND", r.getTaxThreshold()));
+        System.out.println(CYAN + "└───────────────────────────────────────────────┘" + RESET);
+    }
+
+    private void printRow(String label, String value) {
+        System.out.printf("│ %-20s: %-24s│%n", label, trunc(value, 24));
+    }
+
+    private void printSuccess(String msg) {
+        System.out.println(GREEN + "✔ " + msg + RESET);
+    }
+
+    private void printError(String msg) {
+        System.out.println(RED + "✘ " + msg + RESET);
+    }
+
+    private void printInfo(String msg) {
+        System.out.println(YELLOW + "ℹ " + msg + RESET);
+    }
+
+    // ═════════════════════════════════════════
+    // INPUT HELPERS
+    // ═════════════════════════════════════════
+
+    private String prompt(String label) {
+        while (true) {
+            System.out.print(BOLD + label + ": " + RESET);
+            String input = scanner.nextLine().trim();
+            if (!input.isEmpty())
+                return input;
+            printError("Required field.");
+        }
+    }
+
+    private String promptOptional(String label) {
+        System.out.print(BOLD + label + ": " + RESET);
+        String input = scanner.nextLine().trim();
+        return input.isEmpty() ? null : input;
+    }
+
+    private double promptDouble(String label) {
+        while (true) {
+            try {
+                return Double.parseDouble(prompt(label).replace(",", ""));
+            } catch (NumberFormatException e) {
+                printError("Enter a valid number.");
+            }
+        }
+    }
+
+    private boolean confirm(String q) {
+        System.out.print(YELLOW + q + " (yes/no): " + RESET);
+        String ans = scanner.nextLine().trim().toLowerCase();
+        return ans.equals("yes") || ans.equals("y");
+    }
+
+    private String trunc(String s, int max) {
+        if (s == null)
+            return "";
+        return s.length() <= max ? s : s.substring(0, max - 2) + "..";
+    }
+
+    private int parseInt(String s, int fallback) {
+        if (s == null)
+            return fallback;
+        try {
+            return Integer.parseInt(s.trim());
+        } catch (Exception e) {
+            return fallback;
+        }
+    }
+
+    private double parseDoubleVal(String s, double fallback) {
+        if (s == null)
+            return fallback;
+        try {
+            return Double.parseDouble(s.replace(",", ""));
+        } catch (Exception e) {
+            return fallback;
+        }
+    }
+}*/
+/*import java.util.List;
+import java.util.Scanner;
+
+public class MainView {
+
+    private static final String RESET = "\u001B[0m";
+    private static final String BOLD = "\u001B[1m";
+    private static final String GREEN = "\u001B[32m";
+    private static final String CYAN = "\u001B[36m";
+    private static final String YELLOW = "\u001B[33m";
+    private static final String RED = "\u001B[31m";
+    private static final String DIM = "\u001B[2m";
+
+    private final UserAccountRepository userRepo;
+    private final EmployeeController employeeController;
+    private final DepartmentController departmentController;
+    private final AttendanceController attendanceController;
+    private final LeaveController leaveController;
+    private final PayrollController payrollController;
+    private final ReportController reportController;
+    private final SimulationController simulationController;
+
+    private final Scanner scanner;
+    private AuthController currentSession = null;
+
+    public MainView(UserAccountRepository userRepo,
+            EmployeeController employeeController,
+            DepartmentController departmentController,
+            AttendanceController attendanceController,
+            LeaveController leaveController,
+            PayrollController payrollController,
+            ReportController reportController,
+            SimulationController simulationController) {
+        this.userRepo = userRepo;
+        this.employeeController = employeeController;
+        this.departmentController = departmentController;
+        this.attendanceController = attendanceController;
+        this.leaveController = leaveController;
+        this.payrollController = payrollController;
+        this.reportController = reportController;
+        this.simulationController = simulationController;
+        this.scanner = new Scanner(System.in);
+    }
+
+    public void run() {
+        printBanner();
+        if (!handleLogin()) {
+            printError("Login failed. Exiting.");
+            scanner.close();
+            return;
+        }
+        boolean running = true;
+        while (running) {
+            printMainMenu();
+            switch (prompt("Choose").trim()) {
+                case "1" -> handleLogin();
+                case "2" -> showEmployeeManagement();
+                case "3" -> showAttendanceManagement();
+                case "4" -> showLeaveManagement();
+                case "5" -> showPayrollManagement();
+                case "6" -> showReports();
+                case "7" -> showSyncAndSimulation();
+                case "0" -> {
+                    printSuccess("Goodbye!");
+                    running = false;
+                }
+                default -> printError("Invalid choice.");
+            }
+        }
+        scanner.close();
+    }
+
+    // ═════════════════════════════════════════
+    // 1. LOGIN
+    // ═════════════════════════════════════════
+
+    private boolean handleLogin() {
+        printSectionHeader("LOGIN");
+        int attempts = 0;
+        while (attempts < 3) {
+            String username = prompt("Username");
+            String password = prompt("Password");
+            try {
+                currentSession = AuthController.login(userRepo, username, password);
+                printSuccess("Welcome, " + currentSession.getUsername()
+                        + " [" + currentSession.getRole() + "]");
+                return true;
+            } catch (IllegalArgumentException | IllegalStateException ex) {
+                attempts++;
+                printError(ex.getMessage()
+                        + (attempts < 3 ? " (" + (3 - attempts) + " attempts left)" : ""));
+            }
+        }
+        return false;
+    }
+
+    // ═════════════════════════════════════════
+    // 2. EMPLOYEE MANAGEMENT
+    // ═════════════════════════════════════════
+
+    private void showEmployeeManagement() {
+        boolean back = false;
+        while (!back) {
+            printSubMenu("EMPLOYEE MANAGEMENT", new String[] {
+                    "Add Employee", "Update Employee", "Delete Employee",
+                    "Search Employee", "View Employee Detail", "---",
+                    "Add Department", "Update Department", "Delete Department",
+                    "Search Department", "View Departments", "---",
+                    "Save CSV Data", "Load CSV Data", "Generate Test Dataset"
+            });
+            switch (prompt("Choose").trim()) {
+                case "1" -> handleAddEmployee();
+                case "2" -> handleUpdateEmployee();
+                case "3" -> handleDeleteEmployee();
+                case "4" -> handleSearchEmployee();
+                case "5" -> handleViewEmployeeDetail();
+                case "6" -> handleAddDepartment();
+                case "7" -> handleUpdateDepartment();
+                case "8" -> handleDeleteDepartment();
+                case "9" -> handleSearchDepartment();
+                case "10" -> handleViewDepartments();
+                case "11" -> printInfo("Data is auto-saved via Repository.");
+                case "12" -> printInfo("Data is auto-loaded via Repository.");
+                case "13" -> printInfo("Generate test dataset: not implemented yet.");
+                case "0" -> back = true;
+                default -> printError("Invalid choice.");
+            }
+        }
+    }
+
+    private void handleAddEmployee() {
+        printSectionHeader("ADD EMPLOYEE");
+        try {
+            String name = prompt("Full name");
+            String email = prompt("Email");
+            String departmentId = prompt("Department ID");
+            System.out.println("  1. FULLTIME   2. PARTTIME");
+            EmployeeType type = prompt("Choose").equals("2")
+                    ? EmployeeType.PARTTIME
+                    : EmployeeType.FULLTIME;
+            double baseSalary = promptDouble("Base salary (VND, 0 = default)");
+            Employee created = employeeController.addEmployee(name, email, departmentId, type, baseSalary);
+            printSuccess("Employee added!");
+            printEmployeeDetail(created);
+        } catch (IllegalArgumentException ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleUpdateEmployee() {
+        printSectionHeader("UPDATE EMPLOYEE");
+        String id = prompt("Employee ID");
+        try {
+            printEmployeeDetail(employeeController.getEmployeeById(id));
+            printInfo("Press Enter to keep current value.");
+            String name = promptOptional("New name");
+            String email = promptOptional("New email");
+            String departmentId = promptOptional("New department ID");
+            String salaryStr = promptOptional("New base salary");
+            double salary = salaryStr != null ? parseDoubleVal(salaryStr, -1) : -1;
+            Employee updated = employeeController.updateEmployee(id, name, email, departmentId, salary);
+            printSuccess("Updated!");
+            printEmployeeDetail(updated);
+        } catch (IllegalArgumentException ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleDeleteEmployee() {
+        printSectionHeader("DELETE EMPLOYEE");
+        String id = prompt("Employee ID");
+        try {
+            printEmployeeDetail(employeeController.getEmployeeById(id));
+            if (confirm("Confirm delete?")) {
+                employeeController.deleteEmployee(id);
+                printSuccess("Deleted.");
+            } else {
+                printInfo("Cancelled.");
+            }
+        } catch (IllegalArgumentException ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleSearchEmployee() {
+        printSectionHeader("SEARCH EMPLOYEE");
+        System.out.println("  1. By name   2. By department   3. By type");
+        switch (prompt("Choose").trim()) {
+            case "1" -> printEmployeeTable(employeeController.searchByName(prompt("Keyword")));
+            case "2" -> {
+                try {
+                    printEmployeeTable(employeeController.getEmployeesByDepartment(prompt("Department ID")));
+                } catch (IllegalArgumentException ex) {
+                    printError(ex.getMessage());
+                }
+            }
+            case "3" -> {
+                System.out.println("  1. FULLTIME   2. PARTTIME");
+                EmployeeType type = prompt("Choose").equals("2") ? EmployeeType.PARTTIME : EmployeeType.FULLTIME;
+                printEmployeeTable(employeeController.getEmployeesByType(type));
+            }
+            default -> printError("Invalid choice.");
+        }
+    }
+
+    private void handleViewEmployeeDetail() {
+        printSectionHeader("VIEW EMPLOYEE DETAIL");
+        try {
+            printEmployeeDetail(employeeController.getEmployeeById(prompt("Employee ID")));
+        } catch (IllegalArgumentException ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleAddDepartment() {
+        printSectionHeader("ADD DEPARTMENT");
+        try {
+            String name = prompt("Department name");
+            String managerId = promptOptional("Manager ID (Enter to skip)");
+            Department dept = departmentController.addDepartment(name, managerId);
+            printSuccess("Department added: " + dept.getId() + " — " + dept.getName());
+        } catch (IllegalArgumentException ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleUpdateDepartment() {
+        printSectionHeader("UPDATE DEPARTMENT");
+        String id = prompt("Department ID");
+        try {
+            printDepartmentDetail(departmentController.getDepartmentById(id));
+            Department updated = departmentController.updateDepartment(
+                    id, promptOptional("New name"), promptOptional("New manager ID"));
+            printSuccess("Updated: " + updated.getName());
+        } catch (IllegalArgumentException ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleDeleteDepartment() {
+        printSectionHeader("DELETE DEPARTMENT");
+        String id = prompt("Department ID");
+        try {
+            printDepartmentDetail(departmentController.getDepartmentById(id));
+            if (confirm("Confirm delete?")) {
+                departmentController.deleteDepartment(id);
+                printSuccess("Deleted.");
+            } else
+                printInfo("Cancelled.");
+        } catch (IllegalArgumentException ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleSearchDepartment() {
+        printSectionHeader("SEARCH DEPARTMENT");
+        try {
+            List<Department> list = departmentController.searchByName(prompt("Keyword"));
+            if (list.isEmpty())
+                printInfo("No departments found.");
+            else
+                printDepartmentTable(list);
+        } catch (IllegalArgumentException ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleViewDepartments() {
+        printSectionHeader("ALL DEPARTMENTS");
+        List<Department> list = departmentController.getAllDepartments();
+        if (list.isEmpty())
+            printInfo("No departments yet.");
+        else {
+            printDepartmentTable(list);
+            printInfo("Total: " + list.size());
+        }
+    }
+
+    // ═════════════════════════════════════════
+    // 3. ATTENDANCE MANAGEMENT
+    // ═════════════════════════════════════════
+
+    private void showAttendanceManagement() {
+        boolean back = false;
+        while (!back) {
+            printSubMenu("ATTENDANCE MANAGEMENT", new String[] {
+                    "Check In", "Check Out", "View Attendance Record",
+                    "View Attendance Summary", "Submit Attendance Adjustment Request",
+                    "Review Attendance Adjustment Request",
+                    "Approve Attendance Adjustment", "Reject Attendance Adjustment"
+            });
+            switch (prompt("Choose").trim()) {
+                case "1" -> handleCheckIn();
+                case "2" -> handleCheckOut();
+                case "3" -> handleViewAttendanceRecord();
+                case "4" -> handleViewAttendanceSummary();
+                case "5" -> handleSubmitAttendanceAdjustment();
+                case "6" -> handleReviewAttendanceAdjustment();
+                case "7" -> handleApproveAttendanceAdjustment();
+                case "8" -> handleRejectAttendanceAdjustment();
+                case "0" -> back = true;
+                default -> printError("Invalid choice.");
+            }
+        }
+    }
+
+    private void handleCheckIn() {
+        printSectionHeader("CHECK IN");
+        try {
+            AttendanceRecord r = attendanceController.checkIn(prompt("Employee ID"));
+            printSuccess("Checked in. Work days: " + r.getWorkDays());
+        } catch (IllegalArgumentException ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleCheckOut() {
+        printSectionHeader("CHECK OUT");
+        try {
+            AttendanceRecord r = attendanceController.checkOut(
+                    prompt("Employee ID"), promptDouble("Overtime hours (0 if none)"));
+            printSuccess("Checked out. Overtime: " + r.getOvertimeHours() + "h");
+        } catch (IllegalArgumentException ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleViewAttendanceRecord() {
+        printSectionHeader("VIEW ATTENDANCE RECORD");
+        try {
+            AttendanceRecord r = attendanceController.getRecord(
+                    prompt("Employee ID"), prompt("Year-Month (YYYY-MM)"));
+            if (r == null)
+                printInfo("No record found.");
+            else
+                printAttendanceDetail(r);
+        } catch (IllegalArgumentException ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleViewAttendanceSummary() {
+        printSectionHeader("VIEW ATTENDANCE SUMMARY");
+        List<AttendanceRecord> list = attendanceController.getSummaryByMonth(prompt("Year-Month (YYYY-MM)"));
+        if (list.isEmpty())
+            printInfo("No records found.");
+        else
+            printAttendanceTable(list);
+    }
+
+    private void handleSubmitAttendanceAdjustment() {
+        printSectionHeader("SUBMIT ATTENDANCE ADJUSTMENT");
+        try {
+            String empId = prompt("Employee ID");
+            String yearMonth = prompt("Year-Month (YYYY-MM)");
+
+            // Hiển thị số liệu hiện tại để HR biết đang sửa từ đâu
+            AttendanceRecord current = attendanceController.getRecord(empId, yearMonth);
+            int curWorkDays = (current != null) ? current.getWorkDays() : 0;
+            double curOvertime = (current != null) ? current.getOvertimeHours() : 0;
+
+            System.out.println("  Current: Work Days = " + curWorkDays
+                    + ", Overtime = " + curOvertime + "h");
+            printInfo("Press Enter to keep current value.");
+
+            String reason = prompt("Reason");
+
+            String workDaysStr = promptOptional("New work days [" + curWorkDays + "]");
+            int workDays = (workDaysStr != null) ? parseInt(workDaysStr, curWorkDays) : curWorkDays;
+
+            String overtimeStr = promptOptional("New overtime hours [" + curOvertime + "]");
+            double overtime = (overtimeStr != null) ? parseDoubleVal(overtimeStr, curOvertime) : curOvertime;
+
+            attendanceController.submitAdjustmentRequest(empId, yearMonth, reason, workDays, overtime);
+            printSuccess("Adjustment submitted: " + curWorkDays + " → " + workDays + " days");
+        } catch (IllegalArgumentException ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleReviewAttendanceAdjustment() {
+        printSectionHeader("REVIEW ATTENDANCE ADJUSTMENT");
+        List<AttendanceRecord> list = attendanceController.getPendingAdjustments();
+        if (list.isEmpty())
+            printInfo("No pending adjustments.");
+        else
+            printAttendanceTable(list);
+    }
+
+    private void handleApproveAttendanceAdjustment() {
+        printSectionHeader("APPROVE ATTENDANCE ADJUSTMENT");
+        try {
+            attendanceController.approveAdjustment(
+                    prompt("Record ID"), currentSession.getAccount().getId());
+            printSuccess("Approved.");
+        } catch (IllegalArgumentException ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleRejectAttendanceAdjustment() {
+        printSectionHeader("REJECT ATTENDANCE ADJUSTMENT");
+        try {
+            attendanceController.rejectAdjustment(
+                    prompt("Record ID"), currentSession.getAccount().getId(), prompt("Reason"));
+            printSuccess("Rejected.");
+        } catch (IllegalArgumentException ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    // ═════════════════════════════════════════
+    // 4. LEAVE MANAGEMENT
+    // ═════════════════════════════════════════
+
+    private void showLeaveManagement() {
+        boolean back = false;
+        while (!back) {
+            printSubMenu("LEAVE MANAGEMENT", new String[] {
+                    "Submit Leave Request", "Approve Leave Request",
+                    "Reject Leave Request", "View Leave Balance"
+            });
+            switch (prompt("Choose").trim()) {
+                case "1" -> handleSubmitLeaveRequest();
+                case "2" -> handleApproveLeaveRequest();
+                case "3" -> handleRejectLeaveRequest();
+                case "4" -> handleViewLeaveBalance();
+                case "0" -> back = true;
+                default -> printError("Invalid choice.");
+            }
+        }
+    }
+
+    private void handleSubmitLeaveRequest() {
+        printSectionHeader("SUBMIT LEAVE REQUEST");
+        try {
+            String empId = prompt("Employee ID");
+            System.out.println("  1. ANNUAL   2. SICK   3. UNPAID");
+            LeaveType type = switch (prompt("Choose")) {
+                case "2" -> LeaveType.SICK;
+                case "3" -> LeaveType.UNPAID;
+                default -> LeaveType.ANNUAL;
+            };
+            // Gọi đúng tên method: submit() thay vì submitLeaveRequest()
+            LeaveRequest req = leaveController.submit(
+                    empId, type,
+                    java.time.LocalDate.parse(prompt("Start date (YYYY-MM-DD)")),
+                    java.time.LocalDate.parse(prompt("End date (YYYY-MM-DD)")),
+                    prompt("Reason"));
+            printSuccess("Submitted: " + req.getLeaveId() + " (" + req.getDays() + " days)");
+        } catch (Exception ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleApproveLeaveRequest() {
+        printSectionHeader("APPROVE LEAVE REQUEST");
+        List<LeaveRequest> pending = leaveController.getPendingRequests();
+        if (pending.isEmpty()) {
+            printInfo("No pending requests.");
+            return;
+        }
+        printLeaveTable(pending);
+        try {
+            // Gọi đúng tên method: approve() với LockMechanism
+            leaveController.approve(prompt("Leave ID"), currentSession.getAccount().getId(),
+                    LockMechanism.NO_LOCK);
+            printSuccess("Approved.");
+        } catch (Exception ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleRejectLeaveRequest() {
+        printSectionHeader("REJECT LEAVE REQUEST");
+        List<LeaveRequest> pending = leaveController.getPendingRequests();
+        if (pending.isEmpty()) {
+            printInfo("No pending requests.");
+            return;
+        }
+        printLeaveTable(pending);
+        try {
+            // Gọi đúng tên method: reject()
+            leaveController.reject(prompt("Leave ID"), currentSession.getAccount().getId());
+            printSuccess("Rejected.");
+        } catch (Exception ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleViewLeaveBalance() {
+        printSectionHeader("VIEW LEAVE BALANCE");
+        try {
+            // Gọi đúng tên method: getBalancesByEmployee()
+            List<LeaveBalance> balances = leaveController.getBalancesByEmployee(prompt("Employee ID"));
+            if (balances.isEmpty()) {
+                printInfo("No balance records found.");
+                return;
+            }
+            System.out.printf(BOLD + "%-15s %-10s %-8s %-8s %-10s%n" + RESET,
+                    "Employee", "Type", "Total", "Used", "Remaining");
+            System.out.println("─".repeat(55));
+            for (LeaveBalance b : balances) {
+                System.out.printf("%-15s %-10s %-8d %-8d %-10d%n",
+                        b.getEmployeeId(), b.getLeaveType(),
+                        b.getTotalLeaveDays(), b.getUsedLeaveDays(), b.getRemainingLeaveDays());
+            }
+        } catch (IllegalArgumentException ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    // ═════════════════════════════════════════
+    // 5. PAYROLL MANAGEMENT
+    // ═════════════════════════════════════════
+
+    private void showPayrollManagement() {
+        boolean back = false;
+        while (!back) {
+            printSubMenu("PAYROLL MANAGEMENT", new String[] {
+                    "Process Monthly Payroll", "View Payroll History", "Configure Payroll Rules"
+            });
+            switch (prompt("Choose").trim()) {
+                case "1" -> handleProcessMonthlyPayroll();
+                case "2" -> handleViewPayrollHistory();
+                case "3" -> handleConfigurePayrollRules();
+                case "0" -> back = true;
+                default -> printError("Invalid choice.");
+            }
+        }
+    }
+
+    private void handleProcessMonthlyPayroll() {
+        printSectionHeader("PROCESS MONTHLY PAYROLL");
+        try {
+            String yearMonth = prompt("Year-Month (YYYY-MM)");
+            printInfo("Processing...");
+            PayrollRun run = payrollController.processMonthlyPayroll(
+                    yearMonth, currentSession.getAccount().getId());
+            printSuccess("Done!");
+            printPayrollRunSummary(run);
+        } catch (Exception ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleViewPayrollHistory() {
+        printSectionHeader("VIEW PAYROLL HISTORY");
+        try {
+            String empId = promptOptional("Employee ID (Enter = all)");
+            List<PayrollEntry> entries = empId != null
+                    ? payrollController.getPayrollByEmployee(empId)
+                    : payrollController.getAllPayrollEntries();
+            if (entries.isEmpty()) {
+                printInfo("No records.");
+                return;
+            }
+
+            // Hiện thêm cột Type để thấy rõ 2 luồng tính lương đa hình
+            System.out.printf(BOLD + "%-20s %-12s %-10s %-18s %-12s%n" + RESET,
+                    "Entry ID", "Employee", "Type", "Net Salary (VND)", "Status");
+            System.out.println("─".repeat(78));
+            for (PayrollEntry e : entries) {
+                Employee emp = payrollController.findEmployeeById(e.getEmployeeId());
+                String type = (emp != null) ? String.valueOf(emp.getEmploymentType()) : "?";
+                System.out.printf("%-20s %-12s %-10s %-18s %-12s%n",
+                        e.getId(), e.getEmployeeId(), type,
+                        String.format("%,.0f", e.getNetSalary()), e.getStatus());
+            }
+            System.out.println("─".repeat(78));
+
+            // Giải thích công thức khác nhau giữa 2 loại
+            printInfo("FULLTIME: base + overtime + attendance bonus - tax");
+            printInfo("PARTTIME: base + overtime (no bonus, no tax)");
+        } catch (Exception ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleConfigurePayrollRules() {
+        printSectionHeader("CONFIGURE PAYROLL RULES");
+        try {
+            PayrollRule cur = payrollController.getPayrollRule();
+            printPayrollRule(cur);
+            printInfo("Press Enter to keep current value.");
+            PayrollRule updated = new PayrollRule(
+                    parseInt(promptOptional("Standard work days [" + cur.getStandardWorkingDays() + "]"),
+                            cur.getStandardWorkingDays()),
+                    parseInt(promptOptional("Hours/day [" + cur.getWorkingHoursPerDay() + "]"),
+                            cur.getWorkingHoursPerDay()),
+                    parseDoubleVal(promptOptional("Overtime multiplier [" + cur.getOvertimeMultiplier() + "]"),
+                            cur.getOvertimeMultiplier()),
+                    parseDoubleVal(promptOptional("Attendance bonus [" + cur.getAttendanceBonus() + "]"),
+                            cur.getAttendanceBonus()),
+                    parseDoubleVal(promptOptional("Tax rate [" + cur.getTaxRate() + "]"), cur.getTaxRate()),
+                    parseDoubleVal(promptOptional("Tax threshold [" + cur.getTaxThreshold() + "]"),
+                            cur.getTaxThreshold()));
+            payrollController.updatePayrollRule(updated);
+            printSuccess("Payroll rules updated!");
+        } catch (Exception ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    // ═════════════════════════════════════════
+    // 6. REPORTS
+    // ═════════════════════════════════════════
+
+    private void showReports() {
+        boolean back = false;
+        while (!back) {
+            printSubMenu("REPORTS", new String[] {
+                    "Generate Payroll Report", "Generate Attendance Report",
+                    "Generate Simulation Comparison Report", "Export CSV Result", "Import CSV Result"
+            });
+            switch (prompt("Choose").trim()) {
+                case "1" -> {
+                    try {
+                        System.out.println(reportController.generatePayrollReport(prompt("Year-Month (YYYY-MM)")));
+                    } catch (Exception ex) {
+                        printError(ex.getMessage());
+                    }
+                }
+                case "2" -> {
+                    try {
+                        System.out.println(reportController.generateAttendanceReport(prompt("Year-Month (YYYY-MM)")));
+                    } catch (Exception ex) {
+                        printError(ex.getMessage());
+                    }
+                }
+                case "3" -> {
+                    try {
+                        System.out.println(reportController.generateSimulationComparisonReport());
+                    } catch (Exception ex) {
+                        printError(ex.getMessage());
+                    }
+                }
+                case "4" -> {
+                    try {
+                        String p = promptOptional("Path (Enter = reports/export.csv)");
+                        reportController.exportCsv(p != null ? p : "reports/export.csv");
+                        printSuccess("Exported.");
+                    } catch (Exception ex) {
+                        printError(ex.getMessage());
+                    }
+                }
+                case "5" -> {
+                    try {
+                        reportController.importCsv(prompt("File path"));
+                        printSuccess("Imported.");
+                    } catch (Exception ex) {
+                        printError(ex.getMessage());
+                    }
+                }
+                case "0" -> back = true;
+                default -> printError("Invalid choice.");
+            }
+        }
+    }
+
+    // ═════════════════════════════════════════
+    // 7. SYNC & SIMULATION
+    // ═════════════════════════════════════════
+
+    private void showSyncAndSimulation() {
+        boolean back = false;
+        while (!back) {
+            printSubMenu("SYNCHRONIZATION & SIMULATION", new String[] {
+                    "Run Payroll Simulation", "Select Sync Mode",
+                    "Measure TPS / Elapsed Time", "Detect Double Payment",
+                    "Detect Wrong Leave Deduction"
+            });
+            switch (prompt("Choose").trim()) {
+                case "1" -> handleRunSimulation();
+                case "2" -> handleSelectSyncMode();
+                case "3" -> handleMeasureTps();
+                case "4" -> {
+                    try {
+                        List<String> s = simulationController.detectDoublePayment();
+                        if (s.isEmpty())
+                            printSuccess("No double payments.");
+                        else {
+                            printError("Double payments: " + s.size());
+                            s.forEach(x -> System.out.println("  ⚠ " + x));
+                        }
+                    } catch (Exception ex) {
+                        printError(ex.getMessage());
+                    }
+                }
+                case "5" -> {
+                    try {
+                        List<String> s = simulationController.detectWrongLeaveDeduction();
+                        if (s.isEmpty())
+                            printSuccess("No wrong deductions.");
+                        else {
+                            printError("Wrong deductions: " + s.size());
+                            s.forEach(x -> System.out.println("  ⚠ " + x));
+                        }
+                    } catch (Exception ex) {
+                        printError(ex.getMessage());
+                    }
+                }
+                case "0" -> back = true;
+                default -> printError("Invalid choice.");
+            }
+        }
+    }
+
+    private void handleRunSimulation() {
+        printSectionHeader("RUN PAYROLL SIMULATION");
+        try {
+            String yearMonth = prompt("Year-Month (YYYY-MM)");
+            int threads = parseInt(promptOptional("Threads (Enter = 10)"), 10);
+            printInfo("Running with " + threads + " threads, mode: " + simulationController.getCurrentSyncMode());
+            PayrollRun run = simulationController.runSimulation(yearMonth, threads);
+            printSuccess("Done!");
+            printPayrollRunSummary(run);
+        } catch (Exception ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleSelectSyncMode() {
+        printSectionHeader("SELECT SYNC MODE");
+        System.out.println("  1. NO_LOCK      2. FILE_LOCK");
+        System.out.println("  3. SYNCHRONIZED 4. OPTIMISTIC");
+        String mode = switch (prompt("Choose")) {
+            case "1" -> "NO_LOCK";
+            case "2" -> "FILE_LOCK";
+            case "3" -> "SYNCHRONIZED";
+            case "4" -> "OPTIMISTIC";
+            default -> null;
+        };
+        if (mode == null) {
+            printError("Invalid choice.");
+            return;
+        }
+        simulationController.setSyncMode(mode);
+        printSuccess("Mode set to: " + mode);
+    }
+
+    private void handleMeasureTps() {
+        printSectionHeader("MEASURE TPS / ELAPSED TIME");
+        PayrollRun r = simulationController.getLatestRun();
+        if (r == null) {
+            printInfo("No simulation run yet.");
+            return;
+        }
+        printPayrollRunSummary(r);
+    }
+
+    // ═════════════════════════════════════════
+    // DISPLAY HELPERS
+    // ═════════════════════════════════════════
+
+    private void printBanner() {
+        System.out.println(BOLD + CYAN);
+        System.out.println("=========================================");
+        System.out.println("  EMPLOYEE PAYROLL MANAGEMENT SYSTEM");
+        System.out.println("=========================================");
+        System.out.println(RESET);
+    }
+
+    private void printMainMenu() {
+        String user = currentSession != null
+                ? DIM + " [" + currentSession.getUsername() + " | " + currentSession.getRole() + "]" + RESET
+                : "";
+        System.out.println(BOLD + "\n=========================================" + user);
+        System.out.println(" EMPLOYEE PAYROLL MANAGEMENT SYSTEM");
+        System.out.println("=========================================");
+        System.out.println("  1. Login\n  2. Employee Management\n  3. Attendance Management");
+        System.out.println("  4. Leave Management\n  5. Payroll Management\n  6. Reports");
+        System.out.println("  7. Synchronization & Simulation\n  ─────────────────────────────");
+        System.out.println("  0. Exit\n=========================================" + RESET);
+    }
+
+    private void printSubMenu(String title, String[] items) {
+        System.out.println(BOLD + "\n========== " + title + " ==========" + RESET);
+        int n = 1;
+        for (String item : items) {
+            if (item.equals("---"))
+                System.out.println("  ----------------------------");
+            else
+                System.out.printf("  %2d. %s%n", n++, item);
+        }
+        System.out.println("   0. Back");
+        System.out.println(BOLD + "═".repeat(title.length() + 22) + RESET);
+    }
+
+    private void printSectionHeader(String title) {
+        System.out.println(BOLD + CYAN + "\n▶ " + title + RESET);
+        System.out.println("─".repeat(45));
+    }
+
+    private void printEmployeeTable(List<Employee> list) {
+        if (list.isEmpty()) {
+            printInfo("No employees found.");
+            return;
+        }
+        System.out.printf(BOLD + "%-12s %-20s %-25s %-10s %-10s%n" + RESET, "ID", "Name", "Email", "Dept", "Type");
+        System.out.println("─".repeat(80));
+        for (Employee e : list)
+            System.out.printf("%-12s %-20s %-25s %-10s %-10s%n",
+                    e.getId(), trunc(e.getName(), 19), trunc(e.getEmail(), 24), e.getDepartmentId(),
+                    e.getEmploymentType());
+        System.out.println("─".repeat(80));
+        printInfo("Found: " + list.size());
+    }
+
+    private void printEmployeeDetail(Employee e) {
+        System.out.println(CYAN + "┌─── Employee Detail ──────────────────────────┐" + RESET);
+        printRow("ID", e.getId());
+        printRow("Name", e.getName());
+        printRow("Email", e.getEmail());
+        printRow("Department", e.getDepartmentId());
+        printRow("Type", String.valueOf(e.getEmploymentType()));
+        printRow("Base Salary", String.format("%,.0f VND", e.getBaseSalary()));
+        System.out.println(CYAN + "└───────────────────────────────────────────────┘" + RESET);
+    }
+
+    private void printDepartmentTable(List<Department> list) {
+        System.out.printf(BOLD + "%-12s %-25s %-15s%n" + RESET, "ID", "Name", "Manager ID");
+        System.out.println("─".repeat(55));
+        for (Department d : list)
+            System.out.printf("%-12s %-25s %-15s%n", d.getId(), trunc(d.getName(), 24), d.getManagerId());
+        System.out.println("─".repeat(55));
+    }
+
+    private void printDepartmentDetail(Department d) {
+        System.out.println(CYAN + "┌─── Department ────────────────────────────────┐" + RESET);
+        printRow("ID", d.getId());
+        printRow("Name", d.getName());
+        printRow("Manager", d.getManagerId());
+        System.out.println(CYAN + "└───────────────────────────────────────────────┘" + RESET);
+    }
+
+    private void printAttendanceDetail(AttendanceRecord r) {
+        System.out.println(CYAN + "┌─── Attendance Record ─────────────────────────┐" + RESET);
+        printRow("ID", r.getId());
+        printRow("Employee", r.getEmployeeId());
+        printRow("Month", r.getYearMonth());
+        printRow("Work Days", String.valueOf(r.getWorkDays()));
+        printRow("Overtime", r.getOvertimeHours() + "h");
+        System.out.println(CYAN + "└───────────────────────────────────────────────┘" + RESET);
+    }
+
+    private void printAttendanceTable(List<AttendanceRecord> list) {
+        System.out.printf(BOLD + "%-15s %-12s %-10s %-10s %-12s%n" + RESET, "ID", "Employee", "Month", "WorkDays",
+                "Overtime(h)");
+        System.out.println("─".repeat(62));
+        for (AttendanceRecord r : list)
+            System.out.printf("%-15s %-12s %-10s %-10d %-12.1f%n",
+                    trunc(r.getId(), 14), r.getEmployeeId(), r.getYearMonth(), r.getWorkDays(), r.getOvertimeHours());
+        System.out.println("─".repeat(62));
+    }
+
+    private void printLeaveTable(List<LeaveRequest> list) {
+        System.out.printf(BOLD + "%-15s %-12s %-10s %-12s %-12s %-10s%n" + RESET, "Leave ID", "Employee", "Type",
+                "Start", "End", "Status");
+        System.out.println("─".repeat(75));
+        for (LeaveRequest r : list)
+            System.out.printf("%-15s %-12s %-10s %-12s %-12s %-10s%n",
+                    r.getLeaveId(), r.getEmployeeId(), r.getLeaveType(), r.getStartDate(), r.getEndDate(),
+                    r.getStatus());
+        System.out.println("─".repeat(75));
+    }
+
+    private void printPayrollRunSummary(PayrollRun r) {
+        System.out.println(CYAN + "┌─── Payroll Run Summary ───────────────────────┐" + RESET);
+        printRow("Run ID", r.getId());
+        printRow("Month", r.getYearMonth());
+        printRow("Mechanism", r.getMechanism());
+        printRow("Elapsed", r.getElapsedMs() + " ms");
+        printRow("TPS", String.format("%.2f", r.getTps()));
+        printRow("Success", String.valueOf(r.getSuccessCount()));
+        printRow("Double Pay", String.valueOf(r.getDoublePaymentCount()));
+        printRow("Wrong Leave", String.valueOf(r.getWrongLeaveCount()));
+        System.out.println(CYAN + "└───────────────────────────────────────────────┘" + RESET);
+    }
+
+    private void printPayrollRule(PayrollRule r) {
+        System.out.println(CYAN + "┌─── Payroll Rule ──────────────────────────────┐" + RESET);
+        printRow("Work Days", String.valueOf(r.getStandardWorkingDays()));
+        printRow("Hours/Day", String.valueOf(r.getWorkingHoursPerDay()));
+        printRow("OT Multiplier", r.getOvertimeMultiplier() + "x");
+        printRow("Bonus", String.format("%,.0f VND", r.getAttendanceBonus()));
+        printRow("Tax Rate", (r.getTaxRate() * 100) + "%");
+        printRow("Tax Threshold", String.format("%,.0f VND", r.getTaxThreshold()));
+        System.out.println(CYAN + "└───────────────────────────────────────────────┘" + RESET);
+    }
+
+    private void printRow(String label, String value) {
+        System.out.printf("│ %-20s: %-24s│%n", label, trunc(value, 24));
+    }
+
+    private void printSuccess(String msg) {
+        System.out.println(GREEN + "✔ " + msg + RESET);
+    }
+
+    private void printError(String msg) {
+        System.out.println(RED + "✘ " + msg + RESET);
+    }
+
+    private void printInfo(String msg) {
+        System.out.println(YELLOW + "ℹ " + msg + RESET);
+    }
+
+    // ═════════════════════════════════════════
+    // INPUT HELPERS
+    // ═════════════════════════════════════════
+
+    private String prompt(String label) {
+        while (true) {
+            System.out.print(BOLD + label + ": " + RESET);
+            String input = scanner.nextLine().trim();
+            if (!input.isEmpty())
+                return input;
+            printError("Required field.");
+        }
+    }
+
+    private String promptOptional(String label) {
+        System.out.print(BOLD + label + ": " + RESET);
+        String input = scanner.nextLine().trim();
+        return input.isEmpty() ? null : input;
+    }
+
+    private double promptDouble(String label) {
+        while (true) {
+            try {
+                return Double.parseDouble(prompt(label).replace(",", ""));
+            } catch (NumberFormatException e) {
+                printError("Enter a valid number.");
+            }
+        }
+    }
+
+    private boolean confirm(String q) {
+        System.out.print(YELLOW + q + " (yes/no): " + RESET);
+        String ans = scanner.nextLine().trim().toLowerCase();
+        return ans.equals("yes") || ans.equals("y");
+    }
+
+    private String trunc(String s, int max) {
+        if (s == null)
+            return "";
+        return s.length() <= max ? s : s.substring(0, max - 2) + "..";
+    }
+
+    private int parseInt(String s, int fallback) {
+        if (s == null)
+            return fallback;
+        try {
+            return Integer.parseInt(s.trim());
+        } catch (Exception e) {
+            return fallback;
+        }
+    }
+
+    private double parseDoubleVal(String s, double fallback) {
+        if (s == null)
+            return fallback;
+        try {
+            return Double.parseDouble(s.replace(",", ""));
+        } catch (Exception e) {
+            return fallback;
+        }
+    }
+}*/
+import java.util.List;
+import java.util.Scanner;
+
+public class MainView {
+
+    private static final String RESET  = "\u001B[0m";
+    private static final String BOLD   = "\u001B[1m";
+    private static final String GREEN  = "\u001B[32m";
+    private static final String CYAN   = "\u001B[36m";
+    private static final String YELLOW = "\u001B[33m";
+    private static final String RED    = "\u001B[31m";
+    private static final String DIM    = "\u001B[2m";
+
+    private final UserAccountRepository  userRepo;
+    private final EmployeeController     employeeController;
+    private final DepartmentController   departmentController;
+    private final AttendanceController   attendanceController;
+    private final LeaveController        leaveController;
+    private final PayrollController      payrollController;
+    private final ReportController       reportController;
+    private final SimulationController   simulationController;
+
+    private final Scanner scanner;
+    private AuthController currentSession = null;
+
+    public MainView(UserAccountRepository userRepo,
+                    EmployeeController employeeController,
+                    DepartmentController departmentController,
+                    AttendanceController attendanceController,
+                    LeaveController leaveController,
+                    PayrollController payrollController,
+                    ReportController reportController,
+                    SimulationController simulationController) {
+        this.userRepo             = userRepo;
+        this.employeeController   = employeeController;
+        this.departmentController = departmentController;
+        this.attendanceController = attendanceController;
+        this.leaveController      = leaveController;
+        this.payrollController    = payrollController;
+        this.reportController     = reportController;
+        this.simulationController = simulationController;
+        this.scanner = new Scanner(System.in);
+    }
+
+    public void run() {
+        printBanner();
+        if (!handleLogin()) {
+            printError("Login failed. Exiting.");
+            scanner.close();
+            return;
+        }
+        boolean running = true;
+        while (running) {
+            printMainMenu();
+            switch (prompt("Choose").trim()) {
+                case "1" -> handleLogin();
+                case "2" -> {
+                    if (checkAccess("ADD_EMPLOYEE")) showEmployeeManagement();
+                }
+                case "3" -> {
+                    if (checkAccess("CHECK_IN")) showAttendanceManagement();
+                }
+                case "4" -> {
+                    if (checkAccess("SUBMIT_LEAVE_REQUEST")) showLeaveManagement();
+                }
+                case "5" -> {
+                    if (checkAccess("PROCESS_MONTHLY_PAYROLL")) showPayrollManagement();
+                }
+                case "6" -> {
+                    if (checkAccess("GENERATE_PAYROLL_REPORT")) showReports();
+                }
+                case "7" -> {
+                    if (checkAccess("RUN_PAYROLL_SIMULATION")) showSyncAndSimulation();
+                }
+                case "0" -> { printSuccess("Goodbye!"); running = false; }
+                default  -> printError("Invalid choice.");
+            }
+        }
+        scanner.close();
+    }
+
+    /**
+     * Kiểm tra quyền — in lỗi và trả về false nếu role không đủ quyền.
+     * Dùng để chặn cả việc vào menu lớn lẫn từng action con bên trong.
+     */
+    private boolean checkAccess(String feature) {
+        if (currentSession == null) {
+            printError("You must login first.");
+            return false;
+        }
+        if (!currentSession.canAccess(feature)) {
+            printError("Access denied for role [" + currentSession.getRole()
+                    + "]. This feature requires higher permission.");
+            return false;
+        }
+        return true;
+    }
+
+    // ═════════════════════════════════════════
+    // 1. LOGIN
+    // ═════════════════════════════════════════
+
+    private boolean handleLogin() {
+        printSectionHeader("LOGIN");
+        int attempts = 0;
+        while (attempts < 3) {
+            String username = prompt("Username");
+            String password = prompt("Password");
+            try {
+                currentSession = AuthController.login(userRepo, username, password);
+                printSuccess("Welcome, " + currentSession.getUsername()
+                        + " [" + currentSession.getRole() + "]");
+                return true;
+            } catch (IllegalArgumentException | IllegalStateException ex) {
+                attempts++;
+                printError(ex.getMessage()
+                        + (attempts < 3 ? " (" + (3 - attempts) + " attempts left)" : ""));
+            }
+        }
+        return false;
+    }
+
+    // ═════════════════════════════════════════
+    // 2. EMPLOYEE MANAGEMENT
+    // ═════════════════════════════════════════
+
+    private void showEmployeeManagement() {
+        boolean back = false;
+        while (!back) {
+            printSubMenu("EMPLOYEE MANAGEMENT", new String[]{
+                "Add Employee", "Update Employee", "Delete Employee",
+                "Search Employee", "View Employee Detail", "---",
+                "Add Department", "Update Department", "Delete Department",
+                "Search Department", "View Departments", "---",
+                "Save CSV Data", "Load CSV Data", "Generate Test Dataset"
+            });
+            switch (prompt("Choose").trim()) {
+                case "1"  -> handleAddEmployee();
+                case "2"  -> handleUpdateEmployee();
+                case "3"  -> handleDeleteEmployee();
+                case "4"  -> handleSearchEmployee();
+                case "5"  -> handleViewEmployeeDetail();
+                case "6"  -> handleAddDepartment();
+                case "7"  -> handleUpdateDepartment();
+                case "8"  -> handleDeleteDepartment();
+                case "9"  -> handleSearchDepartment();
+                case "10" -> handleViewDepartments();
+                case "11" -> printInfo("Data is auto-saved via Repository.");
+                case "12" -> printInfo("Data is auto-loaded via Repository.");
+                case "13" -> printInfo("Generate test dataset: not implemented yet.");
+                case "0"  -> back = true;
+                default   -> printError("Invalid choice.");
+            }
+        }
+    }
+
+    private void handleAddEmployee() {
+        printSectionHeader("ADD EMPLOYEE");
+        try {
+            String name         = prompt("Full name");
+            String email        = prompt("Email");
+            String departmentId = prompt("Department ID");
+            System.out.println("  1. FULLTIME   2. PARTTIME");
+            EmployeeType type = prompt("Choose").equals("2")
+                    ? EmployeeType.PARTTIME : EmployeeType.FULLTIME;
+            double baseSalary = promptDouble("Base salary (VND, 0 = default)");
+            Employee created = employeeController.addEmployee(name, email, departmentId, type, baseSalary);
+            printSuccess("Employee added!");
+            printEmployeeDetail(created);
+        } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
+    }
+
+    private void handleUpdateEmployee() {
+        printSectionHeader("UPDATE EMPLOYEE");
+        String id = prompt("Employee ID");
+        try {
+            printEmployeeDetail(employeeController.getEmployeeById(id));
+            printInfo("Press Enter to keep current value.");
+            String name         = promptOptional("New name");
+            String email        = promptOptional("New email");
+            String departmentId = promptOptional("New department ID");
+            String salaryStr    = promptOptional("New base salary");
+            double salary       = salaryStr != null ? parseDoubleVal(salaryStr, -1) : -1;
+            Employee updated = employeeController.updateEmployee(id, name, email, departmentId, salary);
+            printSuccess("Updated!");
+            printEmployeeDetail(updated);
+        } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
+    }
+
+    private void handleDeleteEmployee() {
+        printSectionHeader("DELETE EMPLOYEE");
+        String id = prompt("Employee ID");
+        try {
+            printEmployeeDetail(employeeController.getEmployeeById(id));
+            if (confirm("Confirm delete?")) {
+                employeeController.deleteEmployee(id);
+                printSuccess("Deleted.");
+            } else { printInfo("Cancelled."); }
+        } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
+    }
+
+    private void handleSearchEmployee() {
+        printSectionHeader("SEARCH EMPLOYEE");
+        System.out.println("  1. By name   2. By department   3. By type");
+        switch (prompt("Choose").trim()) {
+            case "1" -> printEmployeeTable(employeeController.searchByName(prompt("Keyword")));
+            case "2" -> {
+                try { printEmployeeTable(employeeController.getEmployeesByDepartment(prompt("Department ID"))); }
+                catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
+            }
+            case "3" -> {
+                System.out.println("  1. FULLTIME   2. PARTTIME");
+                EmployeeType type = prompt("Choose").equals("2") ? EmployeeType.PARTTIME : EmployeeType.FULLTIME;
+                printEmployeeTable(employeeController.getEmployeesByType(type));
+            }
+            default -> printError("Invalid choice.");
+        }
+    }
+
+    private void handleViewEmployeeDetail() {
+        printSectionHeader("VIEW EMPLOYEE DETAIL");
+        try { printEmployeeDetail(employeeController.getEmployeeById(prompt("Employee ID"))); }
+        catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
+    }
+
+    private void handleAddDepartment() {
+        printSectionHeader("ADD DEPARTMENT");
+        try {
+            String name      = prompt("Department name");
+            String managerId = promptOptional("Manager ID (Enter to skip)");
+            Department dept  = departmentController.addDepartment(name, managerId);
+            printSuccess("Department added: " + dept.getId() + " — " + dept.getName());
+        } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
+    }
+
+    private void handleUpdateDepartment() {
+        printSectionHeader("UPDATE DEPARTMENT");
+        String id = prompt("Department ID");
+        try {
+            printDepartmentDetail(departmentController.getDepartmentById(id));
+            Department updated = departmentController.updateDepartment(
+                    id, promptOptional("New name"), promptOptional("New manager ID"));
+            printSuccess("Updated: " + updated.getName());
+        } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
+    }
+
+    private void handleDeleteDepartment() {
+        printSectionHeader("DELETE DEPARTMENT");
+        String id = prompt("Department ID");
+        try {
+            printDepartmentDetail(departmentController.getDepartmentById(id));
+            if (confirm("Confirm delete?")) { departmentController.deleteDepartment(id); printSuccess("Deleted."); }
+            else printInfo("Cancelled.");
+        } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
+    }
+
+    private void handleSearchDepartment() {
+        printSectionHeader("SEARCH DEPARTMENT");
+        try {
+            List<Department> list = departmentController.searchByName(prompt("Keyword"));
+            if (list.isEmpty()) printInfo("No departments found.");
+            else printDepartmentTable(list);
+        } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
+    }
+
+    private void handleViewDepartments() {
+        printSectionHeader("ALL DEPARTMENTS");
+        List<Department> list = departmentController.getAllDepartments();
+        if (list.isEmpty()) printInfo("No departments yet.");
+        else { printDepartmentTable(list); printInfo("Total: " + list.size()); }
+    }
+
+    // ═════════════════════════════════════════
+    // 3. ATTENDANCE MANAGEMENT
+    // ═════════════════════════════════════════
+
+    private void showAttendanceManagement() {
+        boolean back = false;
+        while (!back) {
+            printSubMenu("ATTENDANCE MANAGEMENT", new String[]{
+                "Check In", "Check Out", "View Attendance Record",
+                "View Attendance Summary", "Submit Attendance Adjustment Request",
+                "Review Attendance Adjustment Request",
+                "Approve Attendance Adjustment", "Reject Attendance Adjustment"
+            });
             switch (prompt("Choose").trim()) {
                 case "1" -> handleCheckIn();
                 case "2" -> handleCheckOut();
@@ -411,113 +2231,90 @@ public class MainView {
     private void handleCheckIn() {
         printSectionHeader("CHECK IN");
         try {
-            String employeeId = prompt("Employee ID");
-            AttendanceRecord record = attendanceController.checkIn(employeeId);
-            printSuccess("Check-in recorded for " + employeeId
-                    + " [" + record.getYearMonth() + "]");
-        } catch (IllegalArgumentException | IllegalStateException ex) {
-            printError(ex.getMessage());
-        }
+            AttendanceRecord r = attendanceController.checkIn(prompt("Employee ID"));
+            printSuccess("Checked in. Work days: " + r.getWorkDays());
+        } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
     }
 
     private void handleCheckOut() {
         printSectionHeader("CHECK OUT");
         try {
-            String employeeId = prompt("Employee ID");
-            double overtimeHours = promptDouble("Overtime hours (0 if none)");
-            AttendanceRecord record = attendanceController.checkOut(employeeId, overtimeHours);
-            printSuccess("Check-out recorded. Work days: " + record.getWorkDays()
-                    + ", Overtime: " + record.getOvertimeHours() + "h");
-        } catch (IllegalArgumentException | IllegalStateException ex) {
-            printError(ex.getMessage());
-        }
+            AttendanceRecord r = attendanceController.checkOut(
+                    prompt("Employee ID"), promptDouble("Overtime hours (0 if none)"));
+            printSuccess("Checked out. Overtime: " + r.getOvertimeHours() + "h");
+        } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
     }
 
     private void handleViewAttendanceRecord() {
         printSectionHeader("VIEW ATTENDANCE RECORD");
         try {
-            String employeeId = prompt("Employee ID");
-            String yearMonth  = prompt("Year-Month (YYYY-MM)");
-            AttendanceRecord record = attendanceController.getRecord(employeeId, yearMonth);
-            if (record == null) {
-                printInfo("No attendance record found for " + employeeId + " / " + yearMonth);
-            } else {
-                printAttendanceDetail(record);
-            }
-        } catch (IllegalArgumentException ex) {
-            printError(ex.getMessage());
-        }
+            AttendanceRecord r = attendanceController.getRecord(
+                    prompt("Employee ID"), prompt("Year-Month (YYYY-MM)"));
+            if (r == null) printInfo("No record found.");
+            else printAttendanceDetail(r);
+        } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
     }
 
     private void handleViewAttendanceSummary() {
         printSectionHeader("VIEW ATTENDANCE SUMMARY");
-        try {
-            String yearMonth = prompt("Year-Month (YYYY-MM)");
-            List<AttendanceRecord> list = attendanceController.getSummaryByMonth(yearMonth);
-            if (list.isEmpty()) {
-                printInfo("No records for " + yearMonth);
-                return;
-            }
-            printAttendanceTable(list);
-            printInfo("Total records: " + list.size());
-        } catch (IllegalArgumentException ex) {
-            printError(ex.getMessage());
-        }
+        List<AttendanceRecord> list = attendanceController.getSummaryByMonth(prompt("Year-Month (YYYY-MM)"));
+        if (list.isEmpty()) printInfo("No records found.");
+        else printAttendanceTable(list);
     }
 
     private void handleSubmitAttendanceAdjustment() {
-        printSectionHeader("SUBMIT ATTENDANCE ADJUSTMENT REQUEST");
+        printSectionHeader("SUBMIT ATTENDANCE ADJUSTMENT");
         try {
-            String employeeId = prompt("Employee ID");
-            String yearMonth  = prompt("Year-Month (YYYY-MM)");
-            String reason     = prompt("Reason for adjustment");
-            int    newWorkDays    = parseInt(prompt("Adjusted work days"), -1);
-            double newOvertime    = promptDouble("Adjusted overtime hours");
-            attendanceController.submitAdjustmentRequest(
-                    employeeId, yearMonth, reason, newWorkDays, newOvertime);
-            printSuccess("Adjustment request submitted.");
-        } catch (IllegalArgumentException ex) {
-            printError(ex.getMessage());
-        }
+            String empId     = prompt("Employee ID");
+            String yearMonth = prompt("Year-Month (YYYY-MM)");
+
+            // Hiển thị số liệu hiện tại để HR biết đang sửa từ đâu
+            AttendanceRecord current = attendanceController.getRecord(empId, yearMonth);
+            int curWorkDays = (current != null) ? current.getWorkDays() : 0;
+            double curOvertime = (current != null) ? current.getOvertimeHours() : 0;
+
+            System.out.println("  Current: Work Days = " + curWorkDays
+                    + ", Overtime = " + curOvertime + "h");
+            printInfo("Press Enter to keep current value.");
+
+            String reason = prompt("Reason");
+
+            String workDaysStr = promptOptional("New work days [" + curWorkDays + "]");
+            int workDays = (workDaysStr != null) ? parseInt(workDaysStr, curWorkDays) : curWorkDays;
+
+            String overtimeStr = promptOptional("New overtime hours [" + curOvertime + "]");
+            double overtime = (overtimeStr != null) ? parseDoubleVal(overtimeStr, curOvertime) : curOvertime;
+
+            attendanceController.submitAdjustmentRequest(empId, yearMonth, reason, workDays, overtime);
+            printSuccess("Adjustment submitted: " + curWorkDays + " → " + workDays + " days");
+        } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
     }
 
     private void handleReviewAttendanceAdjustment() {
-        printSectionHeader("REVIEW ATTENDANCE ADJUSTMENT REQUEST");
-        try {
-            List<?> pending = attendanceController.getPendingAdjustments();
-            if (pending.isEmpty()) {
-                printInfo("No pending adjustment requests.");
-                return;
-            }
-            pending.forEach(r -> System.out.println("  " + r));
-        } catch (Exception ex) {
-            printError(ex.getMessage());
-        }
+        printSectionHeader("REVIEW ATTENDANCE ADJUSTMENT");
+        List<AttendanceRecord> list = attendanceController.getPendingAdjustments();
+        if (list.isEmpty()) printInfo("No pending adjustments.");
+        else printAttendanceTable(list);
     }
 
     private void handleApproveAttendanceAdjustment() {
+        if (!checkAccess("APPROVE_ATTENDANCE_ADJUSTMENT")) return;
         printSectionHeader("APPROVE ATTENDANCE ADJUSTMENT");
         try {
-            String requestId = prompt("Request ID");
             attendanceController.approveAdjustment(
-                    requestId, currentUser.getId());
-            printSuccess("Adjustment approved.");
-        } catch (IllegalArgumentException | IllegalStateException ex) {
-            printError(ex.getMessage());
-        }
+                    prompt("Record ID"), currentSession.getAccount().getId());
+            printSuccess("Approved.");
+        } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
     }
 
     private void handleRejectAttendanceAdjustment() {
+        if (!checkAccess("REJECT_ATTENDANCE_ADJUSTMENT")) return;
         printSectionHeader("REJECT ATTENDANCE ADJUSTMENT");
         try {
-            String requestId = prompt("Request ID");
-            String reason    = prompt("Rejection reason");
             attendanceController.rejectAdjustment(
-                    requestId, currentUser.getId(), reason);
-            printSuccess("Adjustment rejected.");
-        } catch (IllegalArgumentException | IllegalStateException ex) {
-            printError(ex.getMessage());
-        }
+                    prompt("Record ID"), currentSession.getAccount().getId(), prompt("Reason"));
+            printSuccess("Rejected.");
+        } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
     }
 
     // ═════════════════════════════════════════
@@ -528,12 +2325,9 @@ public class MainView {
         boolean back = false;
         while (!back) {
             printSubMenu("LEAVE MANAGEMENT", new String[]{
-                "Submit Leave Request",
-                "Approve Leave Request",
-                "Reject Leave Request",
-                "View Leave Balance"
+                "Submit Leave Request", "Approve Leave Request",
+                "Reject Leave Request", "View Leave Balance"
             });
-
             switch (prompt("Choose").trim()) {
                 case "1" -> handleSubmitLeaveRequest();
                 case "2" -> handleApproveLeaveRequest();
@@ -548,88 +2342,65 @@ public class MainView {
     private void handleSubmitLeaveRequest() {
         printSectionHeader("SUBMIT LEAVE REQUEST");
         try {
-            String empId     = prompt("Employee ID");
-            System.out.println("  Leave type:  1. ANNUAL   2. SICK   3. UNPAID");
-            LeaveType type   = switch (prompt("Choose")) {
+            String empId = prompt("Employee ID");
+            System.out.println("  1. ANNUAL   2. SICK   3. UNPAID");
+            LeaveType type = switch (prompt("Choose")) {
                 case "2" -> LeaveType.SICK;
                 case "3" -> LeaveType.UNPAID;
                 default  -> LeaveType.ANNUAL;
             };
-            String startDate = prompt("Start date (YYYY-MM-DD)");
-            String endDate   = prompt("End date   (YYYY-MM-DD)");
-            String reason    = prompt("Reason");
-
-            LeaveRequest req = leaveController.submitLeaveRequest(
-                    empId, type, startDate, endDate, reason);
-            printSuccess("Leave request submitted: " + req.getLeaveId()
-                    + " (" + req.getDays() + " days)");
-        } catch (IllegalArgumentException ex) {
-            printError(ex.getMessage());
-        }
+            // Gọi đúng tên method: submit() thay vì submitLeaveRequest()
+            LeaveRequest req = leaveController.submit(
+                    empId, type,
+                    java.time.LocalDate.parse(prompt("Start date (YYYY-MM-DD)")),
+                    java.time.LocalDate.parse(prompt("End date (YYYY-MM-DD)")),
+                    prompt("Reason"));
+            printSuccess("Submitted: " + req.getLeaveId() + " (" + req.getDays() + " days)");
+        } catch (Exception ex) { printError(ex.getMessage()); }
     }
 
     private void handleApproveLeaveRequest() {
+        if (!checkAccess("APPROVE_LEAVE_REQUEST")) return;
         printSectionHeader("APPROVE LEAVE REQUEST");
-
-        // Show pending list first
         List<LeaveRequest> pending = leaveController.getPendingRequests();
-        if (pending.isEmpty()) {
-            printInfo("No pending leave requests.");
-            return;
-        }
+        if (pending.isEmpty()) { printInfo("No pending requests."); return; }
         printLeaveTable(pending);
-
         try {
-            String leaveId = prompt("Leave Request ID to approve");
-            leaveController.approveLeaveRequest(leaveId, currentUser.getId());
-            printSuccess("Leave request " + leaveId + " approved.");
-        } catch (IllegalArgumentException | IllegalStateException ex) {
-            printError(ex.getMessage());
-        }
+            // Gọi đúng tên method: approve() với LockMechanism
+            leaveController.approve(prompt("Leave ID"), currentSession.getAccount().getId(),
+                    LockMechanism.NO_LOCK);
+            printSuccess("Approved.");
+        } catch (Exception ex) { printError(ex.getMessage()); }
     }
 
     private void handleRejectLeaveRequest() {
+        if (!checkAccess("REJECT_LEAVE_REQUEST")) return;
         printSectionHeader("REJECT LEAVE REQUEST");
-
         List<LeaveRequest> pending = leaveController.getPendingRequests();
-        if (pending.isEmpty()) {
-            printInfo("No pending leave requests.");
-            return;
-        }
+        if (pending.isEmpty()) { printInfo("No pending requests."); return; }
         printLeaveTable(pending);
-
         try {
-            String leaveId = prompt("Leave Request ID to reject");
-            leaveController.rejectLeaveRequest(leaveId, currentUser.getId());
-            printSuccess("Leave request " + leaveId + " rejected.");
-        } catch (IllegalArgumentException | IllegalStateException ex) {
-            printError(ex.getMessage());
-        }
+            // Gọi đúng tên method: reject()
+            leaveController.reject(prompt("Leave ID"), currentSession.getAccount().getId());
+            printSuccess("Rejected.");
+        } catch (Exception ex) { printError(ex.getMessage()); }
     }
 
     private void handleViewLeaveBalance() {
         printSectionHeader("VIEW LEAVE BALANCE");
         try {
-            String empId = prompt("Employee ID");
-            List<LeaveBalance> balances = leaveController.getLeaveBalance(empId);
-            if (balances.isEmpty()) {
-                printInfo("No leave balance records for " + empId);
-                return;
-            }
+            // Gọi đúng tên method: getBalancesByEmployee()
+            List<LeaveBalance> balances = leaveController.getBalancesByEmployee(prompt("Employee ID"));
+            if (balances.isEmpty()) { printInfo("No balance records found."); return; }
             System.out.printf(BOLD + "%-15s %-10s %-8s %-8s %-10s%n" + RESET,
                     "Employee", "Type", "Total", "Used", "Remaining");
             System.out.println("─".repeat(55));
             for (LeaveBalance b : balances) {
                 System.out.printf("%-15s %-10s %-8d %-8d %-10d%n",
-                        b.getEmployeeId(),
-                        b.getLeaveType(),
-                        b.getTotalLeaveDays(),
-                        b.getUsedLeaveDays(),
-                        b.getRemainingLeaveDays());
+                        b.getEmployeeId(), b.getLeaveType(),
+                        b.getTotalLeaveDays(), b.getUsedLeaveDays(), b.getRemainingLeaveDays());
             }
-        } catch (IllegalArgumentException ex) {
-            printError(ex.getMessage());
-        }
+        } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
     }
 
     // ═════════════════════════════════════════
@@ -640,11 +2411,8 @@ public class MainView {
         boolean back = false;
         while (!back) {
             printSubMenu("PAYROLL MANAGEMENT", new String[]{
-                "Process Monthly Payroll",
-                "View Payroll History",
-                "Configure Payroll Rules"
+                "Process Monthly Payroll", "View Payroll History", "Configure Payroll Rules"
             });
-
             switch (prompt("Choose").trim()) {
                 case "1" -> handleProcessMonthlyPayroll();
                 case "2" -> handleViewPayrollHistory();
@@ -659,78 +2427,60 @@ public class MainView {
         printSectionHeader("PROCESS MONTHLY PAYROLL");
         try {
             String yearMonth = prompt("Year-Month (YYYY-MM)");
-            printInfo("Processing payroll for " + yearMonth + "...");
-
+            printInfo("Processing...");
             PayrollRun run = payrollController.processMonthlyPayroll(
-                    yearMonth, currentUser.getId());
-
-            printSuccess("Payroll processed successfully!");
+                    yearMonth, currentSession.getAccount().getId());
+            printSuccess("Done!");
             printPayrollRunSummary(run);
-        } catch (IllegalArgumentException | IllegalStateException ex) {
-            printError(ex.getMessage());
-        }
+        } catch (Exception ex) { printError(ex.getMessage()); }
     }
 
     private void handleViewPayrollHistory() {
         printSectionHeader("VIEW PAYROLL HISTORY");
         try {
-            String empId = promptOptional("Employee ID (Enter = all employees)");
-            List<PayrollEntry> entries = (empId != null)
+            String empId = promptOptional("Employee ID (Enter = all)");
+            List<PayrollEntry> entries = empId != null
                     ? payrollController.getPayrollByEmployee(empId)
                     : payrollController.getAllPayrollEntries();
+            if (entries.isEmpty()) { printInfo("No records."); return; }
 
-            if (entries.isEmpty()) {
-                printInfo("No payroll records found.");
-                return;
-            }
-
-            System.out.printf(BOLD + "%-20s %-12s %-18s %-12s%n" + RESET,
-                    "Entry ID", "Employee", "Net Salary (VND)", "Status");
-            System.out.println("─".repeat(65));
+            // Hiện thêm cột Type để thấy rõ 2 luồng tính lương đa hình
+            System.out.printf(BOLD + "%-20s %-12s %-10s %-18s %-12s%n" + RESET,
+                    "Entry ID", "Employee", "Type", "Net Salary (VND)", "Status");
+            System.out.println("─".repeat(78));
             for (PayrollEntry e : entries) {
-                System.out.printf("%-20s %-12s %-18s %-12s%n",
-                        e.getId(),
-                        e.getEmployeeId(),
-                        String.format("%,.0f", e.getNetSalary()),
-                        e.getStatus());
+                Employee emp = payrollController.findEmployeeById(e.getEmployeeId());
+                String type = (emp != null) ? String.valueOf(emp.getEmploymentType()) : "?";
+                System.out.printf("%-20s %-12s %-10s %-18s %-12s%n",
+                        e.getId(), e.getEmployeeId(), type,
+                        String.format("%,.0f", e.getNetSalary()), e.getStatus());
             }
-            System.out.println("─".repeat(65));
-            printInfo("Total: " + entries.size() + " entries.");
-        } catch (IllegalArgumentException ex) {
-            printError(ex.getMessage());
-        }
+            System.out.println("─".repeat(78));
+
+            // Giải thích công thức khác nhau giữa 2 loại
+            printInfo("FULLTIME: base + overtime + attendance bonus - tax");
+            printInfo("PARTTIME: base + overtime (no bonus, no tax)");
+        } catch (Exception ex) { printError(ex.getMessage()); }
     }
 
     private void handleConfigurePayrollRules() {
+        if (!checkAccess("CONFIGURE_PAYROLL_RULES")) return;
         printSectionHeader("CONFIGURE PAYROLL RULES");
         try {
-            PayrollRule current = payrollController.getPayrollRule();
-            System.out.println("  Current configuration:");
-            printPayrollRule(current);
+            PayrollRule cur = payrollController.getPayrollRule();
+            printPayrollRule(cur);
             printInfo("Press Enter to keep current value.");
-
-            String wdStr  = promptOptional("Standard working days [" + current.getStandardWorkingDays() + "]");
-            String hpStr  = promptOptional("Working hours per day  [" + current.getWorkingHoursPerDay() + "]");
-            String otStr  = promptOptional("Overtime multiplier    [" + current.getOvertimeMultiplier() + "]");
-            String bonStr = promptOptional("Attendance bonus (VND) [" + current.getAttendanceBonus() + "]");
-            String taxRStr= promptOptional("Tax rate (0.0-1.0)     [" + current.getTaxRate() + "]");
-            String taxTStr= promptOptional("Tax threshold (VND)    [" + current.getTaxThreshold() + "]");
-
             PayrollRule updated = new PayrollRule(
-                    wdStr  != null ? parseInt(wdStr,  current.getStandardWorkingDays()) : current.getStandardWorkingDays(),
-                    hpStr  != null ? parseInt(hpStr,  current.getWorkingHoursPerDay())  : current.getWorkingHoursPerDay(),
-                    otStr  != null ? parseDoubleVal(otStr,  current.getOvertimeMultiplier()) : current.getOvertimeMultiplier(),
-                    bonStr != null ? parseDoubleVal(bonStr, current.getAttendanceBonus())    : current.getAttendanceBonus(),
-                    taxRStr!= null ? parseDoubleVal(taxRStr,current.getTaxRate())            : current.getTaxRate(),
-                    taxTStr!= null ? parseDoubleVal(taxTStr,current.getTaxThreshold())       : current.getTaxThreshold()
+                    parseInt(promptOptional("Standard work days [" + cur.getStandardWorkingDays() + "]"), cur.getStandardWorkingDays()),
+                    parseInt(promptOptional("Hours/day [" + cur.getWorkingHoursPerDay() + "]"), cur.getWorkingHoursPerDay()),
+                    parseDoubleVal(promptOptional("Overtime multiplier [" + cur.getOvertimeMultiplier() + "]"), cur.getOvertimeMultiplier()),
+                    parseDoubleVal(promptOptional("Attendance bonus [" + cur.getAttendanceBonus() + "]"), cur.getAttendanceBonus()),
+                    parseDoubleVal(promptOptional("Tax rate [" + cur.getTaxRate() + "]"), cur.getTaxRate()),
+                    parseDoubleVal(promptOptional("Tax threshold [" + cur.getTaxThreshold() + "]"), cur.getTaxThreshold())
             );
-
             payrollController.updatePayrollRule(updated);
             printSuccess("Payroll rules updated!");
-            printPayrollRule(updated);
-        } catch (Exception ex) {
-            printError(ex.getMessage());
-        }
+        } catch (Exception ex) { printError(ex.getMessage()); }
     }
 
     // ═════════════════════════════════════════
@@ -741,197 +2491,78 @@ public class MainView {
         boolean back = false;
         while (!back) {
             printSubMenu("REPORTS", new String[]{
-                "Generate Payroll Report",
-                "Generate Attendance Report",
-                "Generate Simulation Comparison Report",
-                "Export CSV Result",
-                "Import CSV Result"
+                "Generate Payroll Report", "Generate Attendance Report",
+                "Generate Simulation Comparison Report", "Export CSV Result", "Import CSV Result"
             });
-
             switch (prompt("Choose").trim()) {
-                case "1" -> handleGeneratePayrollReport();
-                case "2" -> handleGenerateAttendanceReport();
-                case "3" -> handleGenerateSimulationReport();
-                case "4" -> handleExportCsvResult();
-                case "5" -> handleImportCsvResult();
+                case "1" -> { try { System.out.println(reportController.generatePayrollReport(prompt("Year-Month (YYYY-MM)"))); } catch (Exception ex) { printError(ex.getMessage()); } }
+                case "2" -> { try { System.out.println(reportController.generateAttendanceReport(prompt("Year-Month (YYYY-MM)"))); } catch (Exception ex) { printError(ex.getMessage()); } }
+                case "3" -> { try { System.out.println(reportController.generateSimulationComparisonReport()); } catch (Exception ex) { printError(ex.getMessage()); } }
+                case "4" -> { try { String p = promptOptional("Path (Enter = reports/export.csv)"); reportController.exportCsv(p != null ? p : "reports/export.csv"); printSuccess("Exported."); } catch (Exception ex) { printError(ex.getMessage()); } }
+                case "5" -> { try { reportController.importCsv(prompt("File path")); printSuccess("Imported."); } catch (Exception ex) { printError(ex.getMessage()); } }
                 case "0" -> back = true;
                 default  -> printError("Invalid choice.");
             }
         }
     }
 
-    private void handleGeneratePayrollReport() {
-        printSectionHeader("GENERATE PAYROLL REPORT");
-        try {
-            String yearMonth = prompt("Year-Month (YYYY-MM)");
-            String report    = reportController.generatePayrollReport(yearMonth);
-            System.out.println(report);
-        } catch (Exception ex) {
-            printError(ex.getMessage());
-        }
-    }
-
-    private void handleGenerateAttendanceReport() {
-        printSectionHeader("GENERATE ATTENDANCE REPORT");
-        try {
-            String yearMonth = prompt("Year-Month (YYYY-MM)");
-            String report    = reportController.generateAttendanceReport(yearMonth);
-            System.out.println(report);
-        } catch (Exception ex) {
-            printError(ex.getMessage());
-        }
-    }
-
-    private void handleGenerateSimulationReport() {
-        printSectionHeader("GENERATE SIMULATION COMPARISON REPORT");
-        try {
-            String report = reportController.generateSimulationComparisonReport();
-            System.out.println(report);
-        } catch (Exception ex) {
-            printError(ex.getMessage());
-        }
-    }
-
-    private void handleExportCsvResult() {
-        printSectionHeader("EXPORT CSV RESULT");
-        try {
-            String path = promptOptional("Output file path (Enter = reports/export.csv)");
-            if (path == null) path = "reports/export.csv";
-            reportController.exportCsv(path);
-            printSuccess("Exported to: " + path);
-        } catch (Exception ex) {
-            printError(ex.getMessage());
-        }
-    }
-
-    private void handleImportCsvResult() {
-        printSectionHeader("IMPORT CSV RESULT");
-        try {
-            String path = prompt("Input file path");
-            reportController.importCsv(path);
-            printSuccess("Imported from: " + path);
-        } catch (Exception ex) {
-            printError(ex.getMessage());
-        }
-    }
-
     // ═════════════════════════════════════════
-    // 7. SYNCHRONIZATION & SIMULATION
+    // 7. SYNC & SIMULATION
     // ═════════════════════════════════════════
 
     private void showSyncAndSimulation() {
         boolean back = false;
         while (!back) {
             printSubMenu("SYNCHRONIZATION & SIMULATION", new String[]{
-                "Run Payroll Simulation",
-                "Select Sync Mode",
-                "Measure TPS / Elapsed Time",
-                "Detect Double Payment",
+                "Run Payroll Simulation", "Select Sync Mode",
+                "Measure TPS / Elapsed Time", "Detect Double Payment",
                 "Detect Wrong Leave Deduction"
             });
-
             switch (prompt("Choose").trim()) {
-                case "1" -> handleRunPayrollSimulation();
+                case "1" -> handleRunSimulation();
                 case "2" -> handleSelectSyncMode();
                 case "3" -> handleMeasureTps();
-                case "4" -> handleDetectDoublePayment();
-                case "5" -> handleDetectWrongLeaveDeduction();
+                case "4" -> { try { List<String> s = simulationController.detectDoublePayment(); if (s.isEmpty()) printSuccess("No double payments."); else { printError("Double payments: " + s.size()); s.forEach(x -> System.out.println("  ⚠ " + x)); } } catch (Exception ex) { printError(ex.getMessage()); } }
+                case "5" -> { try { List<String> s = simulationController.detectWrongLeaveDeduction(); if (s.isEmpty()) printSuccess("No wrong deductions."); else { printError("Wrong deductions: " + s.size()); s.forEach(x -> System.out.println("  ⚠ " + x)); } } catch (Exception ex) { printError(ex.getMessage()); } }
                 case "0" -> back = true;
                 default  -> printError("Invalid choice.");
             }
         }
     }
 
-    private void handleRunPayrollSimulation() {
+    private void handleRunSimulation() {
         printSectionHeader("RUN PAYROLL SIMULATION");
         try {
             String yearMonth = prompt("Year-Month (YYYY-MM)");
-            int threads      = parseInt(promptOptional("Number of threads (Enter = 10)"), 10);
-            printInfo("Running simulation with " + threads + " threads...");
-
+            int threads = parseInt(promptOptional("Threads (Enter = 10)"), 10);
+            printInfo("Running with " + threads + " threads, mode: " + simulationController.getCurrentSyncMode());
             PayrollRun run = simulationController.runSimulation(yearMonth, threads);
-            printSuccess("Simulation complete!");
+            printSuccess("Done!");
             printPayrollRunSummary(run);
-        } catch (Exception ex) {
-            printError(ex.getMessage());
-        }
+        } catch (Exception ex) { printError(ex.getMessage()); }
     }
 
     private void handleSelectSyncMode() {
         printSectionHeader("SELECT SYNC MODE");
-        System.out.println("  1. NO_LOCK      — No synchronization (demo race condition)");
-        System.out.println("  2. FILE_LOCK    — Lock entire CSV file");
-        System.out.println("  3. SYNCHRONIZED — Per-employee Java synchronized");
-        System.out.println("  4. OPTIMISTIC   — Version-based optimistic locking");
-
-        String choice = prompt("Choose sync mode");
-        String mode   = switch (choice) {
+        System.out.println("  1. NO_LOCK      2. FILE_LOCK");
+        System.out.println("  3. SYNCHRONIZED 4. OPTIMISTIC");
+        String mode = switch (prompt("Choose")) {
             case "1" -> "NO_LOCK";
             case "2" -> "FILE_LOCK";
             case "3" -> "SYNCHRONIZED";
             case "4" -> "OPTIMISTIC";
             default  -> null;
         };
-
-        if (mode == null) {
-            printError("Invalid choice.");
-            return;
-        }
-
-        try {
-            simulationController.setSyncMode(mode);
-            printSuccess("Sync mode set to: " + mode);
-        } catch (Exception ex) {
-            printError(ex.getMessage());
-        }
+        if (mode == null) { printError("Invalid choice."); return; }
+        simulationController.setSyncMode(mode);
+        printSuccess("Mode set to: " + mode);
     }
 
     private void handleMeasureTps() {
         printSectionHeader("MEASURE TPS / ELAPSED TIME");
-        try {
-            PayrollRun latest = simulationController.getLatestRun();
-            if (latest == null) {
-                printInfo("No simulation run yet. Run a simulation first.");
-                return;
-            }
-            System.out.printf("  %-20s: %s%n",    "Year-Month",      latest.getYearMonth());
-            System.out.printf("  %-20s: %s%n",    "Mechanism",       latest.getMechanism());
-            System.out.printf("  %-20s: %d ms%n", "Elapsed Time",    latest.getElapsedMs());
-            System.out.printf("  %-20s: %.2f%n",  "TPS",             latest.getTps());
-            System.out.printf("  %-20s: %d%n",    "Success Count",   latest.getSuccessCount());
-        } catch (Exception ex) {
-            printError(ex.getMessage());
-        }
-    }
-
-    private void handleDetectDoublePayment() {
-        printSectionHeader("DETECT DOUBLE PAYMENT");
-        try {
-            List<String> suspects = simulationController.detectDoublePayment();
-            if (suspects.isEmpty()) {
-                printSuccess("No double payments detected.");
-            } else {
-                printError("Double payment detected for " + suspects.size() + " employee(s):");
-                suspects.forEach(s -> System.out.println("  ⚠ " + s));
-            }
-        } catch (Exception ex) {
-            printError(ex.getMessage());
-        }
-    }
-
-    private void handleDetectWrongLeaveDeduction() {
-        printSectionHeader("DETECT WRONG LEAVE DEDUCTION");
-        try {
-            List<String> suspects = simulationController.detectWrongLeaveDeduction();
-            if (suspects.isEmpty()) {
-                printSuccess("No wrong leave deductions detected.");
-            } else {
-                printError("Wrong leave deduction detected for " + suspects.size() + " employee(s):");
-                suspects.forEach(s -> System.out.println("  ⚠ " + s));
-            }
-        } catch (Exception ex) {
-            printError(ex.getMessage());
-        }
+        PayrollRun r = simulationController.getLatestRun();
+        if (r == null) { printInfo("No simulation run yet."); return; }
+        printPayrollRunSummary(r);
     }
 
     // ═════════════════════════════════════════
@@ -947,36 +2578,23 @@ public class MainView {
     }
 
     private void printMainMenu() {
-        String user = (currentUser != null)
-                ? DIM + " [" + currentUser.getUsername() + " | " + currentUser.getRole() + "]" + RESET
-                : "";
+        String user = currentSession != null
+                ? DIM + " [" + currentSession.getUsername() + " | " + currentSession.getRole() + "]" + RESET : "";
         System.out.println(BOLD + "\n=========================================" + user);
         System.out.println(" EMPLOYEE PAYROLL MANAGEMENT SYSTEM");
         System.out.println("=========================================");
-        System.out.println("  1. Login");
-        System.out.println("  2. Employee Management");
-        System.out.println("  3. Attendance Management");
-        System.out.println("  4. Leave Management");
-        System.out.println("  5. Payroll Management");
-        System.out.println("  6. Reports");
-        System.out.println("  7. Synchronization & Simulation");
-        System.out.println("  ─────────────────────────────");
-        System.out.println("  0. Exit");
-        System.out.println("=========================================" + RESET);
+        System.out.println("  1. Login\n  2. Employee Management\n  3. Attendance Management");
+        System.out.println("  4. Leave Management\n  5. Payroll Management\n  6. Reports");
+        System.out.println("  7. Synchronization & Simulation\n  ─────────────────────────────");
+        System.out.println("  0. Exit\n=========================================" + RESET);
     }
 
-    /**
-     * Sub-menu động — tự đánh số, tự xử lý dấu "---" thành separator.
-     */
     private void printSubMenu(String title, String[] items) {
         System.out.println(BOLD + "\n========== " + title + " ==========" + RESET);
-        int menuNum = 1;
+        int n = 1;
         for (String item : items) {
-            if (item.equals("---")) {
-                System.out.println("  ----------------------------");
-            } else {
-                System.out.printf("  %2d. %s%n", menuNum++, item);
-            }
+            if (item.equals("---")) System.out.println("  ----------------------------");
+            else System.out.printf("  %2d. %s%n", n++, item);
         }
         System.out.println("   0. Back");
         System.out.println(BOLD + "═".repeat(title.length() + 22) + RESET);
@@ -989,103 +2607,82 @@ public class MainView {
 
     private void printEmployeeTable(List<Employee> list) {
         if (list.isEmpty()) { printInfo("No employees found."); return; }
-        System.out.printf(BOLD + "%-12s %-20s %-25s %-10s %-10s%n" + RESET,
-                "ID", "Name", "Email", "Dept", "Type");
+        System.out.printf(BOLD + "%-12s %-20s %-25s %-10s %-10s%n" + RESET, "ID","Name","Email","Dept","Type");
         System.out.println("─".repeat(80));
-        for (Employee e : list) {
+        for (Employee e : list)
             System.out.printf("%-12s %-20s %-25s %-10s %-10s%n",
-                    e.getId(), trunc(e.getName(), 19), trunc(e.getEmail(), 24),
-                    e.getDepartmentId(), e.getEmploymentType());
-        }
+                    e.getId(), trunc(e.getName(),19), trunc(e.getEmail(),24), e.getDepartmentId(), e.getEmploymentType());
         System.out.println("─".repeat(80));
-        printInfo("Found: " + list.size() + " employee(s).");
+        printInfo("Found: " + list.size());
     }
 
     private void printEmployeeDetail(Employee e) {
         System.out.println(CYAN + "┌─── Employee Detail ──────────────────────────┐" + RESET);
-        printRow("ID",           e.getId());
-        printRow("Version",      "v" + e.getVersion());
-        printRow("Name",         e.getName());
-        printRow("Email",        e.getEmail());
-        printRow("Department",   e.getDepartmentId());
-        printRow("Type",         String.valueOf(e.getEmploymentType()));
-        printRow("Base Salary",  String.format("%,.0f VND", e.getBaseSalary()));
+        printRow("ID", e.getId()); printRow("Name", e.getName()); printRow("Email", e.getEmail());
+        printRow("Department", e.getDepartmentId()); printRow("Type", String.valueOf(e.getEmploymentType()));
+        printRow("Base Salary", String.format("%,.0f VND", e.getBaseSalary()));
         System.out.println(CYAN + "└───────────────────────────────────────────────┘" + RESET);
     }
 
     private void printDepartmentTable(List<Department> list) {
-        System.out.printf(BOLD + "%-12s %-25s %-15s%n" + RESET, "ID", "Name", "Manager ID");
+        System.out.printf(BOLD + "%-12s %-25s %-15s%n" + RESET, "ID","Name","Manager ID");
         System.out.println("─".repeat(55));
-        for (Department d : list) {
-            System.out.printf("%-12s %-25s %-15s%n",
-                    d.getId(), trunc(d.getName(), 24), d.getManagerId());
-        }
+        for (Department d : list)
+            System.out.printf("%-12s %-25s %-15s%n", d.getId(), trunc(d.getName(),24), d.getManagerId());
         System.out.println("─".repeat(55));
     }
 
     private void printDepartmentDetail(Department d) {
-        System.out.println(CYAN + "┌─── Department Detail ─────────────────────────┐" + RESET);
-        printRow("ID",         d.getId());
-        printRow("Name",       d.getName());
-        printRow("Manager ID", d.getManagerId());
+        System.out.println(CYAN + "┌─── Department ────────────────────────────────┐" + RESET);
+        printRow("ID", d.getId()); printRow("Name", d.getName()); printRow("Manager", d.getManagerId());
         System.out.println(CYAN + "└───────────────────────────────────────────────┘" + RESET);
     }
 
     private void printAttendanceDetail(AttendanceRecord r) {
         System.out.println(CYAN + "┌─── Attendance Record ─────────────────────────┐" + RESET);
-        printRow("ID",             r.getId());
-        printRow("Employee ID",    r.getEmployeeId());
-        printRow("Year-Month",     r.getYearMonth());
-        printRow("Work Days",      String.valueOf(r.getWorkDays()));
-        printRow("Overtime Hours", r.getOvertimeHours() + "h");
+        printRow("ID", r.getId()); printRow("Employee", r.getEmployeeId());
+        printRow("Month", r.getYearMonth()); printRow("Work Days", String.valueOf(r.getWorkDays()));
+        printRow("Overtime", r.getOvertimeHours() + "h");
         System.out.println(CYAN + "└───────────────────────────────────────────────┘" + RESET);
     }
 
     private void printAttendanceTable(List<AttendanceRecord> list) {
-        System.out.printf(BOLD + "%-15s %-12s %-10s %-10s %-12s%n" + RESET,
-                "ID", "Employee", "Month", "WorkDays", "Overtime(h)");
+        System.out.printf(BOLD + "%-15s %-12s %-10s %-10s %-12s%n" + RESET, "ID","Employee","Month","WorkDays","Overtime(h)");
         System.out.println("─".repeat(62));
-        for (AttendanceRecord r : list) {
+        for (AttendanceRecord r : list)
             System.out.printf("%-15s %-12s %-10s %-10d %-12.1f%n",
-                    trunc(r.getId(), 14), r.getEmployeeId(),
-                    r.getYearMonth(), r.getWorkDays(), r.getOvertimeHours());
-        }
+                    trunc(r.getId(),14), r.getEmployeeId(), r.getYearMonth(), r.getWorkDays(), r.getOvertimeHours());
         System.out.println("─".repeat(62));
     }
 
     private void printLeaveTable(List<LeaveRequest> list) {
-        System.out.printf(BOLD + "%-15s %-12s %-10s %-12s %-12s %-10s%n" + RESET,
-                "Leave ID", "Employee", "Type", "Start", "End", "Status");
+        System.out.printf(BOLD + "%-15s %-12s %-10s %-12s %-12s %-10s%n" + RESET, "Leave ID","Employee","Type","Start","End","Status");
         System.out.println("─".repeat(75));
-        for (LeaveRequest r : list) {
+        for (LeaveRequest r : list)
             System.out.printf("%-15s %-12s %-10s %-12s %-12s %-10s%n",
-                    r.getLeaveId(), r.getEmployeeId(), r.getLeaveType(),
-                    r.getStartDate(), r.getEndDate(), r.getStatus());
-        }
+                    r.getLeaveId(), r.getEmployeeId(), r.getLeaveType(), r.getStartDate(), r.getEndDate(), r.getStatus());
         System.out.println("─".repeat(75));
     }
 
-    private void printPayrollRunSummary(PayrollRun run) {
+    private void printPayrollRunSummary(PayrollRun r) {
         System.out.println(CYAN + "┌─── Payroll Run Summary ───────────────────────┐" + RESET);
-        printRow("Run ID",          run.getId());
-        printRow("Year-Month",      run.getYearMonth());
-        printRow("Mechanism",       run.getMechanism());
-        printRow("Elapsed Time",    run.getElapsedMs() + " ms");
-        printRow("TPS",             String.format("%.2f", run.getTps()));
-        printRow("Success Count",   String.valueOf(run.getSuccessCount()));
-        printRow("Double Payments", String.valueOf(run.getDoublePaymentCount()));
-        printRow("Wrong Leave",     String.valueOf(run.getWrongLeaveCount()));
+        printRow("Run ID", r.getId()); printRow("Month", r.getYearMonth());
+        printRow("Mechanism", r.getMechanism()); printRow("Elapsed", r.getElapsedMs() + " ms");
+        printRow("TPS", String.format("%.2f", r.getTps()));
+        printRow("Success", String.valueOf(r.getSuccessCount()));
+        printRow("Double Pay", String.valueOf(r.getDoublePaymentCount()));
+        printRow("Wrong Leave", String.valueOf(r.getWrongLeaveCount()));
         System.out.println(CYAN + "└───────────────────────────────────────────────┘" + RESET);
     }
 
     private void printPayrollRule(PayrollRule r) {
         System.out.println(CYAN + "┌─── Payroll Rule ──────────────────────────────┐" + RESET);
-        printRow("Standard Work Days",  String.valueOf(r.getStandardWorkingDays()));
-        printRow("Hours/Day",           String.valueOf(r.getWorkingHoursPerDay()));
-        printRow("Overtime Multiplier", String.valueOf(r.getOvertimeMultiplier()) + "x");
-        printRow("Attendance Bonus",    String.format("%,.0f VND", r.getAttendanceBonus()));
-        printRow("Tax Rate",            (r.getTaxRate() * 100) + "%");
-        printRow("Tax Threshold",       String.format("%,.0f VND", r.getTaxThreshold()));
+        printRow("Work Days", String.valueOf(r.getStandardWorkingDays()));
+        printRow("Hours/Day", String.valueOf(r.getWorkingHoursPerDay()));
+        printRow("OT Multiplier", r.getOvertimeMultiplier() + "x");
+        printRow("Bonus", String.format("%,.0f VND", r.getAttendanceBonus()));
+        printRow("Tax Rate", (r.getTaxRate() * 100) + "%");
+        printRow("Tax Threshold", String.format("%,.0f VND", r.getTaxThreshold()));
         System.out.println(CYAN + "└───────────────────────────────────────────────┘" + RESET);
     }
 
@@ -1106,22 +2703,10 @@ public class MainView {
             System.out.print(BOLD + label + ": " + RESET);
             String input = scanner.nextLine().trim();
             if (!input.isEmpty()) return input;
-            printError("This field is required.");
+            printError("Required field.");
         }
     }
 
-    /** Ẩn password (fallback nếu Console null trong IDE). */
-    private String promptPassword(String label) {
-        java.io.Console console = System.console();
-        if (console != null) {
-            char[] pw = console.readPassword(BOLD + label + ": " + RESET);
-            return new String(pw).trim();
-        }
-        // IDE fallback
-        return prompt(label);
-    }
-
-    /** Trả về null nếu nhấn Enter (field tùy chọn). */
     private String promptOptional(String label) {
         System.out.print(BOLD + label + ": " + RESET);
         String input = scanner.nextLine().trim();
@@ -1130,14 +2715,13 @@ public class MainView {
 
     private double promptDouble(String label) {
         while (true) {
-            String raw = prompt(label);
-            try { return Double.parseDouble(raw.replace(",", "")); }
-            catch (NumberFormatException e) { printError("Please enter a valid number."); }
+            try { return Double.parseDouble(prompt(label).replace(",", "")); }
+            catch (NumberFormatException e) { printError("Enter a valid number."); }
         }
     }
 
-    private boolean confirm(String question) {
-        System.out.print(YELLOW + question + " (yes/no): " + RESET);
+    private boolean confirm(String q) {
+        System.out.print(YELLOW + q + " (yes/no): " + RESET);
         String ans = scanner.nextLine().trim().toLowerCase();
         return ans.equals("yes") || ans.equals("y");
     }
@@ -1148,16 +2732,13 @@ public class MainView {
     }
 
     private int parseInt(String s, int fallback) {
+        if (s == null) return fallback;
         try { return Integer.parseInt(s.trim()); }
         catch (Exception e) { return fallback; }
     }
 
-    private double parseDouble(String s) {
-        try { return Double.parseDouble(s.replace(",", "")); }
-        catch (Exception e) { return -1; }
-    }
-
     private double parseDoubleVal(String s, double fallback) {
+        if (s == null) return fallback;
         try { return Double.parseDouble(s.replace(",", "")); }
         catch (Exception e) { return fallback; }
     }
