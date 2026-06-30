@@ -47,7 +47,7 @@ public class LeaveControllerTest {
         employeeRepo = new EmployeeRepository(tempEmployeesFile.getAbsolutePath());
         leaveBalanceRepo = new LeaveBalanceRepository(tempBalancesFile.getAbsolutePath());
         leaveRequestRepo = new LeaveRequestRepository(tempRequestsFile.getAbsolutePath());
-        
+
         leaveController = new LeaveController(leaveRequestRepo, leaveBalanceRepo, employeeRepo);
     }
 
@@ -133,7 +133,7 @@ public class LeaveControllerTest {
         LocalDate start = LocalDate.of(2023, 5, 1);
         LocalDate end = LocalDate.of(2023, 5, 10); // 10 days
         LeaveRequest req1 = leaveController.submit("E0001", LeaveType.ANNUAL, start, end, "Vacation 1");
-        
+
         LocalDate start2 = LocalDate.of(2023, 5, 15);
         LocalDate end2 = LocalDate.of(2023, 5, 19); // 5 days
         LeaveRequest req2 = leaveController.submit("E0001", LeaveType.ANNUAL, start2, end2, "Vacation 2");
