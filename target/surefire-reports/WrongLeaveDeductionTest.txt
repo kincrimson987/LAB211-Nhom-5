@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
-Test set: PayrollAndLeaveTest
+Test set: WrongLeaveDeductionTest
 -------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.012 s -- in PayrollAndLeaveTest
+Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.069 s -- in WrongLeaveDeductionTest

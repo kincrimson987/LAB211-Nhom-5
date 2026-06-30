@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="PayrollAndLeaveTest" time="0.012" tests="1" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="repository.AttendanceCsvRepositoryTest" time="0.464" tests="2" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="17"/>
     <property name="sun.cpu.isalist" value="amd64"/>
@@ -57,24 +57,101 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="61.0"/>
   </properties>
-  <testcase name="testPayrollAndLeaveFlowViaController" classname="PayrollAndLeaveTest" time="0.011">
-    <system-out><![CDATA[[Single-Thread] Week 5 File I/O scanning for: E001
-[Single-Thread] Week 5 File I/O scanning for: E002
-[Single-Thread] Week 5 File I/O scanning for: E003
+  <testcase name="testReadAndValidateAllCsvFiles" classname="repository.AttendanceCsvRepositoryTest" time="0.218">
+    <system-out><![CDATA[================================================================================
+TEST: Read and Validate All CSV Files in 'data/' folder
+================================================================================
 
-=======================================================
-          PAYROLL SYSTEM - REPORT VIEW (WEEK 5-6)      
-=======================================================
- [CONFIG] Progress Mode  : Week 5 (File I/O) & Week 6 (MVC)
--------------------------------------------------------
- SUMMARY STATISTICS:
-  - Total Employees Processed  : 3
-  - Approved Leave Days        : 3 Days
--------------------------------------------------------
-=======================================================
+------------------------------------------------------------
+Analyzing File: data\attendance.csv
+------------------------------------------------------------
+  Detected Header: id,version,employeeId,yearMonth,workDays,overtimeHours
+  Expected Column Count: 6
+  Analysis Completed for attendance.csv
+  Total Data Records: 14400
+  Total Missing/Invalid Values: 0
 
-[Leave Flow] Logic validated -> APPROVED.
-[Leave Flow] Logic validated -> REJECTED.
+------------------------------------------------------------
+Analyzing File: data\departments.csv
+------------------------------------------------------------
+  Detected Header: id,version,name,managerId
+  Expected Column Count: 4
+  Analysis Completed for departments.csv
+  Total Data Records: 10
+  Total Missing/Invalid Values: 0
+
+------------------------------------------------------------
+Analyzing File: data\employees.csv
+------------------------------------------------------------
+  Detected Header: id,version,name,email,departmentId,employmentType,baseSalary
+  Expected Column Count: 7
+  Analysis Completed for employees.csv
+  Total Data Records: 1200
+  Total Missing/Invalid Values: 0
+
+------------------------------------------------------------
+Analyzing File: data\leave_balances.csv
+------------------------------------------------------------
+  Detected Header: balanceId,employeeId,leaveType,totalLeaveDays,usedLeaveDays,remainingLeaveDays,version
+  Expected Column Count: 7
+  Analysis Completed for leave_balances.csv
+  Total Data Records: 2400
+  Total Missing/Invalid Values: 0
+
+------------------------------------------------------------
+Analyzing File: data\leave_requests.csv
+------------------------------------------------------------
+  Detected Header: leaveId,employeeId,leaveType,startDate,endDate,reason,status,approvedBy
+  Expected Column Count: 8
+  Analysis Completed for leave_requests.csv
+  Total Data Records: 1454
+  Total Missing/Invalid Values: 0
+
+------------------------------------------------------------
+Analyzing File: data\payroll_entries.csv
+------------------------------------------------------------
+  Detected Header: id,version,employeeId,netSalary,status
+  Expected Column Count: 5
+  Analysis Completed for payroll_entries.csv
+  Total Data Records: 14400
+  Total Missing/Invalid Values: 0
+
+------------------------------------------------------------
+Analyzing File: data\payroll_runs.csv
+------------------------------------------------------------
+  Detected Header: id,version,yearMonth,mechanism,elapsedMs,successCount,doublePaymentCount,wrongLeaveCount,tps
+  Expected Column Count: 9
+  Analysis Completed for payroll_runs.csv
+  Total Data Records: 48
+  Total Missing/Invalid Values: 0
+
+------------------------------------------------------------
+Analyzing File: data\test_standalone.csv
+------------------------------------------------------------
+  No Header detected. Expected Column Count inferred from first row: 3
+  Analysis Completed for test_standalone.csv
+  Total Data Records: 5
+  Total Missing/Invalid Values: 0
+
+================================================================================
+VALIDATION SUMMARY
+Total CSV files scanned: 8
+Total errors across all files: 0
+Total processing time: 208.802 ms (Limit: < 1000 ms)
+Result: PASSED
+================================================================================
+]]></system-out>
+  </testcase>
+  <testcase name="testCompareAndReportChanges" classname="repository.AttendanceCsvRepositoryTest" time="0.238">
+    <system-out><![CDATA[================================================================================
+COMPARE DATA CHANGES WITH BASELINE (data/ vs data_backup/)
+================================================================================
+
+================================================================================
+SUMMARY: 0 file(s) modified/added/deleted.
+  Tip: To accept these changes, run the test with: -DacceptChanges=true
+  Or simply delete the 'data_backup/' folder and run test again.
+================================================================================
 ]]></system-out>
   </testcase>
 </testsuite>

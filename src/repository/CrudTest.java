@@ -4,9 +4,9 @@ import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.List;
 
-class TestEntity {
-    protected String id;
-    protected long version;
+ class TestEntity {
+    private String id;
+    private long version;
     private String name;
 
     public TestEntity() {

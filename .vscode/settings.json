@@ -1,14 +1,15 @@
 {
-    "java.jdt.ls.java.home": "C:\\Program Files\\Java\\jdk-17",
+    "java.jdt.ls.java.home": "C:\\Program Files\\Java\\jdk-17.0.19",
     "java.configuration.runtimes": [
         {
             "name": "JavaSE-17",
-            "path": "C:\\Program Files\\Java\\jdk-17",
+            "path": "C:\\Program Files\\Java\\jdk-17.0.19",
             "default": true
         },
         {
             "name": "JavaSE-1.8",
             "path": "C:\\Program Files\\Java\\jdk1.8.0_202"
         }
-    ]
+    ],
+    "java.configuration.updateBuildConfiguration": "interactive"
 }
