@@ -15,7 +15,8 @@ public class EmployeeAuthController extends AuthController {
             "CHECK_IN", "CHECK_OUT",
             "VIEW_ATTENDANCE_RECORD", "VIEW_ATTENDANCE_SUMMARY",
             "SUBMIT_ATTENDANCE_ADJUSTMENT",
-            "SUBMIT_LEAVE_REQUEST", "VIEW_LEAVE_BALANCE"
+            "SUBMIT_LEAVE_REQUEST", "VIEW_LEAVE_BALANCE",
+            "VIEW_PAYROLL_HISTORY"
     );
 
     public EmployeeAuthController(UserAccount account) {

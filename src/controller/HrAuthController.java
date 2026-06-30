@@ -21,9 +21,13 @@ public class HrAuthController extends AuthController {
             "APPROVE_LEAVE_REQUEST", "REJECT_LEAVE_REQUEST",
             // Payroll
             "PROCESS_MONTHLY_PAYROLL", "VIEW_PAYROLL_HISTORY",
+            "CONFIGURE_PAYROLL_RULES",
             // Reports
             "GENERATE_PAYROLL_REPORT", "GENERATE_ATTENDANCE_REPORT",
-            "GENERATE_SIMULATION_REPORT", "EXPORT_CSV_RESULT", "IMPORT_CSV_RESULT"
+            "GENERATE_SIMULATION_REPORT", "EXPORT_CSV_RESULT", "IMPORT_CSV_RESULT",
+            // Synchronization and simulation
+            "SELECT_SYNC_MECHANISM", "RUN_PAYROLL_SIMULATION", "MEASURE_TPS",
+            "DETECT_DOUBLE_PAYMENT", "DETECT_WRONG_LEAVE_DEDUCTION"
     );
 
     public HrAuthController(UserAccount account) {
