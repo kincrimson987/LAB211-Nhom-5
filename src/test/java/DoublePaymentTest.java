@@ -1,4 +1,4 @@
-/*import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -38,7 +38,6 @@ public class DoublePaymentTest {
                 if (success) {
                     successCount.incrementAndGet();
                 }
-
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } finally {
@@ -58,28 +57,9 @@ public class DoublePaymentTest {
         long processedCount = repo.countProcessedByEmployee("E001");
         PayrollEntry finalEntry = repo.findById(entry.getEntryId());
 
-        boolean isDoublePayment = successCount.get() > 1
-                || processedCount > 1
-                || finalEntry.getStatus() != PayrollStatus.PROCESSED;
-
-        System.out.println("======================================");
-        System.out.println("TEST: Prevent Double Payment With Two Threads");
-        System.out.println("Employee ID: E001");
-        System.out.println("Payroll month: 2024-01");
-        System.out.println("Threads started: 2");
-        System.out.println("Successful threads: " + successCount.get() + " / 2");
-        System.out.println("Processed entries in CSV: " + processedCount);
-        System.out.println("Expected processed entries: 1");
-        System.out.println("Final version: " + finalEntry.getVersion());
-        System.out.println("Final status: " + finalEntry.getStatus());
-        System.out.println("Double payment detected: " + isDoublePayment);
-        System.out.println("Result: " + (!isDoublePayment ? "PASSED" : "FAILED"));
-        System.out.println("======================================");
-
         assertEquals(1, successCount.get(), "Only one thread should process payroll successfully");
         assertEquals(1, processedCount, "Only one payroll entry should be processed");
         assertEquals(PayrollStatus.PROCESSED, finalEntry.getStatus());
-        assertFalse(isDoublePayment, "Double payment should not occur");
     }
 
     @Test
@@ -104,24 +84,10 @@ public class DoublePaymentTest {
         PayrollEntry finalJanuaryEntry = repo.findById(januaryEntry.getEntryId());
         PayrollEntry finalFebruaryEntry = repo.findById(februaryEntry.getEntryId());
 
-        boolean isWronglyRejected = !januarySuccess || !februarySuccess;
-
-        System.out.println("======================================");
-        System.out.println("TEST: Allow Payment For Different Months");
-        System.out.println("Employee ID: E001");
-        System.out.println("January payment success: " + januarySuccess);
-        System.out.println("February payment success: " + februarySuccess);
-        System.out.println("January final status: " + finalJanuaryEntry.getStatus());
-        System.out.println("February final status: " + finalFebruaryEntry.getStatus());
-        System.out.println("Wrongly rejected payment: " + isWronglyRejected);
-        System.out.println("Result: " + (!isWronglyRejected ? "PASSED" : "FAILED"));
-        System.out.println("======================================");
-
         assertTrue(januarySuccess, "January payroll should be processed");
         assertTrue(februarySuccess, "February payroll should be processed");
         assertEquals(PayrollStatus.PROCESSED, finalJanuaryEntry.getStatus());
         assertEquals(PayrollStatus.PROCESSED, finalFebruaryEntry.getStatus());
-        assertFalse(isWronglyRejected);
     }
 
     @Test
@@ -146,24 +112,10 @@ public class DoublePaymentTest {
         PayrollEntry finalEmployee1Entry = repo.findById(employee1Entry.getEntryId());
         PayrollEntry finalEmployee2Entry = repo.findById(employee2Entry.getEntryId());
 
-        boolean isWronglyRejected = !employee1Success || !employee2Success;
-
-        System.out.println("======================================");
-        System.out.println("TEST: Allow Payment For Different Employees");
-        System.out.println("Payroll month: 2024-01");
-        System.out.println("Employee E001 payment success: " + employee1Success);
-        System.out.println("Employee E002 payment success: " + employee2Success);
-        System.out.println("Employee E001 final status: " + finalEmployee1Entry.getStatus());
-        System.out.println("Employee E002 final status: " + finalEmployee2Entry.getStatus());
-        System.out.println("Wrongly rejected payment: " + isWronglyRejected);
-        System.out.println("Result: " + (!isWronglyRejected ? "PASSED" : "FAILED"));
-        System.out.println("======================================");
-
         assertTrue(employee1Success, "Employee E001 payroll should be processed");
         assertTrue(employee2Success, "Employee E002 payroll should be processed");
         assertEquals(PayrollStatus.PROCESSED, finalEmployee1Entry.getStatus());
         assertEquals(PayrollStatus.PROCESSED, finalEmployee2Entry.getStatus());
-        assertFalse(isWronglyRejected);
     }
 
     private static void setupSinglePayrollEntry(File file) throws Exception {
@@ -188,4 +140,4 @@ public class DoublePaymentTest {
             writer.println("PR_E0002_01_2024,0,E002,0.0,PENDING");
         }
     }
-}*/
+}

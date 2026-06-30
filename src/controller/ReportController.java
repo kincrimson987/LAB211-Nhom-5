@@ -9,7 +9,6 @@ public class ReportController {
     private final PayrollEntryRepository payrollEntryRepository;
     private final AttendanceRepository   attendanceRepository;
     private final PayrollRunRepository   payrollRunRepository;
-    private final EmployeeRepository     employeeRepository;
 
     public ReportController(PayrollEntryRepository payrollEntryRepository,
                             AttendanceRepository attendanceRepository,
@@ -18,7 +17,6 @@ public class ReportController {
         this.payrollEntryRepository = payrollEntryRepository;
         this.attendanceRepository   = attendanceRepository;
         this.payrollRunRepository   = payrollRunRepository;
-        this.employeeRepository     = employeeRepository;
     }
 
     // ── Generate Payroll Report ───────────────────────────────
