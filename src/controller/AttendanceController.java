@@ -5,11 +5,19 @@ public class AttendanceController {
 
     private final AttendanceRepository attendanceRepo;
     private final EmployeeRepository employeeRepo;
+    private final AttendanceAdjustmentRepository adjustmentRepo;
 
     public AttendanceController(AttendanceRepository attendanceRepo,
                                 EmployeeRepository employeeRepo) {
+        this(attendanceRepo, employeeRepo, new AttendanceAdjustmentRepository());
+    }
+
+    public AttendanceController(AttendanceRepository attendanceRepo,
+                                EmployeeRepository employeeRepo,
+                                AttendanceAdjustmentRepository adjustmentRepo) {
         this.attendanceRepo = attendanceRepo;
         this.employeeRepo = employeeRepo;
+        this.adjustmentRepo = adjustmentRepo;
     }
 
     public AttendanceRecord checkIn(String employeeId) {
@@ -53,45 +61,73 @@ public class AttendanceController {
         return attendanceRepo.findByEmployee(employeeId);
     }
 
-    public AttendanceRecord submitAdjustmentRequest(String employeeId, String yearMonth,
-                                                    String reason, int newWorkDays,
-                                                    double newOvertime) {
+    public AttendanceAdjustmentRequest submitAdjustmentRequest(String employeeId, String yearMonth,
+                                                               String reason, int newWorkDays,
+                                                               double newOvertime) {
         validateEmployee(employeeId);
         AttendanceRecord record = attendanceRepo.findByEmployeeAndMonth(employeeId, yearMonth);
         if (record == null) {
             throw new IllegalArgumentException("Khong co du lieu attendance cho thang " + yearMonth + ".");
         }
-        if (newWorkDays >= 0) {
-            record.setWorkDays(newWorkDays);
-        }
-        if (newOvertime >= 0) {
-            record.setOvertimeHours(newOvertime);
-        }
-        record.setVersion(record.getVersion() + 1);
-        saveOrUpdate(record);
+        AttendanceAdjustmentRequest request = new AttendanceAdjustmentRequest(
+                buildAdjustmentRequestId(employeeId, yearMonth),
+                1L,
+                employeeId,
+                yearMonth,
+                record.getWorkDays(),
+                newWorkDays,
+                record.getOvertimeHours(),
+                newOvertime,
+                reason,
+                AttendanceAdjustmentStatus.PENDING,
+                null,
+                null);
+        adjustmentRepo.save(request);
         System.out.println("[Adjustment] " + employeeId + " / " + yearMonth + " - " + reason);
-        return record;
+        return request;
     }
 
-    public List<AttendanceRecord> getPendingAdjustments() {
-        return attendanceRepo.findAll();
+    public List<AttendanceAdjustmentRequest> getPendingAdjustments() {
+        return adjustmentRepo.findByStatus(AttendanceAdjustmentStatus.PENDING);
     }
 
-    public void approveAdjustment(String recordId, String approverId) {
-        AttendanceRecord record = attendanceRepo.findById(recordId);
-        if (record == null) {
-            throw new IllegalArgumentException("Attendance record not found: " + recordId);
+    public List<AttendanceAdjustmentRequest> getAdjustmentRequestsByEmployee(String employeeId) {
+        validateEmployee(employeeId);
+        return adjustmentRepo.findByEmployee(employeeId);
+    }
+
+    public void approveAdjustment(String requestId, String approverId) {
+        AttendanceAdjustmentRequest request = adjustmentRepo.findById(requestId);
+        if (request == null) {
+            throw new IllegalArgumentException("Adjustment request not found: " + requestId);
         }
+        AttendanceRecord record = attendanceRepo.findByEmployeeAndMonth(request.getEmployeeId(), request.getYearMonth());
+        if (record == null) {
+            throw new IllegalArgumentException("Attendance record not found for " + request.getEmployeeId() + " / " + request.getYearMonth());
+        }
+        record.setWorkDays(request.getRequestedWorkDays());
+        record.setOvertimeHours(request.getRequestedOvertimeHours());
+        record.setVersion(record.getVersion() + 1);
         attendanceRepo.update(record);
-        System.out.println("[Approved] " + recordId + " by " + approverId);
+        request.setStatus(AttendanceAdjustmentStatus.APPROVED);
+        request.setReviewedBy(approverId);
+        request.setReviewNote("Approved");
+        request.setVersion(request.getVersion() + 1);
+        adjustmentRepo.update(request);
+        System.out.println("[Approved] " + requestId + " by " + approverId);
     }
 
-    public void rejectAdjustment(String recordId, String approverId, String reason) {
-        AttendanceRecord record = attendanceRepo.findById(recordId);
-        if (record == null) {
-            throw new IllegalArgumentException("Attendance record not found: " + recordId);
+    public void rejectAdjustment(String requestId, String approverId, String reason) {
+        AttendanceAdjustmentRequest request = adjustmentRepo.findById(requestId);
+        if (request == null) {
+            throw new IllegalArgumentException("Adjustment request not found: " + requestId);
         }
-        System.out.println("[Rejected] " + recordId + " by " + approverId + " - " + reason);
+        request.setStatus(AttendanceAdjustmentStatus.REJECTED);
+        request.setReviewedBy(approverId);
+        request.setReviewNote(reason);
+        request.setVersion(request.getVersion() + 1);
+        adjustmentRepo.update(request);
+        System.out.println("[Rejected] " + requestId + " by " + approverId + " - " + reason);
     }
 
     private AttendanceRecord getOrCreate(String employeeId, String yearMonth) {
@@ -120,5 +156,10 @@ public class AttendanceController {
     private String getCurrentYearMonth() {
         LocalDate now = LocalDate.now();
         return now.getYear() + "-" + String.format("%02d", now.getMonthValue());
+    }
+
+    private String buildAdjustmentRequestId(String employeeId, String yearMonth) {
+        int next = adjustmentRepo.findAll().size() + 1;
+        return "AR_" + employeeId + "_" + yearMonth.replace("-", "_") + "_" + String.format("%03d", next);
     }
 }

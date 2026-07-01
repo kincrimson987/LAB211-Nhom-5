@@ -506,37 +506,40 @@ public class MainView {
             String overtimeStr = promptOptional("New overtime hours [" + curOvertime + "]");
             double overtime = (overtimeStr != null) ? parseDoubleVal(overtimeStr, curOvertime) : curOvertime;
 
-            attendanceController.submitAdjustmentRequest(empId, yearMonth, reason, workDays, overtime);
+            AttendanceAdjustmentRequest request =
+                    attendanceController.submitAdjustmentRequest(empId, yearMonth, reason, workDays, overtime);
             printSuccess("Adjustment submitted: " + curWorkDays + " -> " + workDays + " days");
+            printInfo("Request ID: " + request.getId());
         } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
     }
 
     private void handleReviewAttendanceAdjustment() {
         printSectionHeader("REVIEW ATTENDANCE ADJUSTMENT");
-        List<AttendanceRecord> list;
+        List<AttendanceAdjustmentRequest> list;
         if (isEmployee()) {
             String employeeId = requireLinkedEmployeeId();
             if (employeeId == null) return;
-            list = attendanceController.getRecordsByEmployee(employeeId);
+            list = attendanceController.getAdjustmentRequestsByEmployee(employeeId);
         } else {
             list = attendanceController.getPendingAdjustments();
         }
         if (list.isEmpty()) printInfo("No pending adjustments.");
-        else printAttendanceTablePaged(list);
+        else printAttendanceAdjustmentTablePaged(list);
     }
 
     private void handleApproveAttendanceAdjustment() {
         if (!checkAccess("APPROVE_ATTENDANCE_ADJUSTMENT")) return;
         printSectionHeader("APPROVE ATTENDANCE ADJUSTMENT");
         try {
-            List<AttendanceRecord> records = promptAttendanceRecordsByRange();
+            List<AttendanceAdjustmentRequest> records = promptAttendanceAdjustmentRequestsByRange();
             if (records.isEmpty()) {
-                printInfo("No attendance records found in this range.");
+                printInfo("No adjustment requests found in this range.");
                 return;
             }
-            printAttendanceTablePaged(records);
+            printInfo("Browse requests, then press Enter to continue to Request ID.");
+            printAttendanceAdjustmentTablePaged(records, "N-next, P-prev, Enter-continue");
             attendanceController.approveAdjustment(
-                    prompt("Record ID"), currentSession.getAccount().getId());
+                    prompt("Request ID"), currentSession.getAccount().getId());
             printSuccess("Approved.");
         } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
     }
@@ -545,14 +548,15 @@ public class MainView {
         if (!checkAccess("REJECT_ATTENDANCE_ADJUSTMENT")) return;
         printSectionHeader("REJECT ATTENDANCE ADJUSTMENT");
         try {
-            List<AttendanceRecord> records = promptAttendanceRecordsByRange();
+            List<AttendanceAdjustmentRequest> records = promptAttendanceAdjustmentRequestsByRange();
             if (records.isEmpty()) {
-                printInfo("No attendance records found in this range.");
+                printInfo("No adjustment requests found in this range.");
                 return;
             }
-            printAttendanceTablePaged(records);
+            printInfo("Browse requests, then press Enter to continue to Request ID.");
+            printAttendanceAdjustmentTablePaged(records, "N-next, P-prev, Enter-continue");
             attendanceController.rejectAdjustment(
-                    prompt("Record ID"), currentSession.getAccount().getId(), prompt("Reason"));
+                    prompt("Request ID"), currentSession.getAccount().getId(), prompt("Reason"));
             printSuccess("Rejected.");
         } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
     }
@@ -996,6 +1000,10 @@ public class MainView {
     }
 
     private void printAttendanceTablePaged(List<AttendanceRecord> list) {
+        printAttendanceTablePaged(list, "N-next, P-prev, Enter-back");
+    }
+
+    private void printAttendanceTablePaged(List<AttendanceRecord> list, String exitPrompt) {
         if (list.isEmpty()) {
             printInfo("No attendance records found.");
             return;
@@ -1009,7 +1017,60 @@ public class MainView {
             int to = Math.min(from + pageSize, list.size());
             printAttendanceTable(list.subList(from, to));
             printInfo("Page " + (page + 1) + "/" + totalPages + " | Total: " + list.size());
-            String choice = promptOptional("N-next, P-prev, Enter-back");
+            String choice = promptOptional(exitPrompt);
+            if (choice == null || choice.equalsIgnoreCase("q")) {
+                return;
+            }
+            if (choice.equalsIgnoreCase("n") && page < totalPages - 1) {
+                page++;
+            } else if (choice.equalsIgnoreCase("p") && page > 0) {
+                page--;
+            } else {
+                printInfo("No more pages.");
+            }
+        }
+    }
+
+    private void printAttendanceAdjustmentTable(List<AttendanceAdjustmentRequest> list) {
+        System.out.printf(
+                BOLD + "%-22s %-10s %-10s %-15s %-16s %-10s%n" + RESET,
+                "Request ID", "Employee", "Month", "WorkDays", "Overtime(h)", "Status");
+        System.out.println("-".repeat(92));
+        for (AttendanceAdjustmentRequest request : list) {
+            String workDays = request.getOriginalWorkDays() + " -> " + request.getRequestedWorkDays();
+            String overtime = String.format("%.1f -> %.1f",
+                    request.getOriginalOvertimeHours(),
+                    request.getRequestedOvertimeHours());
+            System.out.printf("%-22s %-10s %-10s %-15s %-16s %-10s%n",
+                    request.getId(),
+                    request.getEmployeeId(),
+                    request.getYearMonth(),
+                    workDays,
+                    overtime,
+                    request.getStatus());
+        }
+        System.out.println("-".repeat(92));
+    }
+
+    private void printAttendanceAdjustmentTablePaged(List<AttendanceAdjustmentRequest> list) {
+        printAttendanceAdjustmentTablePaged(list, "N-next, P-prev, Enter-back");
+    }
+
+    private void printAttendanceAdjustmentTablePaged(List<AttendanceAdjustmentRequest> list, String exitPrompt) {
+        if (list.isEmpty()) {
+            printInfo("No adjustment requests found.");
+            return;
+        }
+
+        final int pageSize = 20;
+        int page = 0;
+        int totalPages = (list.size() + pageSize - 1) / pageSize;
+        while (true) {
+            int from = page * pageSize;
+            int to = Math.min(from + pageSize, list.size());
+            printAttendanceAdjustmentTable(list.subList(from, to));
+            printInfo("Page " + (page + 1) + "/" + totalPages + " | Total: " + list.size());
+            String choice = promptOptional(exitPrompt);
             if (choice == null || choice.equalsIgnoreCase("q")) {
                 return;
             }
@@ -1155,6 +1216,20 @@ public class MainView {
         for (int i = 0; i < issues.size(); i++) {
             System.out.printf("  %2d. %s%n", i + 1, issues.get(i));
         }
+    }
+
+    private List<AttendanceAdjustmentRequest> promptAttendanceAdjustmentRequestsByRange() {
+        String fromMonth = prompt("From month (YYYY-MM)");
+        String toMonth = prompt("To month (YYYY-MM)");
+        List<AttendanceAdjustmentRequest> allRequests = attendanceController.getPendingAdjustments();
+        return allRequests.stream()
+                .filter(request -> {
+                    String yearMonth = request.getYearMonth();
+                    return yearMonth != null
+                            && yearMonth.compareTo(fromMonth) >= 0
+                            && yearMonth.compareTo(toMonth) <= 0;
+                })
+                .toList();
     }
 
     // ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
