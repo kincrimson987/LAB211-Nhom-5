@@ -53,36 +53,21 @@ public class MainView {
         boolean running = true;
         while (running) {
             printMainMenu();
-            switch (prompt("Choose").trim()) {
-                case "1" -> handleLogin();
-                case "2" -> {
-                    if (checkAccess("ADD_EMPLOYEE")) showEmployeeManagement();
-                }
-                case "3" -> {
-                    if (checkAccess("CHECK_IN")) showAttendanceManagement();
-                }
-                case "4" -> {
-                    if (checkAccess("SUBMIT_LEAVE_REQUEST")) showLeaveManagement();
-                }
-                case "5" -> {
-                    if (checkAccess("PROCESS_MONTHLY_PAYROLL")) showPayrollManagement();
-                }
-                case "6" -> {
-                    if (checkAccess("GENERATE_PAYROLL_REPORT")) showReports();
-                }
-                case "7" -> {
-                    if (checkAccess("RUN_PAYROLL_SIMULATION")) showSyncAndSimulation();
-                }
-                case "0" -> { printSuccess("Goodbye!"); running = false; }
-                default  -> printError("Invalid choice.");
+            String choice = prompt("Choose").trim();
+            if (isAdmin()) {
+                running = handleAdminMainChoice(choice);
+            } else if (isEmployee()) {
+                running = handleEmployeeMainChoice(choice);
+            } else {
+                running = handleHrMainChoice(choice);
             }
         }
         scanner.close();
     }
 
     /**
-     * Kiểm tra quyền — in lỗi và trả về false nếu role không đủ quyền.
-     * Dùng để chặn cả việc vào menu lớn lẫn từng action con bên trong.
+     * KiÃƒÂ¡Ã‚Â»Ã†â€™m tra quyÃƒÂ¡Ã‚Â»Ã‚Ân ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â in lÃƒÂ¡Ã‚Â»Ã¢â‚¬â€i vÃƒÆ’Ã‚Â  trÃƒÂ¡Ã‚ÂºÃ‚Â£ vÃƒÂ¡Ã‚Â»Ã‚Â false nÃƒÂ¡Ã‚ÂºÃ‚Â¿u role khÃƒÆ’Ã‚Â´ng Ãƒâ€žÃ¢â‚¬ËœÃƒÂ¡Ã‚Â»Ã‚Â§ quyÃƒÂ¡Ã‚Â»Ã‚Ân.
+     * DÃƒÆ’Ã‚Â¹ng Ãƒâ€žÃ¢â‚¬ËœÃƒÂ¡Ã‚Â»Ã†â€™ chÃƒÂ¡Ã‚ÂºÃ‚Â·n cÃƒÂ¡Ã‚ÂºÃ‚Â£ viÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¡c vÃƒÆ’Ã‚Â o menu lÃƒÂ¡Ã‚Â»Ã¢â‚¬Âºn lÃƒÂ¡Ã‚ÂºÃ‚Â«n tÃƒÂ¡Ã‚Â»Ã‚Â«ng action con bÃƒÆ’Ã‚Âªn trong.
      */
     private boolean checkAccess(String feature) {
         if (currentSession == null) {
@@ -97,9 +82,68 @@ public class MainView {
         return true;
     }
 
-    // ═════════════════════════════════════════
+    private boolean isAdmin() {
+        return currentSession != null && "ADMIN".equalsIgnoreCase(currentSession.getRole());
+    }
+
+    private boolean isEmployee() {
+        return currentSession != null && "EMPLOYEE".equalsIgnoreCase(currentSession.getRole());
+    }
+
+    private boolean isHr() {
+        return currentSession != null && "HR".equalsIgnoreCase(currentSession.getRole());
+    }
+
+    private boolean handleAdminMainChoice(String choice) {
+        switch (choice) {
+            case "1" -> { if (checkAccess("ADD_EMPLOYEE")) showEmployeeManagement(); }
+            case "2" -> { if (checkAccess("CONFIGURE_PAYROLL_RULES")) handleConfigurePayrollRules(); }
+            case "3" -> { if (checkAccess("RUN_PAYROLL_SIMULATION")) showSyncAndSimulation(); }
+            case "4" -> handleLogout();
+            case "0" -> { printSuccess("Goodbye!"); return false; }
+            default -> printError("Invalid choice.");
+        }
+        return true;
+    }
+
+    private boolean handleHrMainChoice(String choice) {
+        switch (choice) {
+            case "1" -> { if (checkAccess("ADD_EMPLOYEE")) showEmployeeManagement(); }
+            case "2" -> { if (checkAccess("CHECK_IN")) showAttendanceManagement(); }
+            case "3" -> { if (checkAccess("SUBMIT_LEAVE_REQUEST")) showLeaveManagement(); }
+            case "4" -> { if (checkAccess("PROCESS_MONTHLY_PAYROLL")) showPayrollManagement(); }
+            case "5" -> { if (checkAccess("GENERATE_PAYROLL_REPORT")) showReports(); }
+            case "6" -> { if (checkAccess("RUN_PAYROLL_SIMULATION")) showSyncAndSimulation(); }
+            case "7" -> handleLogout();
+            case "0" -> { printSuccess("Goodbye!"); return false; }
+            default -> printError("Invalid choice.");
+        }
+        return true;
+    }
+
+    private boolean handleEmployeeMainChoice(String choice) {
+        switch (choice) {
+            case "1" -> { if (checkAccess("CHECK_IN")) showAttendanceManagement(); }
+            case "2" -> { if (checkAccess("SUBMIT_LEAVE_REQUEST")) showLeaveManagement(); }
+            case "3" -> { if (checkAccess("VIEW_PAYROLL_HISTORY")) handleViewPayrollHistory(); }
+            case "4" -> handleLogout();
+            case "0" -> { printSuccess("Goodbye!"); return false; }
+            default -> printError("Invalid choice.");
+        }
+        return true;
+    }
+
+    private void handleLogout() {
+        if (currentSession != null) {
+            printSuccess("Logged out: " + currentSession.getUsername());
+        }
+        currentSession = null;
+        handleLogin();
+    }
+
+    // ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
     // 1. LOGIN
-    // ═════════════════════════════════════════
+    // ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
     private boolean handleLogin() {
         printSectionHeader("LOGIN");
@@ -121,34 +165,72 @@ public class MainView {
         return false;
     }
 
-    // ═════════════════════════════════════════
+    // ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
     // 2. EMPLOYEE MANAGEMENT
-    // ═════════════════════════════════════════
+    // ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
     private void showEmployeeManagement() {
         boolean back = false;
         while (!back) {
-            printSubMenu("EMPLOYEE MANAGEMENT", new String[]{
-                "Add Employee", "Update Employee", "Delete Employee",
-                "Search Employee", "View Employee Detail", "---",
-                "Add Department", "Update Department", "Delete Department",
-                "Search Department", "View Departments", "---",
-                "Save CSV Data", "Load CSV Data", "Generate Test Dataset"
-            });
+            String[] items = isHr()
+                    ? new String[]{
+                        "Add Employee", "Update Employee", "Delete Employee",
+                        "Search Employee", "View Employee Detail", "View Employee List", "---",
+                        "Search Department", "View Departments", "---",
+                        "Save CSV Data", "Load CSV Data", "Generate Test Dataset"
+                    }
+                    : new String[]{
+                        "Add Employee", "Update Employee", "Delete Employee",
+                        "Search Employee", "View Employee Detail", "View Employee List",
+                        "Create Employee Account", "---",
+                        "Add Department", "Update Department", "Delete Department",
+                        "Search Department", "View Departments", "---",
+                        "Save CSV Data", "Load CSV Data", "Generate Test Dataset"
+                    };
+            printSubMenu("EMPLOYEE MANAGEMENT", items);
             switch (prompt("Choose").trim()) {
                 case "1"  -> handleAddEmployee();
                 case "2"  -> handleUpdateEmployee();
                 case "3"  -> handleDeleteEmployee();
                 case "4"  -> handleSearchEmployee();
                 case "5"  -> handleViewEmployeeDetail();
-                case "6"  -> handleAddDepartment();
-                case "7"  -> handleUpdateDepartment();
-                case "8"  -> handleDeleteDepartment();
-                case "9"  -> handleSearchDepartment();
-                case "10" -> handleViewDepartments();
-                case "11" -> printInfo("Data is auto-saved via Repository.");
-                case "12" -> printInfo("Data is auto-loaded via Repository.");
-                case "13" -> printInfo("Generate test dataset: not implemented yet.");
+                case "6"  -> handleViewEmployeeList();
+                case "7"  -> {
+                    if (isHr()) handleSearchDepartment();
+                    else handleCreateEmployeeAccount();
+                }
+                case "8"  -> {
+                    if (isHr()) handleViewDepartments();
+                    else handleAddDepartment();
+                }
+                case "9"  -> {
+                    if (isHr()) printInfo("Data is auto-saved via Repository.");
+                    else handleUpdateDepartment();
+                }
+                case "10" -> {
+                    if (isHr()) printInfo("Data is auto-loaded via Repository.");
+                    else handleDeleteDepartment();
+                }
+                case "11" -> {
+                    if (isHr()) printInfo("Generate test dataset: not implemented yet.");
+                    else handleSearchDepartment();
+                }
+                case "12" -> {
+                    if (isHr()) printError("Invalid choice.");
+                    else handleViewDepartments();
+                }
+                case "13" -> {
+                    if (isHr()) printError("Invalid choice.");
+                    else printInfo("Data is auto-saved via Repository.");
+                }
+                case "14" -> {
+                    if (isHr()) printError("Invalid choice.");
+                    else printInfo("Data is auto-loaded via Repository.");
+                }
+                case "15" -> {
+                    if (isHr()) printError("Invalid choice.");
+                    else printInfo("Generate test dataset: not implemented yet.");
+                }
                 case "0"  -> back = true;
                 default   -> printError("Invalid choice.");
             }
@@ -224,13 +306,46 @@ public class MainView {
         catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
     }
 
+    private void handleViewEmployeeList() {
+        printSectionHeader("VIEW EMPLOYEE LIST");
+        printEmployeeTablePaged(employeeController.getAllEmployees());
+    }
+
+    private void handleCreateEmployeeAccount() {
+        printSectionHeader("CREATE EMPLOYEE ACCOUNT");
+        try {
+            String employeeId = prompt("Employee ID");
+            Employee employee = employeeController.getEmployeeById(employeeId);
+            if (userRepo.findByEmployeeId(employeeId) != null) {
+                printError("This employee already has an account.");
+                return;
+            }
+
+            String username = prompt("Username");
+            if (userRepo.findByUsername(username) != null) {
+                printError("Username already exists.");
+                return;
+            }
+
+            String password = prompt("Password");
+            UserAccount account = new UserAccount(
+                    generateUserAccountId(), 1L, username.trim(), password.trim(),
+                    "EMPLOYEE", true, employee.getId());
+            userRepo.save(account);
+            printSuccess("Account created for employee: " + employee.getId());
+            printUserAccountDetail(account);
+        } catch (IllegalArgumentException ex) {
+            printError(ex.getMessage());
+        }
+    }
+
     private void handleAddDepartment() {
         printSectionHeader("ADD DEPARTMENT");
         try {
             String name      = prompt("Department name");
             String managerId = promptOptional("Manager ID (Enter to skip)");
             Department dept  = departmentController.addDepartment(name, managerId);
-            printSuccess("Department added: " + dept.getId() + " — " + dept.getName());
+            printSuccess("Department added: " + dept.getId() + " - " + dept.getName());
         } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
     }
 
@@ -271,28 +386,49 @@ public class MainView {
         else { printDepartmentTable(list); printInfo("Total: " + list.size()); }
     }
 
-    // ═════════════════════════════════════════
+    // ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
     // 3. ATTENDANCE MANAGEMENT
-    // ═════════════════════════════════════════
+    // ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
     private void showAttendanceManagement() {
         boolean back = false;
         while (!back) {
-            printSubMenu("ATTENDANCE MANAGEMENT", new String[]{
-                "Check In", "Check Out", "View Attendance Record",
-                "View Attendance Summary", "Submit Attendance Adjustment Request",
-                "Review Attendance Adjustment Request",
-                "Approve Attendance Adjustment", "Reject Attendance Adjustment"
-            });
+            String[] items = isEmployee()
+                    ? new String[]{
+                        "Check In", "Check Out", "View Attendance Record",
+                        "View Attendance Summary", "Submit Attendance Adjustment Request",
+                        "Review Attendance Adjustment Request"
+                    }
+                    : new String[]{
+                        "View Attendance Record", "View Attendance Summary",
+                        "Approve Attendance Adjustment", "Reject Attendance Adjustment"
+                    };
+            printSubMenu("ATTENDANCE MANAGEMENT", items);
             switch (prompt("Choose").trim()) {
-                case "1" -> handleCheckIn();
-                case "2" -> handleCheckOut();
-                case "3" -> handleViewAttendanceRecord();
-                case "4" -> handleViewAttendanceSummary();
-                case "5" -> handleSubmitAttendanceAdjustment();
-                case "6" -> handleReviewAttendanceAdjustment();
-                case "7" -> handleApproveAttendanceAdjustment();
-                case "8" -> handleRejectAttendanceAdjustment();
+                case "1" -> {
+                    if (isEmployee()) handleCheckIn();
+                    else handleViewAttendanceRecord();
+                }
+                case "2" -> {
+                    if (isEmployee()) handleCheckOut();
+                    else handleViewAttendanceSummary();
+                }
+                case "3" -> {
+                    if (isEmployee()) handleViewAttendanceRecord();
+                    else handleApproveAttendanceAdjustment();
+                }
+                case "4" -> {
+                    if (isEmployee()) handleViewAttendanceSummary();
+                    else handleRejectAttendanceAdjustment();
+                }
+                case "5" -> {
+                    if (isEmployee()) handleSubmitAttendanceAdjustment();
+                    else printError("Invalid choice.");
+                }
+                case "6" -> {
+                    if (isEmployee()) handleReviewAttendanceAdjustment();
+                    else printError("Invalid choice.");
+                }
                 case "0" -> back = true;
                 default  -> printError("Invalid choice.");
             }
@@ -302,7 +438,9 @@ public class MainView {
     private void handleCheckIn() {
         printSectionHeader("CHECK IN");
         try {
-            AttendanceRecord r = attendanceController.checkIn(prompt("Employee ID"));
+            String employeeId = isEmployee() ? requireLinkedEmployeeId() : prompt("Employee ID");
+            if (employeeId == null) return;
+            AttendanceRecord r = attendanceController.checkIn(employeeId);
             printSuccess("Checked in. Work days: " + r.getWorkDays());
         } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
     }
@@ -310,8 +448,10 @@ public class MainView {
     private void handleCheckOut() {
         printSectionHeader("CHECK OUT");
         try {
+            String employeeId = isEmployee() ? requireLinkedEmployeeId() : prompt("Employee ID");
+            if (employeeId == null) return;
             AttendanceRecord r = attendanceController.checkOut(
-                    prompt("Employee ID"), promptDouble("Overtime hours (0 if none)"));
+                    employeeId, promptDouble("Overtime hours (0 if none)"));
             printSuccess("Checked out. Overtime: " + r.getOvertimeHours() + "h");
         } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
     }
@@ -319,8 +459,10 @@ public class MainView {
     private void handleViewAttendanceRecord() {
         printSectionHeader("VIEW ATTENDANCE RECORD");
         try {
+            String employeeId = isEmployee() ? requireLinkedEmployeeId() : prompt("Employee ID");
+            if (employeeId == null) return;
             AttendanceRecord r = attendanceController.getRecord(
-                    prompt("Employee ID"), prompt("Year-Month (YYYY-MM)"));
+                    employeeId, prompt("Year-Month (YYYY-MM)"));
             if (r == null) printInfo("No record found.");
             else printAttendanceDetail(r);
         } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
@@ -328,18 +470,26 @@ public class MainView {
 
     private void handleViewAttendanceSummary() {
         printSectionHeader("VIEW ATTENDANCE SUMMARY");
-        List<AttendanceRecord> list = attendanceController.getSummaryByMonth(prompt("Year-Month (YYYY-MM)"));
+        List<AttendanceRecord> list;
+        if (isEmployee()) {
+            String employeeId = requireLinkedEmployeeId();
+            if (employeeId == null) return;
+            list = attendanceController.getRecordsByEmployee(employeeId);
+        } else {
+            list = attendanceController.getSummaryByMonth(prompt("Year-Month (YYYY-MM)"));
+        }
         if (list.isEmpty()) printInfo("No records found.");
-        else printAttendanceTable(list);
+        else printAttendanceTablePaged(list);
     }
 
     private void handleSubmitAttendanceAdjustment() {
         printSectionHeader("SUBMIT ATTENDANCE ADJUSTMENT");
         try {
-            String empId     = prompt("Employee ID");
+            String empId = isEmployee() ? requireLinkedEmployeeId() : prompt("Employee ID");
+            if (empId == null) return;
             String yearMonth = prompt("Year-Month (YYYY-MM)");
 
-            // Hiển thị số liệu hiện tại để HR biết đang sửa từ đâu
+            // HiÃƒÂ¡Ã‚Â»Ã†â€™n thÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¹ sÃƒÂ¡Ã‚Â»Ã¢â‚¬Ëœ liÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¡u hiÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¡n tÃƒÂ¡Ã‚ÂºÃ‚Â¡i Ãƒâ€žÃ¢â‚¬ËœÃƒÂ¡Ã‚Â»Ã†â€™ HR biÃƒÂ¡Ã‚ÂºÃ‚Â¿t Ãƒâ€žÃ¢â‚¬Ëœang sÃƒÂ¡Ã‚Â»Ã‚Â­a tÃƒÂ¡Ã‚Â»Ã‚Â« Ãƒâ€žÃ¢â‚¬ËœÃƒÆ’Ã‚Â¢u
             AttendanceRecord current = attendanceController.getRecord(empId, yearMonth);
             int curWorkDays = (current != null) ? current.getWorkDays() : 0;
             double curOvertime = (current != null) ? current.getOvertimeHours() : 0;
@@ -357,21 +507,34 @@ public class MainView {
             double overtime = (overtimeStr != null) ? parseDoubleVal(overtimeStr, curOvertime) : curOvertime;
 
             attendanceController.submitAdjustmentRequest(empId, yearMonth, reason, workDays, overtime);
-            printSuccess("Adjustment submitted: " + curWorkDays + " → " + workDays + " days");
+            printSuccess("Adjustment submitted: " + curWorkDays + " -> " + workDays + " days");
         } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
     }
 
     private void handleReviewAttendanceAdjustment() {
         printSectionHeader("REVIEW ATTENDANCE ADJUSTMENT");
-        List<AttendanceRecord> list = attendanceController.getPendingAdjustments();
+        List<AttendanceRecord> list;
+        if (isEmployee()) {
+            String employeeId = requireLinkedEmployeeId();
+            if (employeeId == null) return;
+            list = attendanceController.getRecordsByEmployee(employeeId);
+        } else {
+            list = attendanceController.getPendingAdjustments();
+        }
         if (list.isEmpty()) printInfo("No pending adjustments.");
-        else printAttendanceTable(list);
+        else printAttendanceTablePaged(list);
     }
 
     private void handleApproveAttendanceAdjustment() {
         if (!checkAccess("APPROVE_ATTENDANCE_ADJUSTMENT")) return;
         printSectionHeader("APPROVE ATTENDANCE ADJUSTMENT");
         try {
+            List<AttendanceRecord> records = promptAttendanceRecordsByRange();
+            if (records.isEmpty()) {
+                printInfo("No attendance records found in this range.");
+                return;
+            }
+            printAttendanceTablePaged(records);
             attendanceController.approveAdjustment(
                     prompt("Record ID"), currentSession.getAccount().getId());
             printSuccess("Approved.");
@@ -382,28 +545,59 @@ public class MainView {
         if (!checkAccess("REJECT_ATTENDANCE_ADJUSTMENT")) return;
         printSectionHeader("REJECT ATTENDANCE ADJUSTMENT");
         try {
+            List<AttendanceRecord> records = promptAttendanceRecordsByRange();
+            if (records.isEmpty()) {
+                printInfo("No attendance records found in this range.");
+                return;
+            }
+            printAttendanceTablePaged(records);
             attendanceController.rejectAdjustment(
                     prompt("Record ID"), currentSession.getAccount().getId(), prompt("Reason"));
             printSuccess("Rejected.");
         } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
     }
 
-    // ═════════════════════════════════════════
+    // ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
     // 4. LEAVE MANAGEMENT
-    // ═════════════════════════════════════════
+    // ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
     private void showLeaveManagement() {
         boolean back = false;
         while (!back) {
-            printSubMenu("LEAVE MANAGEMENT", new String[]{
-                "Submit Leave Request", "Approve Leave Request",
-                "Reject Leave Request", "View Leave Balance"
-            });
+            String[] items = isEmployee()
+                    ? new String[]{
+                        "Submit Leave Request", "View Leave Requests", "View Leave Balance"
+                    }
+                    : new String[]{
+                        "Approve Leave Request", "Reject Leave Request"
+                    };
+            printSubMenu("LEAVE MANAGEMENT", items);
             switch (prompt("Choose").trim()) {
-                case "1" -> handleSubmitLeaveRequest();
-                case "2" -> handleApproveLeaveRequest();
-                case "3" -> handleRejectLeaveRequest();
-                case "4" -> handleViewLeaveBalance();
+                case "1" -> {
+                    if (isEmployee()) handleSubmitLeaveRequest();
+                    else handleApproveLeaveRequest();
+                }
+                case "2" -> {
+                    if (isEmployee()) {
+                        handleViewLeaveRequests();
+                    } else {
+                        handleRejectLeaveRequest();
+                    }
+                }
+                case "3" -> {
+                    if (isEmployee()) {
+                        handleViewLeaveBalance();
+                    } else {
+                        printError("Invalid choice.");
+                    }
+                }
+                case "4" -> {
+                    if (isEmployee()) {
+                        printError("Invalid choice.");
+                    } else {
+                        printError("Invalid choice.");
+                    }
+                }
                 case "0" -> back = true;
                 default  -> printError("Invalid choice.");
             }
@@ -413,14 +607,18 @@ public class MainView {
     private void handleSubmitLeaveRequest() {
         printSectionHeader("SUBMIT LEAVE REQUEST");
         try {
-            String empId = prompt("Employee ID");
+            String empId = isEmployee() ? requireLinkedEmployeeId() : prompt("Employee ID");
+            if (empId == null) return;
+            if (isEmployee()) {
+                printInfo("Employee ID: " + empId);
+            }
             System.out.println("  1. ANNUAL   2. SICK   3. UNPAID");
             LeaveType type = switch (prompt("Choose")) {
                 case "2" -> LeaveType.SICK;
                 case "3" -> LeaveType.UNPAID;
                 default  -> LeaveType.ANNUAL;
             };
-            // Gọi đúng tên method: submit() thay vì submitLeaveRequest()
+            // GÃƒÂ¡Ã‚Â»Ã‚Âi Ãƒâ€žÃ¢â‚¬ËœÃƒÆ’Ã‚Âºng tÃƒÆ’Ã‚Âªn method: submit() thay vÃƒÆ’Ã‚Â¬ submitLeaveRequest()
             LeaveRequest req = leaveController.submit(
                     empId, type,
                     java.time.LocalDate.parse(prompt("Start date (YYYY-MM-DD)")),
@@ -430,14 +628,26 @@ public class MainView {
         } catch (Exception ex) { printError(ex.getMessage()); }
     }
 
+    private void handleViewLeaveRequests() {
+        printSectionHeader("VIEW LEAVE REQUESTS");
+        String employeeId = requireLinkedEmployeeId();
+        if (employeeId == null) return;
+        List<LeaveRequest> requests = leaveController.getRequestsByEmployee(employeeId);
+        if (requests.isEmpty()) {
+            printInfo("No leave requests found.");
+            return;
+        }
+        printLeaveTablePaged(requests);
+    }
+
     private void handleApproveLeaveRequest() {
         if (!checkAccess("APPROVE_LEAVE_REQUEST")) return;
         printSectionHeader("APPROVE LEAVE REQUEST");
         List<LeaveRequest> pending = leaveController.getPendingRequests();
         if (pending.isEmpty()) { printInfo("No pending requests."); return; }
-        printLeaveTable(pending);
+        printLeaveTablePaged(pending);
         try {
-            // Gọi đúng tên method: approve() với LockMechanism
+            // GÃƒÂ¡Ã‚Â»Ã‚Âi Ãƒâ€žÃ¢â‚¬ËœÃƒÆ’Ã‚Âºng tÃƒÆ’Ã‚Âªn method: approve() vÃƒÂ¡Ã‚Â»Ã¢â‚¬Âºi LockMechanism
             leaveController.approve(prompt("Leave ID"), currentSession.getAccount().getId(),
                     LockMechanism.NO_LOCK);
             printSuccess("Approved.");
@@ -449,9 +659,9 @@ public class MainView {
         printSectionHeader("REJECT LEAVE REQUEST");
         List<LeaveRequest> pending = leaveController.getPendingRequests();
         if (pending.isEmpty()) { printInfo("No pending requests."); return; }
-        printLeaveTable(pending);
+        printLeaveTablePaged(pending);
         try {
-            // Gọi đúng tên method: reject()
+            // GÃƒÂ¡Ã‚Â»Ã‚Âi Ãƒâ€žÃ¢â‚¬ËœÃƒÆ’Ã‚Âºng tÃƒÆ’Ã‚Âªn method: reject()
             leaveController.reject(prompt("Leave ID"), currentSession.getAccount().getId());
             printSuccess("Rejected.");
         } catch (Exception ex) { printError(ex.getMessage()); }
@@ -460,12 +670,15 @@ public class MainView {
     private void handleViewLeaveBalance() {
         printSectionHeader("VIEW LEAVE BALANCE");
         try {
-            // Gọi đúng tên method: getBalancesByEmployee()
-            List<LeaveBalance> balances = leaveController.getBalancesByEmployee(prompt("Employee ID"));
+            // GÃƒÂ¡Ã‚Â»Ã‚Âi Ãƒâ€žÃ¢â‚¬ËœÃƒÆ’Ã‚Âºng tÃƒÆ’Ã‚Âªn method: getBalancesByEmployee()
+            String employeeId = isEmployee() ? requireLinkedEmployeeId() : prompt("Employee ID");
+            if (employeeId == null) return;
+            List<LeaveBalance> balances = leaveController.getBalancesByEmployee(employeeId);
             if (balances.isEmpty()) { printInfo("No balance records found."); return; }
+            printInfo("Leave balance updates after HR approves the leave request.");
             System.out.printf(BOLD + "%-15s %-10s %-8s %-8s %-10s%n" + RESET,
                     "Employee", "Type", "Total", "Used", "Remaining");
-            System.out.println("─".repeat(55));
+            System.out.println("-".repeat(55));
             for (LeaveBalance b : balances) {
                 System.out.printf("%-15s %-10s %-8d %-8d %-10d%n",
                         b.getEmployeeId(), b.getLeaveType(),
@@ -474,20 +687,19 @@ public class MainView {
         } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
     }
 
-    // ═════════════════════════════════════════
+    // ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
     // 5. PAYROLL MANAGEMENT
-    // ═════════════════════════════════════════
+    // ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
     private void showPayrollManagement() {
         boolean back = false;
         while (!back) {
             printSubMenu("PAYROLL MANAGEMENT", new String[]{
-                "Process Monthly Payroll", "View Payroll History", "Configure Payroll Rules"
+                "Process Monthly Payroll", "View Payroll History"
             });
             switch (prompt("Choose").trim()) {
                 case "1" -> handleProcessMonthlyPayroll();
                 case "2" -> handleViewPayrollHistory();
-                case "3" -> handleConfigurePayrollRules();
                 case "0" -> back = true;
                 default  -> printError("Invalid choice.");
             }
@@ -509,26 +721,23 @@ public class MainView {
     private void handleViewPayrollHistory() {
         printSectionHeader("VIEW PAYROLL HISTORY");
         try {
-            String empId = promptOptional("Employee ID (Enter = all)");
-            List<PayrollEntry> entries = empId != null
-                    ? payrollController.getPayrollByEmployee(empId)
-                    : payrollController.getAllPayrollEntries();
+            List<PayrollEntry> entries;
+            if (isEmployee()) {
+                String empId = requireLinkedEmployeeId();
+                if (empId == null) return;
+                entries = payrollController.getPayrollByEmployee(empId);
+            } else {
+                String empId = promptOptional("Employee ID (Enter = all)");
+                entries = empId != null
+                        ? payrollController.getPayrollByEmployee(empId)
+                        : payrollController.getAllPayrollEntries();
+            }
             if (entries.isEmpty()) { printInfo("No records."); return; }
 
-            // Hiện thêm cột Type để thấy rõ 2 luồng tính lương đa hình
-            System.out.printf(BOLD + "%-20s %-12s %-10s %-18s %-12s%n" + RESET,
-                    "Entry ID", "Employee", "Type", "Net Salary (VND)", "Status");
-            System.out.println("─".repeat(78));
-            for (PayrollEntry e : entries) {
-                Employee emp = payrollController.findEmployeeById(e.getEmployeeId());
-                String type = (emp != null) ? String.valueOf(emp.getEmploymentType()) : "?";
-                System.out.printf("%-20s %-12s %-10s %-18s %-12s%n",
-                        e.getId(), e.getEmployeeId(), type,
-                        String.format("%,.0f", e.getNetSalary()), e.getStatus());
-            }
-            System.out.println("─".repeat(78));
+            // HiÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¡n thÃƒÆ’Ã‚Âªm cÃƒÂ¡Ã‚Â»Ã¢â€žÂ¢t Type Ãƒâ€žÃ¢â‚¬ËœÃƒÂ¡Ã‚Â»Ã†â€™ thÃƒÂ¡Ã‚ÂºÃ‚Â¥y rÃƒÆ’Ã‚Âµ 2 luÃƒÂ¡Ã‚Â»Ã¢â‚¬Å“ng tÃƒÆ’Ã‚Â­nh lÃƒâ€ Ã‚Â°Ãƒâ€ Ã‚Â¡ng Ãƒâ€žÃ¢â‚¬Ëœa hÃƒÆ’Ã‚Â¬nh
+            printPayrollEntryTablePaged(entries);
 
-            // Giải thích công thức khác nhau giữa 2 loại
+            // GiÃƒÂ¡Ã‚ÂºÃ‚Â£i thÃƒÆ’Ã‚Â­ch cÃƒÆ’Ã‚Â´ng thÃƒÂ¡Ã‚Â»Ã‚Â©c khÃƒÆ’Ã‚Â¡c nhau giÃƒÂ¡Ã‚Â»Ã‚Â¯a 2 loÃƒÂ¡Ã‚ÂºÃ‚Â¡i
             printInfo("FULLTIME: base + overtime + attendance bonus - tax");
             printInfo("PARTTIME: base + overtime (no bonus, no tax)");
         } catch (Exception ex) { printError(ex.getMessage()); }
@@ -554,9 +763,9 @@ public class MainView {
         } catch (Exception ex) { printError(ex.getMessage()); }
     }
 
-    // ═════════════════════════════════════════
+    // ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
     // 6. REPORTS
-    // ═════════════════════════════════════════
+    // ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
     private void showReports() {
         boolean back = false;
@@ -577,9 +786,9 @@ public class MainView {
         }
     }
 
-    // ═════════════════════════════════════════
+    // ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
     // 7. SYNC & SIMULATION
-    // ═════════════════════════════════════════
+    // ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
     private void showSyncAndSimulation() {
         boolean back = false;
@@ -593,8 +802,8 @@ public class MainView {
                 case "1" -> handleRunSimulation();
                 case "2" -> handleSelectSyncMode();
                 case "3" -> handleMeasureTps();
-                case "4" -> { try { List<String> s = simulationController.detectDoublePayment(); if (s.isEmpty()) printSuccess("No double payments."); else { printError("Double payments: " + s.size()); s.forEach(x -> System.out.println("  ⚠ " + x)); } } catch (Exception ex) { printError(ex.getMessage()); } }
-                case "5" -> { try { List<String> s = simulationController.detectWrongLeaveDeduction(); if (s.isEmpty()) printSuccess("No wrong deductions."); else { printError("Wrong deductions: " + s.size()); s.forEach(x -> System.out.println("  ⚠ " + x)); } } catch (Exception ex) { printError(ex.getMessage()); } }
+                case "4" -> printIssueList("DOUBLE PAYMENT", simulationController.detectDoublePayment());
+                case "5" -> printIssueList("WRONG LEAVE DEDUCTION", simulationController.detectWrongLeaveDeduction());
                 case "0" -> back = true;
                 default  -> printError("Invalid choice.");
             }
@@ -636,14 +845,14 @@ public class MainView {
         printPayrollRunSummary(r);
     }
 
-    // ═════════════════════════════════════════
+    // ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
     // DISPLAY HELPERS
-    // ═════════════════════════════════════════
+    // ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
     private void printBanner() {
         System.out.println(BOLD + CYAN);
         System.out.println("=========================================");
-        System.out.println("  EMPLOYEE PAYROLL MANAGEMENT SYSTEM");
+        System.out.println("  " + getPortalTitle());
         System.out.println("=========================================");
         System.out.println(RESET);
     }
@@ -652,12 +861,44 @@ public class MainView {
         String user = currentSession != null
                 ? DIM + " [" + currentSession.getUsername() + " | " + currentSession.getRole() + "]" + RESET : "";
         System.out.println(BOLD + "\n=========================================" + user);
-        System.out.println(" EMPLOYEE PAYROLL MANAGEMENT SYSTEM");
+        System.out.println(" " + getPortalTitle());
         System.out.println("=========================================");
-        System.out.println("  1. Login\n  2. Employee Management\n  3. Attendance Management");
-        System.out.println("  4. Leave Management\n  5. Payroll Management\n  6. Reports");
-        System.out.println("  7. Synchronization & Simulation\n  ─────────────────────────────");
+        if (isAdmin()) {
+            System.out.println("  1. Employee Management");
+            System.out.println("  2. Configure Payroll Rules");
+            System.out.println("  3. Synchronization & Simulation");
+            System.out.println("  -----------------------------");
+            System.out.println("  4. Log out");
+        } else if (isEmployee()) {
+            System.out.println("  1. Attendance Management");
+            System.out.println("  2. Leave Management");
+            System.out.println("  3. Payroll History");
+            System.out.println("  -----------------------------");
+            System.out.println("  4. Log out");
+        } else {
+            System.out.println("  1. Employee Management");
+            System.out.println("  2. Attendance Management");
+            System.out.println("  3. Leave Management");
+            System.out.println("  4. Payroll Management");
+            System.out.println("  5. Reports");
+            System.out.println("  6. Synchronization & Simulation");
+            System.out.println("  -----------------------------");
+            System.out.println("  7. Log out");
+        }
         System.out.println("  0. Exit\n=========================================" + RESET);
+    }
+
+    private String getPortalTitle() {
+        if (currentSession == null) {
+            return "INTERNAL COMPANY PORTAL";
+        }
+        if (isEmployee()) {
+            return "EMPLOYEE SELF SERVICE PORTAL";
+        }
+        if (isHr()) {
+            return "HR OPERATIONS PORTAL";
+        }
+        return "EMPLOYEE PAYROLL MANAGEMENT SYSTEM";
     }
 
     private void printSubMenu(String title, String[] items) {
@@ -668,106 +909,257 @@ public class MainView {
             else System.out.printf("  %2d. %s%n", n++, item);
         }
         System.out.println("   0. Back");
-        System.out.println(BOLD + "═".repeat(title.length() + 22) + RESET);
+        System.out.println(BOLD + "-".repeat(title.length() + 22) + RESET);
     }
 
     private void printSectionHeader(String title) {
-        System.out.println(BOLD + CYAN + "\n▶ " + title + RESET);
-        System.out.println("─".repeat(45));
+        System.out.println(BOLD + CYAN + "\n> " + title + RESET);
+        System.out.println("-".repeat(45));
     }
 
     private void printEmployeeTable(List<Employee> list) {
         if (list.isEmpty()) { printInfo("No employees found."); return; }
         System.out.printf(BOLD + "%-12s %-20s %-25s %-10s %-10s%n" + RESET, "ID","Name","Email","Dept","Type");
-        System.out.println("─".repeat(80));
+        System.out.println("-".repeat(80));
         for (Employee e : list)
             System.out.printf("%-12s %-20s %-25s %-10s %-10s%n",
                     e.getId(), trunc(e.getName(),19), trunc(e.getEmail(),24), e.getDepartmentId(), e.getEmploymentType());
-        System.out.println("─".repeat(80));
+        System.out.println("-".repeat(80));
         printInfo("Found: " + list.size());
     }
 
+    private void printEmployeeTablePaged(List<Employee> list) {
+        if (list.isEmpty()) {
+            printInfo("No employees found.");
+            return;
+        }
+
+        final int pageSize = 20;
+        int page = 0;
+        int totalPages = (list.size() + pageSize - 1) / pageSize;
+        while (true) {
+            int from = page * pageSize;
+            int to = Math.min(from + pageSize, list.size());
+            printEmployeeTable(list.subList(from, to));
+            printInfo("Page " + (page + 1) + "/" + totalPages + " | Total: " + list.size());
+            String choice = promptOptional("N-next, P-prev, Enter-back");
+            if (choice == null || choice.equalsIgnoreCase("q")) {
+                return;
+            }
+            if (choice.equalsIgnoreCase("n") && page < totalPages - 1) {
+                page++;
+            } else if (choice.equalsIgnoreCase("p") && page > 0) {
+                page--;
+            } else {
+                printInfo("No more pages.");
+            }
+        }
+    }
+
     private void printEmployeeDetail(Employee e) {
-        System.out.println(CYAN + "┌─── Employee Detail ──────────────────────────┐" + RESET);
+        System.out.println(CYAN + "+----------------------------------------------+" + RESET);
         printRow("ID", e.getId()); printRow("Name", e.getName()); printRow("Email", e.getEmail());
         printRow("Department", e.getDepartmentId()); printRow("Type", String.valueOf(e.getEmploymentType()));
         printRow("Base Salary", String.format("%,.0f VND", e.getBaseSalary()));
-        System.out.println(CYAN + "└───────────────────────────────────────────────┘" + RESET);
+        System.out.println(CYAN + "+----------------------------------------------+" + RESET);
     }
 
     private void printDepartmentTable(List<Department> list) {
         System.out.printf(BOLD + "%-12s %-25s %-15s%n" + RESET, "ID","Name","Manager ID");
-        System.out.println("─".repeat(55));
+        System.out.println("-".repeat(55));
         for (Department d : list)
             System.out.printf("%-12s %-25s %-15s%n", d.getId(), trunc(d.getName(),24), d.getManagerId());
-        System.out.println("─".repeat(55));
+        System.out.println("-".repeat(55));
     }
 
     private void printDepartmentDetail(Department d) {
-        System.out.println(CYAN + "┌─── Department ────────────────────────────────┐" + RESET);
+        System.out.println(CYAN + "+----------------------------------------------+" + RESET);
         printRow("ID", d.getId()); printRow("Name", d.getName()); printRow("Manager", d.getManagerId());
-        System.out.println(CYAN + "└───────────────────────────────────────────────┘" + RESET);
+        System.out.println(CYAN + "+----------------------------------------------+" + RESET);
     }
 
     private void printAttendanceDetail(AttendanceRecord r) {
-        System.out.println(CYAN + "┌─── Attendance Record ─────────────────────────┐" + RESET);
+        System.out.println(CYAN + "+----------------------------------------------+" + RESET);
         printRow("ID", r.getId()); printRow("Employee", r.getEmployeeId());
         printRow("Month", r.getYearMonth()); printRow("Work Days", String.valueOf(r.getWorkDays()));
         printRow("Overtime", r.getOvertimeHours() + "h");
-        System.out.println(CYAN + "└───────────────────────────────────────────────┘" + RESET);
+        System.out.println(CYAN + "+----------------------------------------------+" + RESET);
     }
 
     private void printAttendanceTable(List<AttendanceRecord> list) {
         System.out.printf(BOLD + "%-15s %-12s %-10s %-10s %-12s%n" + RESET, "ID","Employee","Month","WorkDays","Overtime(h)");
-        System.out.println("─".repeat(62));
+        System.out.println("-".repeat(62));
         for (AttendanceRecord r : list)
             System.out.printf("%-15s %-12s %-10s %-10d %-12.1f%n",
                     trunc(r.getId(),14), r.getEmployeeId(), r.getYearMonth(), r.getWorkDays(), r.getOvertimeHours());
-        System.out.println("─".repeat(62));
+        System.out.println("-".repeat(62));
+    }
+
+    private void printAttendanceTablePaged(List<AttendanceRecord> list) {
+        if (list.isEmpty()) {
+            printInfo("No attendance records found.");
+            return;
+        }
+
+        final int pageSize = 20;
+        int page = 0;
+        int totalPages = (list.size() + pageSize - 1) / pageSize;
+        while (true) {
+            int from = page * pageSize;
+            int to = Math.min(from + pageSize, list.size());
+            printAttendanceTable(list.subList(from, to));
+            printInfo("Page " + (page + 1) + "/" + totalPages + " | Total: " + list.size());
+            String choice = promptOptional("N-next, P-prev, Enter-back");
+            if (choice == null || choice.equalsIgnoreCase("q")) {
+                return;
+            }
+            if (choice.equalsIgnoreCase("n") && page < totalPages - 1) {
+                page++;
+            } else if (choice.equalsIgnoreCase("p") && page > 0) {
+                page--;
+            } else {
+                printInfo("No more pages.");
+            }
+        }
     }
 
     private void printLeaveTable(List<LeaveRequest> list) {
         System.out.printf(BOLD + "%-15s %-12s %-10s %-12s %-12s %-10s%n" + RESET, "Leave ID","Employee","Type","Start","End","Status");
-        System.out.println("─".repeat(75));
+        System.out.println("-".repeat(75));
         for (LeaveRequest r : list)
             System.out.printf("%-15s %-12s %-10s %-12s %-12s %-10s%n",
                     r.getLeaveId(), r.getEmployeeId(), r.getLeaveType(), r.getStartDate(), r.getEndDate(), r.getStatus());
-        System.out.println("─".repeat(75));
+        System.out.println("-".repeat(75));
+    }
+
+    private void printLeaveTablePaged(List<LeaveRequest> list) {
+        if (list.isEmpty()) {
+            printInfo("No leave requests found.");
+            return;
+        }
+
+        final int pageSize = 20;
+        int page = 0;
+        int totalPages = (list.size() + pageSize - 1) / pageSize;
+        while (true) {
+            int from = page * pageSize;
+            int to = Math.min(from + pageSize, list.size());
+            printLeaveTable(list.subList(from, to));
+            printInfo("Page " + (page + 1) + "/" + totalPages + " | Total: " + list.size());
+            String choice = promptOptional("N-next, P-prev, Enter-back");
+            if (choice == null || choice.equalsIgnoreCase("q")) {
+                return;
+            }
+            if (choice.equalsIgnoreCase("n") && page < totalPages - 1) {
+                page++;
+            } else if (choice.equalsIgnoreCase("p") && page > 0) {
+                page--;
+            } else {
+                printInfo("No more pages.");
+            }
+        }
+    }
+
+    private void printPayrollEntryTable(List<PayrollEntry> entries) {
+        System.out.printf(BOLD + "%-20s %-12s %-10s %-18s %-12s %-10s%n" + RESET,
+                "Entry ID", "Employee", "Month", "Net Salary (VND)", "Status", "Type");
+        System.out.println("-".repeat(92));
+        for (PayrollEntry entry : entries) {
+            Employee employee = payrollController.findEmployeeById(entry.getEmployeeId());
+            String type = employee != null ? String.valueOf(employee.getEmploymentType()) : "?";
+            System.out.printf("%-20s %-12s %-10s %-18s %-12s %-10s%n",
+                    trunc(entry.getId(), 19),
+                    entry.getEmployeeId(),
+                    entry.extractYearMonth(),
+                    String.format("%,.0f", entry.getNetSalary()),
+                    entry.getStatus(),
+                    type);
+        }
+        System.out.println("-".repeat(92));
+    }
+
+    private void printPayrollEntryTablePaged(List<PayrollEntry> entries) {
+        if (entries.isEmpty()) {
+            printInfo("No payroll entries found.");
+            return;
+        }
+
+        final int pageSize = 20;
+        int page = 0;
+        int totalPages = (entries.size() + pageSize - 1) / pageSize;
+        while (true) {
+            int from = page * pageSize;
+            int to = Math.min(from + pageSize, entries.size());
+            printPayrollEntryTable(entries.subList(from, to));
+            printInfo("Page " + (page + 1) + "/" + totalPages + " | Total: " + entries.size());
+            String choice = promptOptional("N-next, P-prev, Enter-back");
+            if (choice == null || choice.equalsIgnoreCase("q")) {
+                return;
+            }
+            if (choice.equalsIgnoreCase("n") && page < totalPages - 1) {
+                page++;
+            } else if (choice.equalsIgnoreCase("p") && page > 0) {
+                page--;
+            } else {
+                printInfo("No more pages.");
+            }
+        }
     }
 
     private void printPayrollRunSummary(PayrollRun r) {
-        System.out.println(CYAN + "┌─── Payroll Run Summary ───────────────────────┐" + RESET);
+        System.out.println(CYAN + "+----------------------------------------------+" + RESET);
         printRow("Run ID", r.getId()); printRow("Month", r.getYearMonth());
         printRow("Mechanism", r.getMechanism()); printRow("Elapsed", r.getElapsedMs() + " ms");
         printRow("TPS", String.format("%.2f", r.getTps()));
         printRow("Success", String.valueOf(r.getSuccessCount()));
         printRow("Double Pay", String.valueOf(r.getDoublePaymentCount()));
         printRow("Wrong Leave", String.valueOf(r.getWrongLeaveCount()));
-        System.out.println(CYAN + "└───────────────────────────────────────────────┘" + RESET);
+        System.out.println(CYAN + "+----------------------------------------------+" + RESET);
     }
 
     private void printPayrollRule(PayrollRule r) {
-        System.out.println(CYAN + "┌─── Payroll Rule ──────────────────────────────┐" + RESET);
+        System.out.println(CYAN + "+---------------- Payroll Rule ----------------+" + RESET);
         printRow("Work Days", String.valueOf(r.getStandardWorkingDays()));
         printRow("Hours/Day", String.valueOf(r.getWorkingHoursPerDay()));
         printRow("OT Multiplier", r.getOvertimeMultiplier() + "x");
         printRow("Bonus", String.format("%,.0f VND", r.getAttendanceBonus()));
         printRow("Tax Rate", (r.getTaxRate() * 100) + "%");
         printRow("Tax Threshold", String.format("%,.0f VND", r.getTaxThreshold()));
-        System.out.println(CYAN + "└───────────────────────────────────────────────┘" + RESET);
+        System.out.println(CYAN + "+----------------------------------------------+" + RESET);
+    }
+
+    private void printUserAccountDetail(UserAccount account) {
+        System.out.println(CYAN + "+----------------------------------------------+" + RESET);
+        printRow("Account ID", account.getId());
+        printRow("Username", account.getUsername());
+        printRow("Role", account.getRole());
+        printRow("Employee ID", account.getEmployeeId());
+        printRow("Active", String.valueOf(account.isActive()));
+        System.out.println(CYAN + "+----------------------------------------------+" + RESET);
     }
 
     private void printRow(String label, String value) {
-        System.out.printf("│ %-20s: %-24s│%n", label, trunc(value, 24));
+        System.out.printf("| %-20s: %-24s |%n", label, trunc(value, 24));
     }
 
-    private void printSuccess(String msg) { System.out.println(GREEN  + "✔ " + msg + RESET); }
-    private void printError(String msg)   { System.out.println(RED    + "✘ " + msg + RESET); }
-    private void printInfo(String msg)    { System.out.println(YELLOW + "ℹ " + msg + RESET); }
+    private void printSuccess(String msg) { System.out.println(GREEN  + "[OK] " + msg + RESET); }
+    private void printError(String msg)   { System.out.println(RED    + "[ERROR] " + msg + RESET); }
+    private void printInfo(String msg)    { System.out.println(YELLOW + "[INFO] " + msg + RESET); }
 
-    // ═════════════════════════════════════════
+    private void printIssueList(String title, List<String> issues) {
+        printSectionHeader(title);
+        if (issues.isEmpty()) {
+            printSuccess("No issue found.");
+            return;
+        }
+        for (int i = 0; i < issues.size(); i++) {
+            System.out.printf("  %2d. %s%n", i + 1, issues.get(i));
+        }
+    }
+
+    // ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
     // INPUT HELPERS
-    // ═════════════════════════════════════════
+    // ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
 
     private String prompt(String label) {
         while (true) {
@@ -812,5 +1204,29 @@ public class MainView {
         if (s == null) return fallback;
         try { return Double.parseDouble(s.replace(",", "")); }
         catch (Exception e) { return fallback; }
+    }
+
+    private String generateUserAccountId() {
+        int max = 0;
+        for (UserAccount account : userRepo.findAll()) {
+            String id = account.getId();
+            if (id != null && id.matches("U\\d+")) {
+                max = Math.max(max, Integer.parseInt(id.substring(1)));
+            }
+        }
+        return String.format("U%03d", max + 1);
+    }
+
+    private String requireLinkedEmployeeId() {
+        if (currentSession == null) {
+            printError("You must login first.");
+            return null;
+        }
+        String employeeId = currentSession.getEmployeeId();
+        if (employeeId == null || employeeId.isBlank()) {
+            printError("This account is not linked to any employee.");
+            return null;
+        }
+        return employeeId;
     }
 }

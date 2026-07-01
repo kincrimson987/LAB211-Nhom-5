@@ -22,6 +22,10 @@ public abstract class AuthController {
         return account.getRole();
     }
 
+    public String getEmployeeId() {
+        return account.getEmployeeId();
+    }
+
     public UserAccount getAccount() {
         return account;
     }

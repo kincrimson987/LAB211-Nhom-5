@@ -20,7 +20,7 @@ public class UserAccountRepository extends CsvRepository<UserAccount> {
 
     @Override
     public String getHeader() {
-        return "id,version,username,password,role,active";
+        return "id,version,username,password,role,active,employeeId";
     }
 
     @Override
@@ -62,6 +62,17 @@ public class UserAccountRepository extends CsvRepository<UserAccount> {
         }
 
         return result;
+    }
+
+    public UserAccount findByEmployeeId(String employeeId) {
+        for (UserAccount account : findAll()) {
+            if (account.getEmployeeId() != null
+                    && account.getEmployeeId().equalsIgnoreCase(employeeId)) {
+                return account;
+            }
+        }
+
+        return null;
     }
 
     public boolean authenticate(String username, String password) {

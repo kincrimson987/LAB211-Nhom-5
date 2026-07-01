@@ -90,7 +90,7 @@ public class SimulationController {
         for (Employee emp : employees) {
             long count = payrollEntryRepository.countProcessedByEmployee(emp.getId());
             if (count > 1) {
-                suspects.add(emp.getId() + " (" + emp.getName() + ") — " + count + " processed entries");
+                suspects.add(emp.getId() + " (" + emp.getName() + ") - " + count + " processed entries");
             }
         }
         return suspects;

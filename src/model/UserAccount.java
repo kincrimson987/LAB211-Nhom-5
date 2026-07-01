@@ -2,6 +2,7 @@ public class UserAccount extends BaseEntity {
     private String username;
     private String password;
     private String role;
+    private String employeeId;
     private boolean active;
 
     public UserAccount() {
@@ -9,11 +10,17 @@ public class UserAccount extends BaseEntity {
     }
 
     public UserAccount(String id, long version, String username, String password, String role, boolean active) {
+        this(id, version, username, password, role, active, "");
+    }
+
+    public UserAccount(String id, long version, String username, String password,
+                       String role, boolean active, String employeeId) {
         super(id, version);
         this.username = username;
         this.password = password;
         this.role = role;
         this.active = active;
+        this.employeeId = employeeId;
     }
 
     public String getUsername() {
@@ -40,6 +47,14 @@ public class UserAccount extends BaseEntity {
         this.role = role;
     }
 
+    public String getEmployeeId() {
+        return employeeId;
+    }
+
+    public void setEmployeeId(String employeeId) {
+        this.employeeId = employeeId;
+    }
+
     public boolean isActive() {
         return active;
     }
@@ -59,7 +74,8 @@ public class UserAccount extends BaseEntity {
                 + username + ","
                 + password + ","
                 + role + ","
-                + active;
+                + active + ","
+                + (employeeId != null ? employeeId : "");
     }
 
     @Override
@@ -73,6 +89,7 @@ public class UserAccount extends BaseEntity {
             this.password = parts[3].trim();
             this.role = parts[4].trim();
             this.active = Boolean.parseBoolean(parts[5].trim());
+            this.employeeId = parts.length >= 7 ? parts[6].trim() : "";
         }
     }
 
@@ -82,6 +99,7 @@ public class UserAccount extends BaseEntity {
                 "id='" + getId() + '\'' +
                 ", username='" + username + '\'' +
                 ", role='" + role + '\'' +
+                ", employeeId='" + employeeId + '\'' +
                 ", active=" + active +
                 '}';
     }

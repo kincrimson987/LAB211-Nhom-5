@@ -1,13 +1,7 @@
-
-
 import java.util.Set;
 
 /**
-import java.util.Set;
-
-/**
- * EmployeeAuthController — quyền Employee theo Use Case.
- * Chỉ được: Check In/Out, Submit Leave, View Attendance/Leave Balance.
+ * EmployeeAuthController - quyen Employee theo Use Case.
  */
 public class EmployeeAuthController extends AuthController {
 

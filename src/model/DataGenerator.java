@@ -88,9 +88,9 @@ public class DataGenerator {
                         i);
                 String deptId = String.format("D%03d", 1 + RANDOM.nextInt(NUM_DEPARTMENTS));
                 EmployeeType empType = RANDOM.nextBoolean() ? EmployeeType.FULLTIME : EmployeeType.PARTTIME;
-                double baseSalary = empType == EmployeeType.FULLTIME ? 4000.0 : 2000.0;
+                double baseSalary = randomBaseSalary(empType);
 
-                writer.println(String.format(Locale.US, "E%04d,1,%s,%s,%s,%s,%.1f",
+                writer.println(String.format(Locale.US, "E%04d,1,%s,%s,%s,%s,%.0f",
                         i, fullName, email, deptId, empType.name(), baseSalary));
 
                 totalRows++;
@@ -98,6 +98,19 @@ public class DataGenerator {
         }
 
         System.out.printf("[OK] employees.csv       (%d dòng)%n", totalRows);
+    }
+
+    private static double randomBaseSalary(EmployeeType empType) {
+        if (empType == EmployeeType.PARTTIME) {
+            return (6 + RANDOM.nextInt(3)) * 1_000_000.0;
+        }
+
+        int minMillion = 10;
+        int maxMillion = 50;
+        int stepMillion = 10;
+        int steps = ((maxMillion - minMillion) / stepMillion) + 1;
+        int salaryMillion = minMillion + RANDOM.nextInt(steps) * stepMillion;
+        return salaryMillion * 1_000_000.0;
     }
 
     private static void generateLeaveBalances() throws IOException {
