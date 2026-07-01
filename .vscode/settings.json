@@ -1,4 +1,4 @@
-{
+/*{
     "java.jdt.ls.java.home": "C:\\Users\\ADMIN\\AppData\\Local\\Programs\\Eclipse Adoptium\\jdk-21.0.11.10-hotspot",
     "java.configuration.runtimes": [
         {
@@ -8,8 +8,8 @@
         }
     ],
     "java.configuration.updateBuildConfiguration": "interactive"
-}
-/*{
+}*/
+{
     "java.jdt.ls.java.home": "C:\\Program Files\\Java\\jdk-17.0.19",
     "java.configuration.runtimes": [
         {
@@ -23,4 +23,4 @@
         }
     ],
     "java.configuration.updateBuildConfiguration": "interactive"
-}*/
+}
