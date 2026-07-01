@@ -1,13 +1,19 @@
+<<<<<<< HEAD
 /*{
     "java.jdt.ls.java.home": "C:\\Users\\ADMIN\\AppData\\Local\\Programs\\Eclipse Adoptium\\jdk-21.0.11.10-hotspot",
+=======
+{
+    "java.jdt.ls.java.home": "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.19.10-hotspot",
+>>>>>>> c90695a02e9f9350dd8f45a7a126c2b5fae5d608
     "java.configuration.runtimes": [
         {
             "name": "JavaSE-17",
-            "path": "C:\\Users\\ADMIN\\AppData\\Local\\Programs\\Eclipse Adoptium\\jdk-21.0.11.10-hotspot",
+            "path": "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.19.10-hotspot",
             "default": true
         }
     ],
     "java.configuration.updateBuildConfiguration": "interactive"
+<<<<<<< HEAD
 }*/
 {
     "java.jdt.ls.java.home": "C:\\Program Files\\Java\\jdk-17.0.19",
@@ -24,3 +30,6 @@
     ],
     "java.configuration.updateBuildConfiguration": "interactive"
 }
+=======
+}
+>>>>>>> c90695a02e9f9350dd8f45a7a126c2b5fae5d608
