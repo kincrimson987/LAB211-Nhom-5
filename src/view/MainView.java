@@ -736,6 +736,18 @@ public class MainView {
                         ? payrollController.getPayrollByEmployee(empId)
                         : payrollController.getAllPayrollEntries();
             }
+
+            String yearMonth = promptOptional("Year-Month (YYYY-MM, Enter = all)");
+            if (yearMonth != null) {
+                List<PayrollEntry> filtered = new java.util.ArrayList<>();
+                for (PayrollEntry entry : entries) {
+                    if (yearMonth.equals(entry.extractYearMonth())) {
+                        filtered.add(entry);
+                    }
+                }
+                entries = filtered;
+            }
+
             if (entries.isEmpty()) { printInfo("No records."); return; }
 
             // HiÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¡n thÃƒÆ’Ã‚Âªm cÃƒÂ¡Ã‚Â»Ã¢â€žÂ¢t Type Ãƒâ€žÃ¢â‚¬ËœÃƒÂ¡Ã‚Â»Ã†â€™ thÃƒÂ¡Ã‚ÂºÃ‚Â¥y rÃƒÆ’Ã‚Âµ 2 luÃƒÂ¡Ã‚Â»Ã¢â‚¬Å“ng tÃƒÆ’Ã‚Â­nh lÃƒâ€ Ã‚Â°Ãƒâ€ Ã‚Â¡ng Ãƒâ€žÃ¢â‚¬Ëœa hÃƒÆ’Ã‚Â¬nh
