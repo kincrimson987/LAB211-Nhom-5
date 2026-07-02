@@ -2,9 +2,5 @@ id,version,username,password,role,active,employeeId
 U001,1,admin,admin123,ADMIN,true,
 U002,1,hr01,hr123,HR,true,
 U004,1,andrew,andrew123,EMPLOYEE,true,E0001
-<<<<<<< HEAD
 U005,1,patricia,patricia123,EMPLOYEE,true,E0002
-=======
-U005,1,ThomasPT,PT098,EMPLOYEE,true,E1183
-U006,1,Tcb457,456hk,EMPLOYEE,true,E0909
->>>>>>> 6bdb18acd0850f232d692087feb38483653dd9aa
+U006,1,trieuvy,trieuvy2006,EMPLOYEE,true,EMP-72E1CB71

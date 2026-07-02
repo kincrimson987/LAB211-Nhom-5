@@ -23,10 +23,7 @@ public class AttendanceController {
     public AttendanceRecord checkIn(String employeeId) {
         validateEmployee(employeeId);
         String yearMonth = getCurrentYearMonth();
-        AttendanceRecord record = attendanceRepo.findByEmployeeAndMonth(employeeId, yearMonth);
-        if (record == null) {
-            throw new IllegalArgumentException("Khong co du lieu attendance cho thang " + yearMonth + ".");
-        }
+        AttendanceRecord record = getOrCreate(employeeId, yearMonth);
         record.setWorkDays(record.getWorkDays() + 1);
         record.setVersion(record.getVersion() + 1);
         saveOrUpdate(record);

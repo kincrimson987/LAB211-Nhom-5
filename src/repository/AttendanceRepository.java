@@ -46,20 +46,20 @@ public class AttendanceRepository extends CsvRepository<AttendanceRecord> {
 
     public List<AttendanceRecord> findByEmployee(String employeeId) {
         return findAll().stream()
-                .filter(record -> record.getEmployeeId().equals(employeeId))
+                .filter(record -> employeeId.equals(record.getEmployeeId()))
                 .collect(Collectors.toList());
     }
 
     public List<AttendanceRecord> findByMonth(String yearMonth) {
         return findAll().stream()
-                .filter(record -> record.getYearMonth().equals(yearMonth))
+                .filter(record -> yearMonth.equals(record.getYearMonth()))
                 .collect(Collectors.toList());
     }
 
     public AttendanceRecord findByEmployeeAndMonth(String employeeId, String yearMonth) {
         return findAll().stream()
-                .filter(record -> record.getEmployeeId().equals(employeeId))
-                .filter(record -> record.getYearMonth().equals(yearMonth))
+                .filter(record -> employeeId.equals(record.getEmployeeId()))
+                .filter(record -> yearMonth.equals(record.getYearMonth()))
                 .findFirst()
                 .orElse(null);
     }

@@ -616,19 +616,23 @@ public class MainView {
             if (isEmployee()) {
                 printInfo("Employee ID: " + empId);
             }
-            System.out.println("  1. ANNUAL   2. SICK   3. UNPAID");
+            System.out.println("  1. ANNUAL   2. SICK");
             LeaveType type = switch (prompt("Choose")) {
                 case "2" -> LeaveType.SICK;
-                case "3" -> LeaveType.UNPAID;
                 default  -> LeaveType.ANNUAL;
             };
+            java.time.LocalDate startDate = java.time.LocalDate.parse(prompt("Start date (YYYY-MM-DD)"));
+            java.time.LocalDate endDate = java.time.LocalDate.parse(prompt("End date (YYYY-MM-DD)"));
+            int requestedDays = (int) (endDate.toEpochDay() - startDate.toEpochDay()) + 1;
+            int chargeableDays = leaveController.previewChargeableDays(empId, startDate, endDate);
             // GÃƒÂ¡Ã‚Â»Ã‚Âi Ãƒâ€žÃ¢â‚¬ËœÃƒÆ’Ã‚Âºng tÃƒÆ’Ã‚Âªn method: submit() thay vÃƒÆ’Ã‚Â¬ submitLeaveRequest()
             LeaveRequest req = leaveController.submit(
                     empId, type,
-                    java.time.LocalDate.parse(prompt("Start date (YYYY-MM-DD)")),
-                    java.time.LocalDate.parse(prompt("End date (YYYY-MM-DD)")),
+                    startDate,
+                    endDate,
                     prompt("Reason"));
-            printSuccess("Submitted: " + req.getLeaveId() + " (" + req.getDays() + " days)");
+            printSuccess("Submitted: " + req.getLeaveId() + " (requested " + requestedDays
+                    + " days, new charged days " + chargeableDays + " to " + type + ")");
         } catch (Exception ex) { printError(ex.getMessage()); }
     }
 
@@ -647,23 +651,27 @@ public class MainView {
     private void handleApproveLeaveRequest() {
         if (!checkAccess("APPROVE_LEAVE_REQUEST")) return;
         printSectionHeader("APPROVE LEAVE REQUEST");
-        List<LeaveRequest> pending = leaveController.getPendingRequests();
+        List<LeaveRequest> pending = promptPendingLeaveRequestsByMonth();
         if (pending.isEmpty()) { printInfo("No pending requests."); return; }
-        printLeaveTablePaged(pending);
+        printInfo("Browse requests, then press Enter to continue to Leave ID.");
+        printLeaveTablePaged(pending, "N-next, P-prev, Enter-continue");
         try {
+            String leaveId = prompt("Leave ID");
+            int chargeableDays = leaveController.previewApprovalChargeableDays(leaveId);
             // GÃƒÂ¡Ã‚Â»Ã‚Âi Ãƒâ€žÃ¢â‚¬ËœÃƒÆ’Ã‚Âºng tÃƒÆ’Ã‚Âªn method: approve() vÃƒÂ¡Ã‚Â»Ã¢â‚¬Âºi LockMechanism
-            leaveController.approve(prompt("Leave ID"), currentSession.getAccount().getId(),
+            leaveController.approve(leaveId, currentSession.getAccount().getId(),
                     LockMechanism.NO_LOCK);
-            printSuccess("Approved.");
+            printSuccess("Approved. Charged " + chargeableDays + " new leave day(s).");
         } catch (Exception ex) { printError(ex.getMessage()); }
     }
 
     private void handleRejectLeaveRequest() {
         if (!checkAccess("REJECT_LEAVE_REQUEST")) return;
         printSectionHeader("REJECT LEAVE REQUEST");
-        List<LeaveRequest> pending = leaveController.getPendingRequests();
+        List<LeaveRequest> pending = promptPendingLeaveRequestsByMonth();
         if (pending.isEmpty()) { printInfo("No pending requests."); return; }
-        printLeaveTablePaged(pending);
+        printInfo("Browse requests, then press Enter to continue to Leave ID.");
+        printLeaveTablePaged(pending, "N-next, P-prev, Enter-continue");
         try {
             // GÃƒÂ¡Ã‚Â»Ã‚Âi Ãƒâ€žÃ¢â‚¬ËœÃƒÆ’Ã‚Âºng tÃƒÆ’Ã‚Âªn method: reject()
             leaveController.reject(prompt("Leave ID"), currentSession.getAccount().getId());
@@ -679,7 +687,9 @@ public class MainView {
             if (employeeId == null) return;
             List<LeaveBalance> balances = leaveController.getBalancesByEmployee(employeeId);
             if (balances.isEmpty()) { printInfo("No balance records found."); return; }
-            printInfo("Leave balance updates after HR approves the leave request.");
+            printInfo("Annual leave va sick leave la quota theo nam.");
+            printInfo("He thong chi cho xin nghi tu 2026-07-01 tro di.");
+            printInfo("Neu don moi bi trung ngay voi don da co, chi tinh phan ngay moi chua nghi.");
             System.out.printf(BOLD + "%-15s %-10s %-8s %-8s %-10s%n" + RESET,
                     "Employee", "Type", "Total", "Used", "Remaining");
             System.out.println("-".repeat(55));
@@ -1106,6 +1116,10 @@ public class MainView {
     }
 
     private void printLeaveTablePaged(List<LeaveRequest> list) {
+        printLeaveTablePaged(list, "N-next, P-prev, Enter-back");
+    }
+
+    private void printLeaveTablePaged(List<LeaveRequest> list, String exitPrompt) {
         if (list.isEmpty()) {
             printInfo("No leave requests found.");
             return;
@@ -1119,7 +1133,7 @@ public class MainView {
             int to = Math.min(from + pageSize, list.size());
             printLeaveTable(list.subList(from, to));
             printInfo("Page " + (page + 1) + "/" + totalPages + " | Total: " + list.size());
-            String choice = promptOptional("N-next, P-prev, Enter-back");
+            String choice = promptOptional(exitPrompt);
             if (choice == null || choice.equalsIgnoreCase("q")) {
                 return;
             }
@@ -1131,6 +1145,17 @@ public class MainView {
                 printInfo("No more pages.");
             }
         }
+    }
+
+    private List<LeaveRequest> promptPendingLeaveRequestsByMonth() {
+        String yearMonth = prompt("Year-Month (YYYY-MM)");
+        java.time.LocalDate monthStart = java.time.LocalDate.parse(yearMonth + "-01");
+        java.time.LocalDate monthEnd = monthStart.withDayOfMonth(monthStart.lengthOfMonth());
+        return leaveController.getPendingRequests().stream()
+                .filter(request -> request.getStartDate() != null && request.getEndDate() != null)
+                .filter(request -> !request.getEndDate().isBefore(monthStart))
+                .filter(request -> !request.getStartDate().isAfter(monthEnd))
+                .toList();
     }
 
     private void printPayrollEntryTable(List<PayrollEntry> entries) {

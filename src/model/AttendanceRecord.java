@@ -88,15 +88,16 @@ public class AttendanceRecord extends BaseEntity {
         String[] parts = line.split(",");
 
         // Format mới: id,version,employeeId,yearMonth,workDays,overtimeHours
-        if (parts.length >= 6) {
-            setId(parts[0].trim());
-            setVersion(Long.parseLong(parts[1].trim()));
-            this.employeeId = parts[2].trim();
-            this.yearMonth = parts[3].trim();
-            this.workDays = Integer.parseInt(parts[4].trim());
-            this.overtimeHours = Double.parseDouble(parts[5].trim());
+        if (parts.length < 6) {
+            throw new IllegalArgumentException("Invalid attendance CSV line: " + line);
         }
-    
+
+        setId(parts[0].trim());
+        setVersion(Long.parseLong(parts[1].trim()));
+        this.employeeId = parts[2].trim();
+        this.yearMonth = parts[3].trim();
+        this.workDays = Integer.parseInt(parts[4].trim());
+        this.overtimeHours = Double.parseDouble(parts[5].trim());
     }
 
     @Override

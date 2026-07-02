@@ -1,11 +1,15 @@
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Controller xử lý toàn bộ logic nghiệp vụ cho Employee.
  * MainView gọi các method này — không trực tiếp thao tác Repository.
  */
 public class EmployeeController {
+    private static final int EMPLOYEE_ID_SEED = 1200;
+    private static final String EMPLOYEE_SEQUENCE_FILE = "data/employee_sequence.txt";
 
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
@@ -172,7 +176,56 @@ public class EmployeeController {
     // ─────────────────────────────────────────
 
     private String generateId() {
-        return "EMP-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        int nextNumber = getNextEmployeeNumber();
+        saveLastEmployeeNumber(nextNumber);
+        return String.format("E%04d", nextNumber);
+    }
+
+    private int getNextEmployeeNumber() {
+        int currentMax = employeeRepository.findAll().stream()
+                .map(Employee::getId)
+                .mapToInt(this::extractEmployeeNumber)
+                .max()
+                .orElse(0);
+        int storedLast = readLastEmployeeNumber();
+        int lastUsed = Math.max(Math.max(currentMax, storedLast), EMPLOYEE_ID_SEED);
+        return lastUsed + 1;
+    }
+
+    private int extractEmployeeNumber(String employeeId) {
+        if (employeeId == null || !employeeId.matches("E\\d{4,}")) {
+            return -1;
+        }
+        return Integer.parseInt(employeeId.substring(1));
+    }
+
+    private int readLastEmployeeNumber() {
+        try {
+            Path path = Path.of(EMPLOYEE_SEQUENCE_FILE);
+            if (!Files.exists(path)) {
+                return 0;
+            }
+            String value = Files.readString(path).trim();
+            if (value.isEmpty()) {
+                return 0;
+            }
+            return Integer.parseInt(value);
+        } catch (IOException | NumberFormatException ex) {
+            return 0;
+        }
+    }
+
+    private void saveLastEmployeeNumber(int number) {
+        try {
+            Path path = Path.of(EMPLOYEE_SEQUENCE_FILE);
+            Path parent = path.getParent();
+            if (parent != null && Files.notExists(parent)) {
+                Files.createDirectories(parent);
+            }
+            Files.writeString(path, String.valueOf(number));
+        } catch (IOException ex) {
+            throw new RuntimeException("Khong the luu bo dem ma nhan vien.", ex);
+        }
     }
 
     private void validateName(String name) {
