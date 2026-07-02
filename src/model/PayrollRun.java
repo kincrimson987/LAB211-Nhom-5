@@ -1,3 +1,5 @@
+import java.util.Locale;
+
 public class PayrollRun extends BaseEntity {
     private String yearMonth;
     private String mechanism;
@@ -89,7 +91,7 @@ public class PayrollRun extends BaseEntity {
 
     @Override
     public String toCsvLine() {
-        return String.format("%s,%d,%s,%s,%d,%d,%d,%d,%.2f",
+        return String.format(Locale.US, "%s,%d,%s,%s,%d,%d,%d,%d,%.2f",
                 getId(), getVersion(), yearMonth, mechanism, elapsedMs,
                 successCount, doublePaymentCount, wrongLeaveCount, tps);
     }
@@ -98,16 +100,24 @@ public class PayrollRun extends BaseEntity {
     public void fromCsvLine(String line) {
         String[] parts = line.split(",");
 
-        if (parts.length >= 9) {
-            setId(parts[0]);
-            setVersion(Long.parseLong(parts[1]));
-            this.yearMonth = parts[2];
-            this.mechanism = parts[3];
-            this.elapsedMs = Long.parseLong(parts[4]);
-            this.successCount = Integer.parseInt(parts[5]);
-            this.doublePaymentCount = Integer.parseInt(parts[6]);
-            this.wrongLeaveCount = Integer.parseInt(parts[7]);
-            this.tps = Double.parseDouble(parts[8]);
+        if (parts.length != 9) {
+            throw new IllegalArgumentException("Invalid payroll run CSV line: " + line);
+        }
+
+        setId(parts[0].trim());
+        setVersion(Long.parseLong(parts[1].trim()));
+        this.yearMonth = parts[2].trim();
+        this.mechanism = parts[3].trim();
+        this.elapsedMs = Long.parseLong(parts[4].trim());
+        this.successCount = Integer.parseInt(parts[5].trim());
+        this.doublePaymentCount = Integer.parseInt(parts[6].trim());
+        this.wrongLeaveCount = Integer.parseInt(parts[7].trim());
+        this.tps = Double.parseDouble(parts[8].trim());
+
+        if (getId() == null || getId().isBlank()
+                || yearMonth == null || yearMonth.isBlank()
+                || mechanism == null || mechanism.isBlank()) {
+            throw new IllegalArgumentException("Invalid payroll run CSV line: " + line);
         }
     }
 
