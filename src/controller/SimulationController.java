@@ -118,13 +118,16 @@ public class SimulationController {
     private List<PayrollEntry> prepareEntries(List<Employee> employees,
                                               String yearMonth, PayrollRule rule) {
         List<PayrollEntry> entries = new ArrayList<>();
+        String[] yearMonthParts = yearMonth.split("-");
+        String year = yearMonthParts[0];
+        String month = yearMonthParts[1];
         for (Employee emp : employees) {
             AttendanceRecord att = attendanceRepository
                     .findByEmployeeAndMonth(emp.getId(), yearMonth);
             if (att == null) continue;
 
             double netSalary = emp.calculateSalary(att, rule);
-            String entryId   = "PR_" + emp.getId() + "_" + yearMonth.replace("-", "_");
+            String entryId   = "PR_" + emp.getId() + "_" + month + "_" + year;
 
             PayrollEntry existing = payrollEntryRepository.findById(entryId);
             if (existing == null) {
