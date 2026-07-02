@@ -2,3 +2,4 @@ id,version,username,password,role,active,employeeId
 U001,1,admin,admin123,ADMIN,true,
 U002,1,hr01,hr123,HR,true,
 U004,1,andrew,andrew123,EMPLOYEE,true,E0001
+U005,1,patricia,patricia123,EMPLOYEE,true,E0002
