@@ -113,8 +113,7 @@ public class MainView {
             case "3" -> { if (checkAccess("SUBMIT_LEAVE_REQUEST")) showLeaveManagement(); }
             case "4" -> { if (checkAccess("PROCESS_MONTHLY_PAYROLL")) showPayrollManagement(); }
             case "5" -> { if (checkAccess("GENERATE_PAYROLL_REPORT")) showReports(); }
-            case "6" -> { if (checkAccess("RUN_PAYROLL_SIMULATION")) showSyncAndSimulation(); }
-            case "7" -> handleLogout();
+            case "6" -> handleLogout();
             case "0" -> { printSuccess("Goodbye!"); return false; }
             default -> printError("Invalid choice.");
         }
@@ -177,7 +176,7 @@ public class MainView {
                         "Add Employee", "Update Employee", "Delete Employee",
                         "Search Employee", "View Employee Detail", "View Employee List", "---",
                         "Search Department", "View Departments", "---",
-                        "Save CSV Data", "Load CSV Data", "Generate Test Dataset"
+                        "Generate Test Dataset"
                     }
                     : new String[]{
                         "Add Employee", "Update Employee", "Delete Employee",
@@ -185,7 +184,7 @@ public class MainView {
                         "Create Employee Account", "---",
                         "Add Department", "Update Department", "Delete Department",
                         "Search Department", "View Departments", "---",
-                        "Save CSV Data", "Load CSV Data", "Generate Test Dataset"
+                        "Generate Test Dataset"
                     };
             printSubMenu("EMPLOYEE MANAGEMENT", items);
             switch (prompt("Choose").trim()) {
@@ -204,15 +203,15 @@ public class MainView {
                     else handleAddDepartment();
                 }
                 case "9"  -> {
-                    if (isHr()) printInfo("Data is auto-saved via Repository.");
+                    if (isHr()) printInfo("Generate test dataset: not implemented yet.");
                     else handleUpdateDepartment();
                 }
                 case "10" -> {
-                    if (isHr()) printInfo("Data is auto-loaded via Repository.");
+                    if (isHr()) printError("Invalid choice.");
                     else handleDeleteDepartment();
                 }
                 case "11" -> {
-                    if (isHr()) printInfo("Generate test dataset: not implemented yet.");
+                    if (isHr()) printError("Invalid choice.");
                     else handleSearchDepartment();
                 }
                 case "12" -> {
@@ -220,14 +219,6 @@ public class MainView {
                     else handleViewDepartments();
                 }
                 case "13" -> {
-                    if (isHr()) printError("Invalid choice.");
-                    else printInfo("Data is auto-saved via Repository.");
-                }
-                case "14" -> {
-                    if (isHr()) printError("Invalid choice.");
-                    else printInfo("Data is auto-loaded via Repository.");
-                }
-                case "15" -> {
                     if (isHr()) printError("Invalid choice.");
                     else printInfo("Generate test dataset: not implemented yet.");
                 }
@@ -801,14 +792,87 @@ public class MainView {
                 "Generate Simulation Comparison Report", "Export CSV Result", "Import CSV Result"
             });
             switch (prompt("Choose").trim()) {
-                case "1" -> { try { System.out.println(reportController.generatePayrollReport(prompt("Year-Month (YYYY-MM)"))); } catch (Exception ex) { printError(ex.getMessage()); } }
-                case "2" -> { try { System.out.println(reportController.generateAttendanceReport(prompt("Year-Month (YYYY-MM)"))); } catch (Exception ex) { printError(ex.getMessage()); } }
-                case "3" -> { try { System.out.println(reportController.generateSimulationComparisonReport()); } catch (Exception ex) { printError(ex.getMessage()); } }
-                case "4" -> { try { String p = promptOptional("Path (Enter = reports/export.csv)"); reportController.exportCsv(p != null ? p : "reports/export.csv"); printSuccess("Exported."); } catch (Exception ex) { printError(ex.getMessage()); } }
-                case "5" -> { try { reportController.importCsv(prompt("File path")); printSuccess("Imported."); } catch (Exception ex) { printError(ex.getMessage()); } }
+                case "1" -> handleGeneratePayrollReport();
+                case "2" -> handleGenerateAttendanceReport();
+                case "3" -> handleGenerateSimulationComparisonReport();
+                case "4" -> handleExportCsvResult();
+                case "5" -> handleImportCsvResult();
                 case "0" -> back = true;
                 default  -> printError("Invalid choice.");
             }
+        }
+    }
+
+    private void handleGeneratePayrollReport() {
+        printSectionHeader("PAYROLL REPORT");
+        try {
+            String yearMonth = prompt("Year-Month (YYYY-MM)");
+            List<PayrollEntry> entries = reportController.getPayrollEntriesByMonth(yearMonth);
+            if (entries.isEmpty()) {
+                printInfo("No payroll data for " + yearMonth + ".");
+                return;
+            }
+            printInfo("Payroll report for " + yearMonth);
+            printPayrollEntryTablePaged(entries);
+        } catch (Exception ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleGenerateAttendanceReport() {
+        printSectionHeader("ATTENDANCE REPORT");
+        try {
+            String yearMonth = prompt("Year-Month (YYYY-MM)");
+            List<AttendanceRecord> records = reportController.getAttendanceRecordsByMonth(yearMonth);
+            if (records.isEmpty()) {
+                printInfo("No attendance data for " + yearMonth + ".");
+                return;
+            }
+            printInfo("Attendance report for " + yearMonth);
+            printAttendanceTablePaged(records);
+        } catch (Exception ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleGenerateSimulationComparisonReport() {
+        printSectionHeader("SIMULATION COMPARISON REPORT");
+        try {
+            List<PayrollRun> runs = reportController.getPayrollRuns();
+            if (runs.isEmpty()) {
+                printInfo("No simulation runs found.");
+                return;
+            }
+            printPayrollRunTablePaged(runs);
+        } catch (Exception ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleExportCsvResult() {
+        printSectionHeader("EXPORT CSV RESULT");
+        try {
+            String path = promptOptional("Path (Enter = reports/export.csv)");
+            String exportPath = path != null ? path : "reports/export.csv";
+            int count = reportController.exportCsv(exportPath);
+            printSuccess("Exported " + count + " payroll record(s) to " + exportPath);
+        } catch (Exception ex) {
+            printError(ex.getMessage());
+        }
+    }
+
+    private void handleImportCsvResult() {
+        printSectionHeader("IMPORT CSV RESULT");
+        try {
+            String path = prompt("File path");
+            if (!confirm("Import file nay vao payroll_entries.csv?")) {
+                printInfo("Cancelled.");
+                return;
+            }
+            int count = reportController.importCsv(path);
+            printSuccess("Imported " + count + " payroll record(s).");
+        } catch (Exception ex) {
+            printError(ex.getMessage());
         }
     }
 
@@ -820,16 +884,11 @@ public class MainView {
         boolean back = false;
         while (!back) {
             printSubMenu("SYNCHRONIZATION & SIMULATION", new String[]{
-                "Run Payroll Simulation", "Select Sync Mode",
-                "Measure TPS / Elapsed Time", "Detect Double Payment",
-                "Detect Wrong Leave Deduction"
+                "Run Payroll Simulation", "Select Sync Mode"
             });
             switch (prompt("Choose").trim()) {
                 case "1" -> handleRunSimulation();
                 case "2" -> handleSelectSyncMode();
-                case "3" -> handleMeasureTps();
-                case "4" -> printIssueList("DOUBLE PAYMENT", simulationController.detectDoublePayment());
-                case "5" -> printIssueList("WRONG LEAVE DEDUCTION", simulationController.detectWrongLeaveDeduction());
                 case "0" -> back = true;
                 default  -> printError("Invalid choice.");
             }
@@ -845,6 +904,7 @@ public class MainView {
             PayrollRun run = simulationController.runSimulation(yearMonth, threads);
             printSuccess("Done!");
             printPayrollRunSummary(run);
+            printInfo("Simulation result da bao gom TPS, elapsed time, double payment va wrong leave deduction.");
         } catch (Exception ex) { printError(ex.getMessage()); }
     }
 
@@ -862,13 +922,6 @@ public class MainView {
         if (mode == null) { printError("Invalid choice."); return; }
         simulationController.setSyncMode(mode);
         printSuccess("Mode set to: " + mode);
-    }
-
-    private void handleMeasureTps() {
-        printSectionHeader("MEASURE TPS / ELAPSED TIME");
-        PayrollRun r = simulationController.getLatestRun();
-        if (r == null) { printInfo("No simulation run yet."); return; }
-        printPayrollRunSummary(r);
     }
 
     // ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
@@ -907,9 +960,8 @@ public class MainView {
             System.out.println("  3. Leave Management");
             System.out.println("  4. Payroll Management");
             System.out.println("  5. Reports");
-            System.out.println("  6. Synchronization & Simulation");
             System.out.println("  -----------------------------");
-            System.out.println("  7. Log out");
+            System.out.println("  6. Log out");
         }
         System.out.println("  0. Exit\n=========================================" + RESET);
     }
@@ -1215,6 +1267,52 @@ public class MainView {
         System.out.println(CYAN + "+----------------------------------------------+" + RESET);
     }
 
+    private void printPayrollRunTable(List<PayrollRun> runs) {
+        System.out.printf(BOLD + "%-28s %-10s %-20s %-8s %-8s %-8s %-8s %-8s%n" + RESET,
+                "Run ID", "Month", "Mechanism", "Ms", "TPS", "Success", "DblPay", "WrongLv");
+        System.out.println("-".repeat(110));
+        for (PayrollRun run : runs) {
+            System.out.printf("%-28s %-10s %-20s %-8d %-8.1f %-8d %-8d %-8d%n",
+                    trunc(run.getId(), 27),
+                    run.getYearMonth(),
+                    trunc(run.getMechanism(), 19),
+                    run.getElapsedMs(),
+                    run.getTps(),
+                    run.getSuccessCount(),
+                    run.getDoublePaymentCount(),
+                    run.getWrongLeaveCount());
+        }
+        System.out.println("-".repeat(110));
+    }
+
+    private void printPayrollRunTablePaged(List<PayrollRun> runs) {
+        if (runs.isEmpty()) {
+            printInfo("No simulation runs found.");
+            return;
+        }
+
+        final int pageSize = 15;
+        int page = 0;
+        int totalPages = (runs.size() + pageSize - 1) / pageSize;
+        while (true) {
+            int from = page * pageSize;
+            int to = Math.min(from + pageSize, runs.size());
+            printPayrollRunTable(runs.subList(from, to));
+            printInfo("Page " + (page + 1) + "/" + totalPages + " | Total: " + runs.size());
+            String choice = promptOptional("N-next, P-prev, Enter-back");
+            if (choice == null || choice.equalsIgnoreCase("q")) {
+                return;
+            }
+            if (choice.equalsIgnoreCase("n") && page < totalPages - 1) {
+                page++;
+            } else if (choice.equalsIgnoreCase("p") && page > 0) {
+                page--;
+            } else {
+                printInfo("No more pages.");
+            }
+        }
+    }
+
     private void printPayrollRule(PayrollRule r) {
         System.out.println(CYAN + "+---------------- Payroll Rule ----------------+" + RESET);
         printRow("Work Days", String.valueOf(r.getStandardWorkingDays()));
@@ -1243,17 +1341,6 @@ public class MainView {
     private void printSuccess(String msg) { System.out.println(GREEN  + "[OK] " + msg + RESET); }
     private void printError(String msg)   { System.out.println(RED    + "[ERROR] " + msg + RESET); }
     private void printInfo(String msg)    { System.out.println(YELLOW + "[INFO] " + msg + RESET); }
-
-    private void printIssueList(String title, List<String> issues) {
-        printSectionHeader(title);
-        if (issues.isEmpty()) {
-            printSuccess("No issue found.");
-            return;
-        }
-        for (int i = 0; i < issues.size(); i++) {
-            System.out.printf("  %2d. %s%n", i + 1, issues.get(i));
-        }
-    }
 
     private List<AttendanceAdjustmentRequest> promptAttendanceAdjustmentRequestsByRange() {
         String fromMonth = prompt("From month (YYYY-MM)");
