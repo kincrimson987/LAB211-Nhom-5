@@ -1,297 +1,225 @@
 ﻿```mermaid
 classDiagram
+    class BaseEntity {
+        <<abstract>>
+        -id: String
+        -version: long
+        +BaseEntity()
+        +BaseEntity(id: String, version: long)
+        +getId() String
+        +setId(id: String) void
+        +getVersion() long
+        +setVersion(version: long) void
+        +toCsvLine() String*
+        +fromCsvLine(line: String) void*
+        +equals(o: Object) boolean
+        +hashCode() int
+        +toString() String
+    }
 
-class CsvRepository~T~ {
-    +getFilePath() : String
-    +findAll() : List~T~
-    +findById(id : String) : T
-    +save(entity : T) : void
-    +update(entity : T) : void
-    +delete(id : String) : void
-    +getHeader() : String
-    +getId(entity : T) : String
-    +toLine(entity : T) : String
-    +parseLine(line : String) : T
-    +readAllLines() : List~T~
-    +writeAllLines(entities : List~T~) : void
-}
+    class CsvRepository~T~ {
+        <<abstract>>
+        -filePath: String
+        +CsvRepository(filePath: String)
+        +getFilePath() String
+        +getHeader() String*
+        +getId(entity: T) String*
+        +toLine(entity: T) String*
+        +parseLine(line: String) T*
+        +findAll() List~T~
+        +findById(id: String) T
+        +save(entity: T) void
+        +update(entity: T) void
+        +delete(id: String) void
+        +readAllLines() List~T~
+        +writeAllLines(entities: List~T~) void
+    }
 
-class PayrollEntryRepository {
-    +PayrollEntryRepository()
-    +PayrollEntryRepository(String : filePath :)
-    +findByEmployeeAndMonth(empId : String, yearMonth : String) : PayrollEntry
-    +findByStatus(status : PayrollStatus) : List~PayrollEntry~
-    +findByDeptAndMonth(deptId : String, yearMonth : String) : List~PayrollEntry~
-    +countProcessedByEmployee(employeeId : String) : long
-    +processWithNoLock(entryId : String, processedBy : String) : boolean
-    +processWithFileLock(entryId : String, processedBy : String) : boolean
-    +processWithSync(entryId : String, processedBy : String) : boolean
-    +processWithOptimistic(entryId : String, processedBy : String) : boolean
-    ~updateIfVersionMatch(updated : PayrollEntry, expectedVersion : long) : boolean
-    -findInList(entries : List~PayrollEntry~, String : entryId :) : PayrollEntry
-    -markProcessed(PayrollEntry : entry :, String : processedBy :) : void
-    -sleepWithBackoff(int : attempt :) : void
-    -loadEmployeeIdsByDepartment(deptId : String) : Set~String~
-}
+    class LeaveRequest {
+        -leaveType: LeaveType
+        -startDate: LocalDate
+        -endDate: LocalDate
+        -reason: String
+        -status: LeaveStatus
+        -employeeId: String
+        -approvedBy: String
+        +LeaveRequest()
+        +LeaveRequest(leaveId: String, leaveType: LeaveType, startDate: LocalDate, endDate: LocalDate, reason: String, status: LeaveStatus)
+        +LeaveRequest(leaveId: String, employeeId: String, leaveType: LeaveType, startDate: LocalDate, endDate: LocalDate, reason: String)
+        +getLeaveId() String
+        +getLeaveType() LeaveType
+        +getStartDate() LocalDate
+        +getEndDate() LocalDate
+        +getReason() String
+        +getStatus() LeaveStatus
+        +setLeaveId(leaveId: String) void
+        +setLeaveType(leaveType: LeaveType) void
+        +setStartDate(startDate: LocalDate) void
+        +setEndDate(endDate: LocalDate) void
+        +setReason(reason: String) void
+        +setStatus(status: LeaveStatus) void
+        +getEmployeeId() String
+        +getApprovedBy() String
+        +setEmployeeId(employeeId: String) void
+        +setApprovedBy(approvedBy: String) void
+        +approve() void
+        +reject() void
+        +getDays() int
+        +getCsvHeader() String
+        +toCsvLine() String
+        +fromCsvLine(line: String) void
+        +toString() String
+    }
 
-class PayrollEntry {
-    -id : String
-    -version : long
-    -employeeId : String
-    -netSalary : double
-    -status : PayrollStatus
+    class LeaveBalance {
+        -totalLeaveDays: int
+        -usedLeaveDays: int
+        -remainingLeaveDays: int
+        -employeeId: String
+        -leaveType: LeaveType
+        +LeaveBalance()
+        +LeaveBalance(totalLeaveDays: int, usedLeaveDays: int, remainingLeaveDays: int)
+        +LeaveBalance(balanceId: String, employeeId: String, leaveType: LeaveType, totalLeaveDays: int)
+        +getTotalLeaveDays() int
+        +getUsedLeaveDays() int
+        +getRemainingLeaveDays() int
+        +setTotalLeaveDays(totalLeaveDays: int) void
+        +setUsedLeaveDays(usedLeaveDays: int) void
+        +setRemainingLeaveDays(remainingLeaveDays: int) void
+        +getBalanceId() String
+        +getEmployeeId() String
+        +getLeaveType() LeaveType
+        +setBalanceId(balanceId: String) void
+        +setEmployeeId(employeeId: String) void
+        +setLeaveType(leaveType: LeaveType) void
+        +deductLeave(days: int) void
+        +addLeave(days: int) void
+        +checkRemaining() int
+        +getCsvHeader() String
+        +toCsvLine() String
+        +fromCsvLine(line: String) void
+        +toString() String
+    }
 
-    +PayrollEntry()
-    +PayrollEntry(String : id :, String : employeeId :)
-    +PayrollEntry(String : id :, long : version :, String : employeeId :, double : netSalary :, PayrollStatus : status :)
-    +getEntryId() : String
-    +setEntryId(entryId : String) : void
-    +getEmployeeId() : String
-    +setEmployeeId(employeeId : String) : void
-    +getNetSalary() : double
-    +setNetSalary(netSalary : double) : void
-    +getStatus() : PayrollStatus
-    +setStatus(status : PayrollStatus) : void
-    +process() : void
-    +getFullCsvHeader() : String
-    +getCsvHeader() : String
-    +toCsvLine() : String
-    +parseCsvLine(String : line :) : PayrollEntry
-    +fromCsvLine(line : String) : void
-    +extractYearMonthFromId(String : id :) : String
-    +toString() : String
-}
+    class LeaveStatus {
+        <<enumeration>>
+        PENDING
+        APPROVED
+        REJECTED
+    }
 
-class PayrollRun {
-    -id : String
-    -version : long
-    -yearMonth : String
-    -mechanism : String
-    -elapsedMs : long
-    -successCount : int
-    -doublePaymentCount : int
-    -wrongLeaveCount : int
-    -tps : double
+    class LeaveType {
+        <<enumeration>>
+        ANNUAL
+        SICK
+        UNPAID
+        OTHER
+    }
 
-    +PayrollRun()
-    +PayrollRun(String : runId :, long : version :, String : yearMonth :, String : mechanism :, long : elapsedMs :, int : successCount :, int : doublePaymentCount :, int : wrongLeaveCount :, double : tps :)
-    +getRunId() : String
-    +setRunId(runId : String) : void
-    +getYearMonth() : String
-    +setYearMonth(yearMonth : String) : void
-    +getMechanism() : String
-    +setMechanism(mechanism : String) : void
-    +getElapsedMs() : long
-    +setElapsedMs(elapsedMs : long) : void
-    +getSuccessCount() : int
-    +setSuccessCount(successCount : int) : void
-    +getDoublePaymentCount() : int
-    +setDoublePaymentCount(doublePaymentCount : int) : void
-    +getWrongLeaveCount() : int
-    +setWrongLeaveCount(wrongLeaveCount : int) : void
-    +getTps() : double
-    +setTps(tps : double) : void
-    +toCsvLine() : String
-    +fromCsvLine(line : String) : void
-    +toString() : String
-}
+    class LockMechanism {
+        <<enumeration>>
+        NO_LOCK
+        SYNCHRONIZED
+        OPTIMISTIC_LOCKING
+        FILE_LOCK
+    }
 
-class PayrollRule {
-    -standardWorkingDays : int
-    -workingHoursPerDay : int
-    -overtimeMultiplier : double
-    -attendanceBonus : double
-    -taxRate : double
-    -taxThreshold : double
+    class LeaveRequestRepository {
+        +LeaveRequestRepository()
+        +LeaveRequestRepository(filePath: String)
+        +getHeader() String
+        +getId(entity: LeaveRequest) String
+        +toLine(entity: LeaveRequest) String
+        +parseLine(line: String) LeaveRequest
+        +findByEmployee(employeeId: String) List~LeaveRequest~
+        +findByStatus(status: LeaveStatus) List~LeaveRequest~
+        +findPending() List~LeaveRequest~
+        +updateStatus(leaveId: String, newStatus: LeaveStatus, approvedBy: String) boolean
+        +approveRequest(leaveId: String, approvedBy: String) boolean
+        +rejectRequest(leaveId: String, approvedBy: String) boolean
+    }
 
-    +PayrollRule()
-    +PayrollRule(int : standardWorkingDays :, int : workingHoursPerDay :, double : overtimeMultiplier :, double : attendanceBonus :, double : taxRate :, double : taxThreshold :)
-    +getStandardWorkingDays() : int
-    +setStandardWorkingDays(standardWorkingDays : int) : void
-    +getWorkingHoursPerDay() : int
-    +setWorkingHoursPerDay(workingHoursPerDay : int) : void
-    +getOvertimeMultiplier() : double
-    +setOvertimeMultiplier(overtimeMultiplier : double) : void
-    +getAttendanceBonus() : double
-    +setAttendanceBonus(attendanceBonus : double) : void
-    +getTaxRate() : double
-    +setTaxRate(taxRate : double) : void
-    +getTaxThreshold() : double
-    +setTaxThreshold(taxThreshold : double) : void
-    +toString() : String
-}
+    class LeaveBalanceRepository {
+        -OPTIMISTIC_MAX_RETRIES: int
+        -OPTIMISTIC_BASE_BACKOFF_MS: long
+        +LeaveBalanceRepository()
+        +LeaveBalanceRepository(filePath: String)
+        +getHeader() String
+        +getId(entity: LeaveBalance) String
+        +toLine(entity: LeaveBalance) String
+        +parseLine(line: String) LeaveBalance
+        +findByEmployee(employeeId: String) List~LeaveBalance~
+        +findByEmployeeAndType(employeeId: String, leaveType: LeaveType) LeaveBalance
+        +deductWithNoLock(employeeId: String, leaveType: LeaveType, days: int) boolean
+        +deductWithSync(employeeId: String, leaveType: LeaveType, days: int) boolean
+        +deductWithOptimistic(employeeId: String, leaveType: LeaveType, days: int) boolean
+        +deductWithFileLock(employeeId: String, leaveType: LeaveType, days: int) boolean
+        +updateIfVersionMatch(updated: LeaveBalance, expectedVersion: long) boolean
+        -findInList(balances: List~LeaveBalance~, employeeId: String, leaveType: LeaveType) LeaveBalance
+        -sleepWithBackoff(attempt: int) void
+    }
 
-class SalaryCalculator {
-    +calcBaseSalary(Employee : employee :, AttendanceRecord : attendance :, PayrollRule : rule :) : double
-    +calcOvertime(Employee : employee :, AttendanceRecord : attendance :, PayrollRule : rule :) : double
-    +calcDeduction(Employee : employee :, AttendanceRecord : attendance :, PayrollRule : rule :) : double
-    +calcBonus(AttendanceRecord : attendance :, PayrollRule : rule :) : double
-    +calcGross(Employee : employee :, AttendanceRecord : attendance :, PayrollRule : rule :) : double
-    +calcTax(Employee : employee :, AttendanceRecord : attendance :, PayrollRule : rule :) : double
-    +calcNetSalary(Employee : employee :, AttendanceRecord : attendance :, PayrollRule : rule :) : double
-}
+    class LeaveController {
+        -LEAVE_SYSTEM_START_DATE: LocalDate
+        -ANNUAL_LEAVE_DAYS_PER_YEAR: int
+        -SICK_LEAVE_DAYS_PER_YEAR: int
+        -leaveRequestRepo: LeaveRequestRepository
+        -leaveBalanceRepo: LeaveBalanceRepository
+        -employeeRepo: EmployeeRepository
+        +LeaveController(leaveRequestRepo: LeaveRequestRepository, leaveBalanceRepo: LeaveBalanceRepository, employeeRepo: EmployeeRepository)
+        +submit(employeeId: String, leaveType: LeaveType, startDate: LocalDate, endDate: LocalDate, reason: String) LeaveRequest
+        +approve(leaveId: String, approvedBy: String, lockMechanism: LockMechanism) boolean
+        +reject(leaveId: String, approvedBy: String) boolean
+        +getAllRequests() List~LeaveRequest~
+        +getRequestsByEmployee(employeeId: String) List~LeaveRequest~
+        +getPendingRequests() List~LeaveRequest~
+        +getBalancesByEmployee(employeeId: String) List~LeaveBalance~
+        +previewChargeableDays(employeeId: String, startDate: LocalDate, endDate: LocalDate) int
+        +previewApprovalChargeableDays(leaveId: String) int
+        -ensureDefaultBalances(employeeId: String) void
+        -calculateChargeableDays(employeeId: String, startDate: LocalDate, endDate: LocalDate, excludeLeaveId: String, approvedOnly: boolean) int
+    }
 
-class Employee {
-    -id : String
-    -version : long
-    -name : String
-    -email : String
-    -departmentId : String
-    -employmentType : Enums.EmploymentType
-    -baseSalary : double
+    class InsufficientLeaveBalanceException {
+        +InsufficientLeaveBalanceException(message: String)
+    }
 
-    +Employee()
-    +Employee(String : id :, long : version :, String : name :, String : email :, String : departmentId :)
-    +getId() : String
-    +setId(id : String) : void
-    +getVersion() : long
-    +setVersion(version : long) : void
-    +getName() : String
-    +setName(name : String) : void
-    +getEmail() : String
-    +setEmail(email : String) : void
-    +getDepartmentId() : String
-    +setDepartmentId(departmentId : String) : void
-    +getEmploymentType() : Enums.EmploymentType
-    +setEmploymentType(employmentType : Enums.EmploymentType) : void
-    +getBaseSalary() : double
-    +setBaseSalary(baseSalary : double) : void
-    +toCsvLine() : String
-    +fromCsvLine(line : String) : void
-}
+    class InvalidLeaveStateException {
+        +InvalidLeaveStateException(message: String)
+    }
 
-class AttendanceRecord {
-    -id : String
-    -version : long
-    -employeeId : String
-    -workDays : int
-    -overtimeHours : double
+    class EmployeeRepository {
+        +findById(id: String) Employee
+    }
 
-    +AttendanceRecord()
-    +AttendanceRecord(String : id :, long : version :, String : employeeId :, int : workDays :, double : overtimeHours :)
-    +getId() : String
-    +setId(id : String) : void
-    +getVersion() : long
-    +setVersion(version : long) : void
-    +getEmployeeId() : String
-    +setEmployeeId(employeeId : String) : void
-    +getWorkDays() : int
-    +setWorkDays(workDays : int) : void
-    +getOvertimeHours() : double
-    +setOvertimeHours(overtimeHours : double) : void
-    +toCsvLine() : String
-    +fromCsvLine(line : String) : void
-}
+    class Employee
 
-class LeaveBalance {
-    -balanceId : String
-    -employeeId : String
-    -leaveType : Enums.LeaveType
-    -totalLeaveDays : int
-    -usedLeaveDays : int
-    -remainingLeaveDays : int
-    -version : int
+    BaseEntity <|-- LeaveRequest
+    BaseEntity <|-- LeaveBalance
 
-    +LeaveBalance()
-    +LeaveBalance(int : totalLeaveDays :, int : usedLeaveDays :, int : remainingLeaveDays :)
-    +LeaveBalance(String : balanceId :, String : employeeId :, leaveType : Enums.LeaveType, int : totalLeaveDays :)
-    +getBalanceId() : String
-    +setBalanceId(balanceId : String) : void
-    +getEmployeeId() : String
-    +setEmployeeId(employeeId : String) : void
-    +getLeaveType() : Enums.LeaveType
-    +setLeaveType(leaveType : Enums.LeaveType) : void
-    +getTotalLeaveDays() : int
-    +setTotalLeaveDays(totalLeaveDays : int) : void
-    +getUsedLeaveDays() : int
-    +setUsedLeaveDays(usedLeaveDays : int) : void
-    +getRemainingLeaveDays() : int
-    +setRemainingLeaveDays(remainingLeaveDays : int) : void
-    +getVersion() : int
-    +setVersion(version : int) : void
-    +deductLeave(days : int) : void
-    +addLeave(days : int) : void
-    +checkRemaining() : int
-    +getCsvHeader() : String
-    +toCsvLine() : String
-    +fromCsvLine(String : line :) : LeaveBalance
-    +toString() : String
-}
+    CsvRepository~T~ <|-- LeaveRequestRepository
+    CsvRepository~T~ <|-- LeaveBalanceRepository
 
-class LeaveRequest {
-    -leaveId : String
-    -employeeId : String
-    -leaveType : Enums.LeaveType
-    -startDate : LocalDate
-    -endDate : LocalDate
-    -reason : String
-    -status : Enums.LeaveStatus
-    -approvedBy : String
+    LeaveRequest --> LeaveType : leaveType
+    LeaveRequest --> LeaveStatus : status
+    LeaveBalance --> LeaveType : leaveType
 
-    +LeaveRequest()
-    +LeaveRequest(String : leaveId :, leaveType : Enums.LeaveType, LocalDate : startDate :, LocalDate : endDate :, String : reason :, status : Enums.LeaveStatus)
-    +LeaveRequest(String : leaveId :, String : employeeId :, leaveType : Enums.LeaveType, LocalDate : startDate :, LocalDate : endDate :, String : reason :)
-    +getLeaveId() : String
-    +setLeaveId(leaveId : String) : void
-    +getEmployeeId() : String
-    +setEmployeeId(employeeId : String) : void
-    +getLeaveType() : Enums.LeaveType
-    +setLeaveType(leaveType : Enums.LeaveType) : void
-    +getStartDate() : LocalDate
-    +setStartDate(startDate : LocalDate) : void
-    +getEndDate() : LocalDate
-    +setEndDate(endDate : LocalDate) : void
-    +getReason() : String
-    +setReason(reason : String) : void
-    +getStatus() : Enums.LeaveStatus
-    +setStatus(status : Enums.LeaveStatus) : void
-    +getApprovedBy() : String
-    +setApprovedBy(approvedBy : String) : void
-    +approve() : void
-    +reject() : void
-    +getDays() : int
-    +getCsvHeader() : String
-    +toCsvLine() : String
-    +fromCsvLine(String : line :) : LeaveRequest
-    +toString() : String
-}
+    LeaveRequestRepository --> LeaveRequest : manages
+    LeaveRequestRepository ..> LeaveStatus : filters/updates
 
-class Department {
-    -id : String
-    -version : long
-    -name : String
-    -managerId : String
+    LeaveBalanceRepository --> LeaveBalance : manages
+    LeaveBalanceRepository ..> LeaveType : filters/deducts
 
-    +Department()
-    +Department(String : id :, long : version :, String : name :, String : managerId :)
-    +getId() : String
-    +setId(id : String) : void
-    +getVersion() : long
-    +setVersion(version : long) : void
-    +getName() : String
-    +setName(name : String) : void
-    +getManagerId() : String
-    +setManagerId(managerId : String) : void
-    +toCsvLine() : String
-    +fromCsvLine(line : String) : void
-}
+    LeaveController --> LeaveRequestRepository : uses
+    LeaveController --> LeaveBalanceRepository : uses
+    LeaveController --> EmployeeRepository : validates employee
+    LeaveController --> LeaveRequest : creates/approves/rejects
+    LeaveController --> LeaveBalance : checks/deducts
+    LeaveController ..> LeaveType : uses
+    LeaveController ..> LeaveStatus : checks
+    LeaveController ..> LockMechanism : selects locking
+    LeaveController ..> InsufficientLeaveBalanceException : throws
+    LeaveController ..> InvalidLeaveStateException : throws
 
-CsvRepository <|-- PayrollEntryRepository
-PayrollEntryRepository --> PayrollEntry
-PayrollEntryRepository --> PayrollRun
-PayrollEntryRepository --> LeaveRequest
-PayrollEntryRepository --> LeaveBalance
-PayrollEntryRepository --> AttendanceRecord
-PayrollEntryRepository --> Department
-SalaryCalculator --> Employee
-SalaryCalculator --> AttendanceRecord
-SalaryCalculator --> PayrollRule
-PayrollEntry --> PayrollStatus
-LeaveRequest --> LeaveStatus
-LeaveBalance --> LeaveType
-PayrollEntry --> Employee
-AttendanceRecord --> Employee
-LeaveBalance --> Employee
-LeaveRequest --> Employee
-Department --> Employee
+    EmployeeRepository --> Employee : finds
 ```
