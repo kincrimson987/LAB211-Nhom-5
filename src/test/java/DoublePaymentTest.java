@@ -63,6 +63,110 @@ public class DoublePaymentTest {
     }
 
     @Test
+    @DisplayName("Prevent double payment with 5 threads (SYNCHRONIZED)")
+    public void testPreventDoublePaymentWithSync5Threads() throws Exception {
+        File testFile = File.createTempFile("double_payment_sync_5_", ".csv");
+        testFile.deleteOnExit();
+
+        setupSinglePayrollEntry(testFile);
+
+        PayrollEntryRepository repo = new PayrollEntryRepository(testFile.getAbsolutePath());
+
+        PayrollEntry entry = repo.findByEmployeeAndMonth("E001", "2024-01");
+        assertNotNull(entry, "Test payroll entry for E001/2024-01 must exist");
+
+        int threadCount = 5;
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch doneLatch = new CountDownLatch(threadCount);
+        AtomicInteger successCount = new AtomicInteger(0);
+
+        Runnable task = () -> {
+            try {
+                startLatch.await();
+
+                boolean success = repo.processWithSync(entry.getEntryId(), "HR_TEST");
+
+                if (success) {
+                    successCount.incrementAndGet();
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } finally {
+                doneLatch.countDown();
+            }
+        };
+
+        Thread[] threads = new Thread[threadCount];
+        for (int i = 0; i < threadCount; i++) {
+            threads[i] = new Thread(task, "Sync-Thread-" + i);
+            threads[i].start();
+        }
+
+        startLatch.countDown();
+        doneLatch.await();
+
+        long processedCount = repo.countProcessedByEmployee("E001");
+        PayrollEntry finalEntry = repo.findById(entry.getEntryId());
+
+        assertEquals(1, successCount.get(), "Only one thread should process payroll successfully");
+        assertEquals(1, processedCount, "Only one payroll entry should be processed");
+        assertEquals(PayrollStatus.PROCESSED, finalEntry.getStatus());
+        assertEquals(1L, finalEntry.getVersion(), "Version should be incremented exactly once to 1");
+    }
+
+    @Test
+    @DisplayName("Prevent double payment with 5 threads (OPTIMISTIC)")
+    public void testPreventDoublePaymentWithOptimistic5Threads() throws Exception {
+        File testFile = File.createTempFile("double_payment_opt_5_", ".csv");
+        testFile.deleteOnExit();
+
+        setupSinglePayrollEntry(testFile);
+
+        PayrollEntryRepository repo = new PayrollEntryRepository(testFile.getAbsolutePath());
+
+        PayrollEntry entry = repo.findByEmployeeAndMonth("E001", "2024-01");
+        assertNotNull(entry, "Test payroll entry for E001/2024-01 must exist");
+
+        int threadCount = 5;
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch doneLatch = new CountDownLatch(threadCount);
+        AtomicInteger successCount = new AtomicInteger(0);
+
+        Runnable task = () -> {
+            try {
+                startLatch.await();
+
+                boolean success = repo.processWithOptimistic(entry.getEntryId(), "HR_TEST");
+
+                if (success) {
+                    successCount.incrementAndGet();
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } finally {
+                doneLatch.countDown();
+            }
+        };
+
+        Thread[] threads = new Thread[threadCount];
+        for (int i = 0; i < threadCount; i++) {
+            threads[i] = new Thread(task, "Opt-Thread-" + i);
+            threads[i].start();
+        }
+
+        startLatch.countDown();
+        doneLatch.await();
+
+        long processedCount = repo.countProcessedByEmployee("E001");
+        PayrollEntry finalEntry = repo.findById(entry.getEntryId());
+
+        assertEquals(1, successCount.get(), "Only one thread should process payroll successfully");
+        assertEquals(1, processedCount, "Only one payroll entry should be processed");
+        assertEquals(PayrollStatus.PROCESSED, finalEntry.getStatus());
+        assertEquals(1L, finalEntry.getVersion(), "Version should be incremented exactly once to 1");
+    }
+
+    @Test
     @DisplayName("Same employee can be paid in different months")
     public void testAllowPaymentForDifferentMonths() throws Exception {
         File testFile = File.createTempFile("different_month_payment_test_", ".csv");

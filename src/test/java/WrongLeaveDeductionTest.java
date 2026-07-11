@@ -87,6 +87,112 @@ public class WrongLeaveDeductionTest {
     }
 
     @Test
+    @DisplayName("Prevent wrong leave deduction with 5 threads (SYNCHRONIZED)")
+    public void testWrongLeaveDeductionWithSync5Threads() throws Exception {
+        File testFile = File.createTempFile("wrong_leave_sync_5_", ".csv");
+        testFile.deleteOnExit();
+
+        setupTestData(testFile);
+
+        LeaveBalanceRepository repo = new LeaveBalanceRepository(testFile.getAbsolutePath());
+
+        int threadCount = 5;
+        int deductDaysPerThread = 2;
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch doneLatch = new CountDownLatch(threadCount);
+        AtomicInteger successCount = new AtomicInteger(0);
+
+        Runnable task = () -> {
+            try {
+                startLatch.await();
+                boolean success = repo.deductWithSync("E001", LeaveType.ANNUAL, deductDaysPerThread);
+                if (success) {
+                    successCount.incrementAndGet();
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } finally {
+                doneLatch.countDown();
+            }
+        };
+
+        Thread[] threads = new Thread[threadCount];
+        for (int i = 0; i < threadCount; i++) {
+            threads[i] = new Thread(task, "Sync-Thread-" + i);
+            threads[i].start();
+        }
+
+        startLatch.countDown();
+        doneLatch.await();
+
+        LeaveBalance finalBalance = repo.findByEmployeeAndType("E001", LeaveType.ANNUAL);
+        assertNotNull(finalBalance);
+
+        int expectedRemaining = 12 - (successCount.get() * deductDaysPerThread);
+        int expectedUsed = successCount.get() * deductDaysPerThread;
+
+        assertEquals(threadCount, successCount.get(), "All 5 threads should successfully deduct leave");
+        assertEquals(expectedRemaining, finalBalance.getRemainingLeaveDays(), "Remaining leave days mismatch");
+        assertEquals(expectedUsed, finalBalance.getUsedLeaveDays(), "Used leave days mismatch");
+        assertEquals(2, finalBalance.getRemainingLeaveDays());
+        assertEquals(10, finalBalance.getUsedLeaveDays());
+        assertEquals(5L, finalBalance.getVersion(), "Version should be exactly 5");
+    }
+
+    @Test
+    @DisplayName("Prevent wrong leave deduction with 5 threads (OPTIMISTIC)")
+    public void testWrongLeaveDeductionWithOptimistic5Threads() throws Exception {
+        File testFile = File.createTempFile("wrong_leave_opt_5_", ".csv");
+        testFile.deleteOnExit();
+
+        setupTestData(testFile);
+
+        LeaveBalanceRepository repo = new LeaveBalanceRepository(testFile.getAbsolutePath());
+
+        int threadCount = 5;
+        int deductDaysPerThread = 2;
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch doneLatch = new CountDownLatch(threadCount);
+        AtomicInteger successCount = new AtomicInteger(0);
+
+        Runnable task = () -> {
+            try {
+                startLatch.await();
+                boolean success = repo.deductWithOptimistic("E001", LeaveType.ANNUAL, deductDaysPerThread);
+                if (success) {
+                    successCount.incrementAndGet();
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } finally {
+                doneLatch.countDown();
+            }
+        };
+
+        Thread[] threads = new Thread[threadCount];
+        for (int i = 0; i < threadCount; i++) {
+            threads[i] = new Thread(task, "Opt-Thread-" + i);
+            threads[i].start();
+        }
+
+        startLatch.countDown();
+        doneLatch.await();
+
+        LeaveBalance finalBalance = repo.findByEmployeeAndType("E001", LeaveType.ANNUAL);
+        assertNotNull(finalBalance);
+
+        int expectedRemaining = 12 - (successCount.get() * deductDaysPerThread);
+        int expectedUsed = successCount.get() * deductDaysPerThread;
+
+        assertEquals(threadCount, successCount.get(), "All 5 threads should successfully deduct leave under optimistic locking");
+        assertEquals(expectedRemaining, finalBalance.getRemainingLeaveDays(), "Remaining leave days mismatch");
+        assertEquals(expectedUsed, finalBalance.getUsedLeaveDays(), "Used leave days mismatch");
+        assertEquals(2, finalBalance.getRemainingLeaveDays());
+        assertEquals(10, finalBalance.getUsedLeaveDays());
+        assertEquals(5L, finalBalance.getVersion(), "Version should be exactly 5");
+    }
+
+    @Test
     @DisplayName("Correct single leave deduction")
     public void testCorrectSingleLeaveDeduction() throws Exception {
         File testFile = File.createTempFile("correct_leave_deduction_test_", ".csv");
