@@ -35,7 +35,7 @@ public class PayrollController {
     // Core payroll processing
     // ─────────────────────────────────────────
 
-    public List<PayrollEntry> runPayroll(String yearMonth) {
+   public synchronized List<PayrollEntry> runPayroll(String yearMonth) {
         List<PayrollEntry> results = new ArrayList<>();
         PayrollRule rule = ruleRepo.getConfig();
         List<Employee> employees = employeeRepo.findAll();
