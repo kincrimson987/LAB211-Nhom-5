@@ -1,4 +1,60 @@
 -------------------------------------------------------------------------------
 Test set: LeaveControllerTest
 -------------------------------------------------------------------------------
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.187 s -- in LeaveControllerTest
+Tests run: 8, Failures: 1, Errors: 5, Skipped: 0, Time elapsed: 0.267 s <<< FAILURE! -- in LeaveControllerTest
+LeaveControllerTest.testSubmitLeaveRequestInsufficientBalance -- Time elapsed: 0.119 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <InsufficientLeaveBalanceException> but was: <java.lang.IllegalArgumentException>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:67)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)
+	at org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3115)
+	at LeaveControllerTest.testSubmitLeaveRequestInsufficientBalance(LeaveControllerTest.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+Caused by: java.lang.IllegalArgumentException: Chi duoc xin nghi tu ngay 2026-07-01 tro di.
+	at LeaveController.submit(LeaveController.java:42)
+	at LeaveControllerTest.lambda$testSubmitLeaveRequestInsufficientBalance$2(LeaveControllerTest.java:104)
+	at org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:53)
+	... 6 more
+
+LeaveControllerTest.testSubmitLeaveRequestSuccess -- Time elapsed: 0.009 s <<< ERROR!
+java.lang.IllegalArgumentException: Chi duoc xin nghi tu ngay 2026-07-01 tro di.
+	at LeaveController.submit(LeaveController.java:42)
+	at LeaveControllerTest.testSubmitLeaveRequestSuccess(LeaveControllerTest.java:59)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+LeaveControllerTest.testApproveOrRejectProcessedRequestFails -- Time elapsed: 0.019 s <<< ERROR!
+java.lang.IllegalArgumentException: Chi duoc xin nghi tu ngay 2026-07-01 tro di.
+	at LeaveController.submit(LeaveController.java:42)
+	at LeaveControllerTest.testApproveOrRejectProcessedRequestFails(LeaveControllerTest.java:180)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+LeaveControllerTest.testApproveRequestSuccess -- Time elapsed: 0.011 s <<< ERROR!
+java.lang.IllegalArgumentException: Chi duoc xin nghi tu ngay 2026-07-01 tro di.
+	at LeaveController.submit(LeaveController.java:42)
+	at LeaveControllerTest.testApproveRequestSuccess(LeaveControllerTest.java:113)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+LeaveControllerTest.testApproveRequestFailsDueToBalance -- Time elapsed: 0.017 s <<< ERROR!
+java.lang.IllegalArgumentException: Chi duoc xin nghi tu ngay 2026-07-01 tro di.
+	at LeaveController.submit(LeaveController.java:42)
+	at LeaveControllerTest.testApproveRequestFailsDueToBalance(LeaveControllerTest.java:134)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+LeaveControllerTest.testRejectRequestSuccess -- Time elapsed: 0.015 s <<< ERROR!
+java.lang.IllegalArgumentException: Chi duoc xin nghi tu ngay 2026-07-01 tro di.
+	at LeaveController.submit(LeaveController.java:42)
+	at LeaveControllerTest.testRejectRequestSuccess(LeaveControllerTest.java:159)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+

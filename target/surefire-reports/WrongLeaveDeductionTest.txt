@@ -1,4 +1,16 @@
 -------------------------------------------------------------------------------
 Test set: WrongLeaveDeductionTest
 -------------------------------------------------------------------------------
-Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.064 s -- in WrongLeaveDeductionTest
+Tests run: 8, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.301 s <<< FAILURE! -- in WrongLeaveDeductionTest
+WrongLeaveDeductionTest.testWrongLeaveDeductionWithOptimistic5Threads -- Time elapsed: 0.190 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: Remaining leave days mismatch ==> expected: <2> but was: <6>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at WrongLeaveDeductionTest.testWrongLeaveDeductionWithOptimistic5Threads(WrongLeaveDeductionTest.java:188)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+

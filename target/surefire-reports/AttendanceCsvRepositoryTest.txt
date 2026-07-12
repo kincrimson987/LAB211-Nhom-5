@@ -1,4 +1,16 @@
 -------------------------------------------------------------------------------
 Test set: AttendanceCsvRepositoryTest
 -------------------------------------------------------------------------------
-Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.615 s -- in AttendanceCsvRepositoryTest
+Tests run: 2, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 5.021 s <<< FAILURE! -- in AttendanceCsvRepositoryTest
+AttendanceCsvRepositoryTest.testReadAndValidateAllCsvFiles -- Time elapsed: 0.497 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: There should be no missing values or syntax errors in any CSV file (except known optional fields) ==> expected: <0> but was: <19>
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
+	at AttendanceCsvRepositoryTest.testReadAndValidateAllCsvFiles(AttendanceCsvRepositoryTest.java:137)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
