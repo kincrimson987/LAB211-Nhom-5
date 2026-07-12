@@ -198,4 +198,11 @@ public class LeaveBalanceRepository extends CsvRepository<LeaveBalance> {
             Thread.currentThread().interrupt();
         }
     }
+    public void deductWithFileLock(String filePath, Runnable deductAction) throws Exception {
+        FileLockManager.executeWithLock(filePath, () -> {
+            deductAction.run();
+            return null;
+        });
+    }
+}
 }

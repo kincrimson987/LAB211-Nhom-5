@@ -1,4 +1,3 @@
-DoublePaymentTest.class
 CsvRepository.class
 EmployeeRepository.class
 TestSalaryCalculator.class
@@ -6,11 +5,10 @@ AttendanceRepository.class
 DataGenerator.class
 PayrollEntryRepository.class
 MainView.class
-TestEntity.class
 LeaveBalance.class
+AttendanceAdjustmentRequest.class
 LeaveBalanceRepository.class
 PayrollRun.class
-PayrollView.class
 Employee.class
 AuthController.class
 LeaveStatus.class
@@ -19,11 +17,12 @@ InvalidLeaveStateException.class
 BaseEntity.class
 DepartmentRepository.class
 LockMechanism.class
-CrudTest.class
+AttendanceAdjustmentRepository.class
 DepartmentController.class
 PayrollRule.class
 LeaveView.class
 PayrollRunRepository.class
+AttendanceAdjustmentStatus.class
 Department.class
 PayrollRuleRepository.class
 UserAccount.class
@@ -34,7 +33,6 @@ PartTimeEmployee.class
 SimulationController.class
 EmployeeController.class
 EmployeeAuthController.class
-PerformanceTest.class
 LeaveRequestRepository.class
 PayrollStatus.class
 EmployeeNotFoundException.class
