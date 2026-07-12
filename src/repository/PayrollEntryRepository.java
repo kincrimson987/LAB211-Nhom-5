@@ -261,11 +261,10 @@ public class PayrollEntryRepository extends CsvRepository<PayrollEntry> {
         }
         return ids;
     }
-    public void processWithFileLock(String filePath, Runnable saveAction) throws Exception {
+   public void processWithFileLock(String filePath, Runnable saveAction) throws Exception {
         FileLockManager.executeWithLock(filePath, () -> {
             saveAction.run();
             return null;
         });
     }
-}
 }
