@@ -1,16 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: DoublePaymentTest
 -------------------------------------------------------------------------------
-Tests run: 5, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.355 s <<< FAILURE! -- in DoublePaymentTest
-DoublePaymentTest.testPreventDoublePaymentWithOptimistic5Threads -- Time elapsed: 0.018 s <<< FAILURE!
-org.opentest4j.AssertionFailedError: Only one thread should process payroll successfully ==> expected: <1> but was: <0>
-	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
-	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
-	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
-	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:150)
-	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:563)
-	at DoublePaymentTest.testPreventDoublePaymentWithOptimistic5Threads(DoublePaymentTest.java:163)
-	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
-	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
-
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.361 s -- in DoublePaymentTest
