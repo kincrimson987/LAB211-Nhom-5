@@ -60,11 +60,19 @@ public class PayrollController {
             PayrollEntry entry = new PayrollEntry(entryId, 0, emp.getId(), netSalary, PayrollStatus.PENDING);
             entry.process();
 
-            if (existing != null) {
-                entryRepo.update(entry);
-            } else {
-                entryRepo.save(entry);
-            }
+           if (existing != null) {
+            try {
+                entryRepo.processWithFileLock("data/payroll_entries.csv", () -> {
+                    entryRepo.update(entry);
+                });
+            } catch (Exception e) { e.printStackTrace(); }
+        } else {
+            try {
+                entryRepo.processWithFileLock("data/payroll_entries.csv", () -> {
+                    entryRepo.save(entry);
+                });
+            } catch (Exception e) { e.printStackTrace(); }
+        }
             results.add(entry);
         }
         return results;
