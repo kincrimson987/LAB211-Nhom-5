@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="DoublePaymentTest" time="0.366" tests="5" errors="0" skipped="0" failures="1">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="DoublePaymentTest" time="0.355" tests="5" errors="0" skipped="0" failures="1">
   <properties>
     <property name="java.specification.version" value="17"/>
     <property name="sun.cpu.isalist" value="amd64"/>
@@ -15,7 +15,7 @@
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="user.country" value="US"/>
     <property name="sun.boot.library.path" value="C:\Program Files\Java\jdk-17\bin"/>
-    <property name="sun.java.command" value="C:\Users\Dell\AppData\Local\Temp\surefire3385446591022030825\surefirebooter-20260712233109734_3.jar C:\Users\Dell\AppData\Local\Temp\surefire3385446591022030825 2026-07-12T23-31-09_350-jvmRun1 surefire-20260712233109734_1tmp surefire_0-20260712233109734_2tmp"/>
+    <property name="sun.java.command" value="C:\Users\Dell\AppData\Local\Temp\surefire3019742109773039577\surefirebooter-20260712235901390_3.jar C:\Users\Dell\AppData\Local\Temp\surefire3019742109773039577 2026-07-12T23-59-00_743-jvmRun1 surefire-20260712235901390_1tmp surefire_0-20260712235901390_2tmp"/>
     <property name="jdk.debug" value="release"/>
     <property name="test" value="DoublePaymentTest"/>
     <property name="surefire.test.class.path" value="C:\Users\Dell\Documents\GitHub\LAB211-Nhom-5\target\test-classes;C:\Users\Dell\Documents\GitHub\LAB211-Nhom-5\target\classes;C:\Users\Dell\.m2\repository\org\junit\jupiter\junit-jupiter\5.10.2\junit-jupiter-5.10.2.jar;C:\Users\Dell\.m2\repository\org\junit\jupiter\junit-jupiter-api\5.10.2\junit-jupiter-api-5.10.2.jar;C:\Users\Dell\.m2\repository\org\opentest4j\opentest4j\1.3.0\opentest4j-1.3.0.jar;C:\Users\Dell\.m2\repository\org\junit\platform\junit-platform-commons\1.10.2\junit-platform-commons-1.10.2.jar;C:\Users\Dell\.m2\repository\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;C:\Users\Dell\.m2\repository\org\junit\jupiter\junit-jupiter-params\5.10.2\junit-jupiter-params-5.10.2.jar;C:\Users\Dell\.m2\repository\org\junit\jupiter\junit-jupiter-engine\5.10.2\junit-jupiter-engine-5.10.2.jar;C:\Users\Dell\.m2\repository\org\junit\platform\junit-platform-engine\1.10.2\junit-platform-engine-1.10.2.jar;"/>
@@ -31,7 +31,7 @@
     <property name="line.separator" value="&#10;"/>
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
-    <property name="surefire.real.class.path" value="C:\Users\Dell\AppData\Local\Temp\surefire3385446591022030825\surefirebooter-20260712233109734_3.jar"/>
+    <property name="surefire.real.class.path" value="C:\Users\Dell\AppData\Local\Temp\surefire3019742109773039577\surefirebooter-20260712235901390_3.jar"/>
     <property name="user.script" value=""/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="java.runtime.version" value="17.0.12+8-LTS-286"/>
@@ -57,10 +57,10 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="java.class.version" value="61.0"/>
   </properties>
-  <testcase name="testPreventDoublePaymentWithSync5Threads" classname="DoublePaymentTest" time="0.156"/>
+  <testcase name="testPreventDoublePaymentWithSync5Threads" classname="DoublePaymentTest" time="0.183"/>
   <testcase name="testAllowPaymentForDifferentMonths" classname="DoublePaymentTest" time="0.016"/>
-  <testcase name="testPreventDoublePaymentWithOptimistic5Threads" classname="DoublePaymentTest" time="0.093">
-    <failure message="Only one thread should process payroll successfully ==&gt; expected: &lt;1&gt; but was: &lt;2&gt;" type="org.opentest4j.AssertionFailedError"><![CDATA[org.opentest4j.AssertionFailedError: Only one thread should process payroll successfully ==> expected: <1> but was: <2>
+  <testcase name="testPreventDoublePaymentWithOptimistic5Threads" classname="DoublePaymentTest" time="0.018">
+    <failure message="Only one thread should process payroll successfully ==&gt; expected: &lt;1&gt; but was: &lt;0&gt;" type="org.opentest4j.AssertionFailedError"><![CDATA[org.opentest4j.AssertionFailedError: Only one thread should process payroll successfully ==> expected: <1> but was: <0>
 	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:151)
 	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:132)
 	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:197)
@@ -71,7 +71,62 @@
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
 ]]></failure>
+    <system-err><![CDATA[Exception in thread "Opt-Thread-1" Exception in thread "Opt-Thread-3" Exception in thread "Opt-Thread-2" Exception in thread "Opt-Thread-0" java.nio.channels.OverlappingFileLockException
+	at java.base/sun.nio.ch.FileLockTable.checkList(FileLockTable.java:229)
+	at java.base/sun.nio.ch.FileLockTable.add(FileLockTable.java:123)
+	at java.base/sun.nio.ch.FileChannelImpl.lock(FileChannelImpl.java:1276)
+	at java.base/java.nio.channels.FileChannel.lock(FileChannel.java:1089)
+	at PayrollEntryRepository.updateIfVersionMatch(PayrollEntryRepository.java:203)
+	at PayrollEntryRepository.processWithOptimistic(PayrollEntryRepository.java:187)
+	at DoublePaymentTest.lambda$testPreventDoublePaymentWithOptimistic5Threads$2(DoublePaymentTest.java:139)
+	at java.base/java.lang.Thread.run(Thread.java:842)
+java.nio.channels.OverlappingFileLockException
+Exception in thread "Opt-Thread-4" 	at java.base/sun.nio.ch.FileLockTable.checkList(FileLockTable.java:229)
+	at java.base/sun.nio.ch.FileLockTable.add(FileLockTable.java:123)
+	at java.base/sun.nio.ch.FileChannelImpl.lock(FileChannelImpl.java:1276)
+	at java.base/java.nio.channels.FileChannel.lock(FileChannel.java:1089)
+	at PayrollEntryRepository.updateIfVersionMatch(PayrollEntryRepository.java:203)
+	at PayrollEntryRepository.processWithOptimistic(PayrollEntryRepository.java:187)
+	at DoublePaymentTest.lambda$testPreventDoublePaymentWithOptimistic5Threads$2(DoublePaymentTest.java:139)
+	at java.base/java.lang.Thread.run(Thread.java:842)
+java.nio.channels.OverlappingFileLockException
+	at java.base/sun.nio.ch.FileLockTable.checkList(FileLockTable.java:229)
+	at java.base/sun.nio.ch.FileLockTable.add(FileLockTable.java:123)
+	at java.base/sun.nio.ch.FileChannelImpl.lock(FileChannelImpl.java:1276)
+	at java.base/java.nio.channels.FileChannel.lock(FileChannel.java:1089)
+	at PayrollEntryRepository.updateIfVersionMatch(PayrollEntryRepository.java:203)
+	at PayrollEntryRepository.processWithOptimistic(PayrollEntryRepository.java:187)
+	at DoublePaymentTest.lambda$testPreventDoublePaymentWithOptimistic5Threads$2(DoublePaymentTest.java:139)
+	at java.base/java.lang.Thread.run(Thread.java:842)
+java.nio.channels.OverlappingFileLockException
+	at java.base/sun.nio.ch.FileLockTable.checkList(FileLockTable.java:229)
+	at java.base/sun.nio.ch.FileLockTable.add(FileLockTable.java:123)
+	at java.base/sun.nio.ch.FileChannelImpl.lock(FileChannelImpl.java:1276)
+	at java.base/java.nio.channels.FileChannel.lock(FileChannel.java:1089)
+	at PayrollEntryRepository.updateIfVersionMatch(PayrollEntryRepository.java:203)
+	at PayrollEntryRepository.processWithOptimistic(PayrollEntryRepository.java:187)
+	at DoublePaymentTest.lambda$testPreventDoublePaymentWithOptimistic5Threads$2(DoublePaymentTest.java:139)
+	at java.base/java.lang.Thread.run(Thread.java:842)
+java.lang.RuntimeException: Failed to read CSV: C:\Users\Dell\AppData\Local\Temp\double_payment_opt_5_12261583707992190664.csv
+	at CsvRepository.readAllLines(CsvRepository.java:94)
+	at PayrollEntryRepository.updateIfVersionMatch(PayrollEntryRepository.java:205)
+	at PayrollEntryRepository.processWithOptimistic(PayrollEntryRepository.java:187)
+	at DoublePaymentTest.lambda$testPreventDoublePaymentWithOptimistic5Threads$2(DoublePaymentTest.java:139)
+	at java.base/java.lang.Thread.run(Thread.java:842)
+Caused by: java.io.IOException: The process cannot access the file because another process has locked a portion of the file
+	at java.base/java.io.FileInputStream.readBytes(Native Method)
+	at java.base/java.io.FileInputStream.read(FileInputStream.java:276)
+	at java.base/sun.nio.cs.StreamDecoder.readBytes(StreamDecoder.java:270)
+	at java.base/sun.nio.cs.StreamDecoder.implRead(StreamDecoder.java:313)
+	at java.base/sun.nio.cs.StreamDecoder.read(StreamDecoder.java:188)
+	at java.base/java.io.InputStreamReader.read(InputStreamReader.java:177)
+	at java.base/java.io.BufferedReader.fill(BufferedReader.java:162)
+	at java.base/java.io.BufferedReader.readLine(BufferedReader.java:329)
+	at java.base/java.io.BufferedReader.readLine(BufferedReader.java:396)
+	at CsvRepository.readAllLines(CsvRepository.java:82)
+	... 4 more
+]]></system-err>
   </testcase>
-  <testcase name="testAllowPaymentForDifferentEmployees" classname="DoublePaymentTest" time="0.016"/>
-  <testcase name="testPreventDoublePaymentWithTwoThreads" classname="DoublePaymentTest" time="0.013"/>
+  <testcase name="testAllowPaymentForDifferentEmployees" classname="DoublePaymentTest" time="0.018"/>
+  <testcase name="testPreventDoublePaymentWithTwoThreads" classname="DoublePaymentTest" time="0.028"/>
 </testsuite>

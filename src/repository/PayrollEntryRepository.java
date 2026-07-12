@@ -197,18 +197,51 @@ public class PayrollEntryRepository extends CsvRepository<PayrollEntry> {
      * Ghi entry chỉ khi version trong file vẫn khớp expectedVersion.
      */
     boolean updateIfVersionMatch(PayrollEntry updated, long expectedVersion) {
-        List<PayrollEntry> all = readAllLines();
-        for (int i = 0; i < all.size(); i++) {
-            PayrollEntry current = all.get(i);
-            if (!current.getId().equals(updated.getId()))
-                continue;
-            if (current.getVersion() != expectedVersion)
-                return false;
-            all.set(i, updated);
-            writeAllLines(all);
-            return true;
+        synchronized (getFilePath().intern()) {
+            File lockFile = new File(getFilePath());
+            try (RandomAccessFile raf = new RandomAccessFile(lockFile, "rw");
+                 FileChannel channel = raf.getChannel();
+                 FileLock lock = channel.lock()) {
+
+                List<PayrollEntry> all = new ArrayList<>();
+                String header = raf.readLine();
+                String line;
+                while ((line = raf.readLine()) != null) {
+                    if (!line.trim().isEmpty()) {
+                        all.add(parseLine(line));
+                    }
+                }
+
+                boolean updatedAny = false;
+                for (int i = 0; i < all.size(); i++) {
+                    PayrollEntry current = all.get(i);
+                    if (!current.getId().equals(updated.getId())) {
+                        continue;
+                    }
+                    if (current.getVersion() != expectedVersion)
+                        return false;
+                    all.set(i, updated);
+                    updatedAny = true;
+                    break;
+                }
+
+                if (!updatedAny) {
+                    return false;
+                }
+
+                raf.setLength(0);
+                raf.seek(0);
+                raf.writeBytes(header != null ? header : new PayrollEntry().getCsvHeader());
+                raf.writeBytes(System.lineSeparator());
+                for (PayrollEntry entry : all) {
+                    raf.writeBytes(entry.toCsvLine());
+                    raf.writeBytes(System.lineSeparator());
+                }
+                return true;
+            } catch (IOException e) {
+                throw new RuntimeException("Optimistic update failed for entry: " + updated.getId(), e);
+            }
         }
-        return false;
     }
 
     // ==================== HELPERS ====================
@@ -261,7 +294,7 @@ public class PayrollEntryRepository extends CsvRepository<PayrollEntry> {
         }
         return ids;
     }
-   public void processWithFileLock(String filePath, Runnable saveAction) throws Exception {
+    public void processWithFileLock(String filePath, Runnable saveAction) throws Exception {
         FileLockManager.executeWithLock(filePath, () -> {
             saveAction.run();
             return null;
