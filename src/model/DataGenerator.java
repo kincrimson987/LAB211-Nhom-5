@@ -4,13 +4,14 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Random;
 import java.util.Locale;
+import java.time.YearMonth;
 
 public class DataGenerator {
     private static final String DATA_DIR = "data/";
     private static final int NUM_DEPARTMENTS = 10;
     private static final int NUM_EMPLOYEES = 1200;
-    private static final int CURRENT_YEAR = 2023;
-    private static final int MONTHS_TO_GENERATE = 12;
+    private static final int START_YEAR = 2026;
+    private static final int MONTHS_TO_GENERATE = 18;
     private static final Random RANDOM = new Random();
 
     public static void main(String[] args) {
@@ -26,6 +27,8 @@ public class DataGenerator {
         try {
             generateDepartments();
             generateEmployees();
+            resetEmployeeSequence();
+            generateUserAccounts();
             generateLeaveBalances();
             generateAttendanceRecords();
             generateLeaveRequests();
@@ -113,6 +116,29 @@ public class DataGenerator {
         return salaryMillion * 1_000_000.0;
     }
 
+    private static void resetEmployeeSequence() throws IOException {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(DATA_DIR + "employee_sequence.txt"))) {
+            writer.println(NUM_EMPLOYEES);
+        }
+    }
+
+    private static void generateUserAccounts() throws IOException {
+        int totalRows = 0;
+        try (PrintWriter writer = new PrintWriter(new FileWriter(DATA_DIR + "user_accounts.csv"))) {
+            writer.println("id,version,username,password,role,active,employeeId");
+            for (int i = 1; i <= NUM_EMPLOYEES; i++) {
+                String employeeId = String.format("E%04d", i);
+                String username = employeeId.toLowerCase(Locale.ROOT);
+                writer.println(String.format("U%04d,1,%s,%s@123,EMPLOYEE,true,%s",
+                        i, username, username, employeeId));
+                totalRows++;
+            }
+            writer.println(String.format("U%04d,1,admin,admin123,ADMIN,true,", NUM_EMPLOYEES + 1));
+            writer.println(String.format("U%04d,1,hr,hr123,HR,true,", NUM_EMPLOYEES + 2));
+        }
+        System.out.printf("[OK] user_accounts.csv   (%d employee accounts + ADMIN + HR)%n", totalRows);
+    }
+
     private static void generateLeaveBalances() throws IOException {
         int totalRows = 0;
 
@@ -142,13 +168,16 @@ public class DataGenerator {
             writer.println("id,version,employeeId,yearMonth,workDays,overtimeHours");
 
             for (int m = 1; m <= MONTHS_TO_GENERATE; m++) {
+                YearMonth period = periodForIndex(m);
+                int year = period.getYear();
+                int month = period.getMonthValue();
                 for (int i = 1; i <= NUM_EMPLOYEES; i++) {
                     int workDays = 20 + RANDOM.nextInt(7); // 20 -> 26 ngày
                     double otHours = RANDOM.nextInt(10) + (RANDOM.nextDouble() * 2);
 
-                    String attendanceId = String.format("A_E%04d_%02d_%d", i, m, CURRENT_YEAR);
+                    String attendanceId = String.format("A_E%04d_%02d_%d", i, month, year);
                     String employeeId = String.format("E%04d", i);
-                    String yearMonth = String.format("%d-%02d", CURRENT_YEAR, m);
+                    String yearMonth = period.toString();
 
                     writer.println(String.format(Locale.US, "%s,1,%s,%s,%d,%.1f",
                             attendanceId,
@@ -172,6 +201,9 @@ public class DataGenerator {
             writer.println("leaveId,employeeId,leaveType,startDate,endDate,reason,status,approvedBy");
 
             for (int m = 1; m <= MONTHS_TO_GENERATE; m++) {
+                YearMonth period = periodForIndex(m);
+                int year = period.getYear();
+                int month = period.getMonthValue();
                 for (int i = 1; i <= NUM_EMPLOYEES; i++) {
                     if (RANDOM.nextInt(100) < 10) {
                         String employeeId = String.format("E%04d", i);
@@ -181,9 +213,9 @@ public class DataGenerator {
                         int days = 1 + RANDOM.nextInt(3);
                         int endDay = startDay + days - 1;
 
-                        String startDate = String.format("%d-%02d-%02d", CURRENT_YEAR, m, startDay);
-                        String endDate = String.format("%d-%02d-%02d", CURRENT_YEAR, m, endDay);
-                        String leaveId = String.format("LR_%s_%02d_%d", employeeId, m, CURRENT_YEAR);
+                        String startDate = String.format("%d-%02d-%02d", year, month, startDay);
+                        String endDate = String.format("%d-%02d-%02d", year, month, endDay);
+                        String leaveId = String.format("LR_%s_%02d_%d", employeeId, month, year);
 
                         writer.println(String.format("%s,%s,%s,%s,%s,Leave request,PENDING,",
                                 leaveId,
@@ -208,9 +240,12 @@ public class DataGenerator {
             writer.println("id,version,employeeId,netSalary,status");
 
             for (int m = 1; m <= MONTHS_TO_GENERATE; m++) {
+                YearMonth period = periodForIndex(m);
+                int year = period.getYear();
+                int month = period.getMonthValue();
                 for (int i = 1; i <= NUM_EMPLOYEES; i++) {
                     writer.println(String.format("PR_E%04d_%02d_%d,0,E%04d,0.0,PENDING",
-                            i, m, CURRENT_YEAR, i));
+                            i, month, year, i));
 
                     totalRows++;
                 }
@@ -234,10 +269,13 @@ public class DataGenerator {
             };
 
             for (int m = 1; m <= MONTHS_TO_GENERATE; m++) {
-                String yearMonth = String.format("%d-%02d", CURRENT_YEAR, m);
+                YearMonth period = periodForIndex(m);
+                int year = period.getYear();
+                int month = period.getMonthValue();
+                String yearMonth = period.toString();
 
                 for (String mechanism : mechanisms) {
-                    String runId = String.format("RUN_%s_%02d_%d", mechanism, m, CURRENT_YEAR);
+                    String runId = String.format("RUN_%s_%02d_%d", mechanism, month, year);
 
                     writer.println(String.format("%s,0,%s,%s,0,0,0,0,0.0",
                             runId,
@@ -250,5 +288,9 @@ public class DataGenerator {
         }
 
         System.out.printf("[OK] payroll_runs.csv    (%d dòng)%n", totalRows);
+    }
+
+    private static YearMonth periodForIndex(int oneBasedIndex) {
+        return YearMonth.of(START_YEAR, 1).plusMonths(oneBasedIndex - 1L);
     }
 }

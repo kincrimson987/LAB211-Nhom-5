@@ -35,7 +35,7 @@ public class PayrollRuleRepository extends CsvRepository<PayrollRule> {
                 + entity.getOvertimeMultiplier() + ","
                 + entity.getAttendanceBonus() + ","
                 + entity.getTaxRate() + ","
-                + entity.getTaxThreshold();
+                + String.format(java.util.Locale.ROOT, "%.0f", entity.getTaxThreshold());
     }
 
     @Override

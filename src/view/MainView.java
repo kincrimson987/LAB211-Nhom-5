@@ -174,17 +174,16 @@ public class MainView {
             String[] items = isHr()
                     ? new String[]{
                         "Add Employee", "Update Employee", "Delete Employee",
-                        "Search Employee", "View Employee Detail", "View Employee List", "---",
-                        "Search Department", "View Departments", "---",
-                        "Generate Test Dataset"
+                        "Search Employee", "View Employee Detail", "View Employee List",
+                        "View Employees by Department", "---",
+                        "Search Department", "View Departments"
                     }
                     : new String[]{
                         "Add Employee", "Update Employee", "Delete Employee",
                         "Search Employee", "View Employee Detail", "View Employee List",
-                        "Create Employee Account", "---",
+                        "View Employees by Department", "---",
                         "Add Department", "Update Department", "Delete Department",
-                        "Search Department", "View Departments", "---",
-                        "Generate Test Dataset"
+                        "Search Department", "View Departments"
                     };
             printSubMenu("EMPLOYEE MANAGEMENT", items);
             switch (prompt("Choose").trim()) {
@@ -194,16 +193,13 @@ public class MainView {
                 case "4"  -> handleSearchEmployee();
                 case "5"  -> handleViewEmployeeDetail();
                 case "6"  -> handleViewEmployeeList();
-                case "7"  -> {
-                    if (isHr()) handleSearchDepartment();
-                    else handleCreateEmployeeAccount();
-                }
+                case "7"  -> handleViewEmployeesByDepartment();
                 case "8"  -> {
-                    if (isHr()) handleViewDepartments();
+                    if (isHr()) handleSearchDepartment();
                     else handleAddDepartment();
                 }
                 case "9"  -> {
-                    if (isHr()) printInfo("Generate test dataset: not implemented yet.");
+                    if (isHr()) handleViewDepartments();
                     else handleUpdateDepartment();
                 }
                 case "10" -> {
@@ -217,10 +213,6 @@ public class MainView {
                 case "12" -> {
                     if (isHr()) printError("Invalid choice.");
                     else handleViewDepartments();
-                }
-                case "13" -> {
-                    if (isHr()) printError("Invalid choice.");
-                    else printInfo("Generate test dataset: not implemented yet.");
                 }
                 case "0"  -> back = true;
                 default   -> printError("Invalid choice.");
@@ -239,8 +231,11 @@ public class MainView {
                     ? EmployeeType.PARTTIME : EmployeeType.FULLTIME;
             double baseSalary = promptDouble("Base salary (VND, 0 = default)");
             Employee created = employeeController.addEmployee(name, email, departmentId, type, baseSalary);
+            UserAccount account = createAccountForEmployee(created);
             printSuccess("Employee added!");
             printEmployeeDetail(created);
+            printSuccess("Employee account created automatically.");
+            printUserAccountDetail(account);
         } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
     }
 
@@ -267,7 +262,9 @@ public class MainView {
         try {
             printEmployeeDetail(employeeController.getEmployeeById(id));
             if (confirm("Confirm delete?")) {
+                UserAccount linkedAccount = userRepo.findByEmployeeId(id);
                 employeeController.deleteEmployee(id);
+                if (linkedAccount != null) userRepo.delete(linkedAccount.getId());
                 printSuccess("Deleted.");
             } else { printInfo("Cancelled."); }
         } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
@@ -302,32 +299,33 @@ public class MainView {
         printEmployeeTablePaged(employeeController.getAllEmployees());
     }
 
-    private void handleCreateEmployeeAccount() {
-        printSectionHeader("CREATE EMPLOYEE ACCOUNT");
+    private void handleViewEmployeesByDepartment() {
+        printSectionHeader("VIEW EMPLOYEES BY DEPARTMENT");
         try {
-            String employeeId = prompt("Employee ID");
-            Employee employee = employeeController.getEmployeeById(employeeId);
-            if (userRepo.findByEmployeeId(employeeId) != null) {
-                printError("This employee already has an account.");
-                return;
-            }
-
-            String username = prompt("Username");
-            if (userRepo.findByUsername(username) != null) {
-                printError("Username already exists.");
-                return;
-            }
-
-            String password = prompt("Password");
-            UserAccount account = new UserAccount(
-                    generateUserAccountId(), 1L, username.trim(), password.trim(),
-                    "EMPLOYEE", true, employee.getId());
-            userRepo.save(account);
-            printSuccess("Account created for employee: " + employee.getId());
-            printUserAccountDetail(account);
+            String departmentId = prompt("Department ID");
+            List<Employee> employees = employeeController.getEmployeesByDepartment(departmentId);
+            printEmployeeTablePaged(employees);
         } catch (IllegalArgumentException ex) {
             printError(ex.getMessage());
         }
+    }
+
+    private UserAccount createAccountForEmployee(Employee employee) {
+        if (employee == null || employee.getId() == null || employee.getId().isBlank()) {
+            throw new IllegalArgumentException("A valid employee is required to create an account.");
+        }
+        if (userRepo.findByEmployeeId(employee.getId()) != null) {
+            throw new IllegalArgumentException("This employee already has an account.");
+        }
+        String username = employee.getId().toLowerCase(java.util.Locale.ROOT);
+        if (userRepo.findByUsername(username) != null) {
+            throw new IllegalArgumentException("Username already exists: " + username);
+        }
+        UserAccount account = new UserAccount(
+                generateUserAccountId(), 1L, username, username + "@123",
+                "EMPLOYEE", true, employee.getId());
+        userRepo.save(account);
+        return account;
     }
 
     private void handleAddDepartment() {
@@ -773,7 +771,9 @@ public class MainView {
                     parseDoubleVal(promptOptional("Overtime multiplier [" + cur.getOvertimeMultiplier() + "]"), cur.getOvertimeMultiplier()),
                     parseDoubleVal(promptOptional("Attendance bonus [" + cur.getAttendanceBonus() + "]"), cur.getAttendanceBonus()),
                     parseDoubleVal(promptOptional("Tax rate [" + cur.getTaxRate() + "]"), cur.getTaxRate()),
-                    parseDoubleVal(promptOptional("Tax threshold [" + cur.getTaxThreshold() + "]"), cur.getTaxThreshold())
+                    parseDoubleVal(promptOptional("Tax threshold [" +
+                            String.format(java.util.Locale.ROOT, "%.0f", cur.getTaxThreshold()) + "]"),
+                            cur.getTaxThreshold())
             );
             payrollController.updatePayrollRule(updated);
             printSuccess("Payroll rules updated!");

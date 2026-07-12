@@ -1,0 +1,8 @@
+id,version,employeeId,yearMonth,originalWorkDays,requestedWorkDays,originalOvertimeHours,requestedOvertimeHours,reason,status,reviewedBy,reviewNote
+AR_E0001_2023_01_001,2,E0001,2023-01,20,25,6.2,9.0,fix test,APPROVED,U002,Approved
+null,0,,,0,0,0.0,0.0,,PENDING,,
+AR_E0002_2023_04_002,2,E0002,2023-04,24,25,8.8,10.0,dm tk hr tinh sai,APPROVED,U002,Approved
+null,0,,,0,0,0.0,0.0,,PENDING,,
+AR_E0001_2023_01_002,2,E0001,2023-01,25,26,9.0,12.0,faild,APPROVED,U002,Approved
+null,0,,,0,0,0.0,0.0,,PENDING,,
+AR_E1201_2026_07_007,1,E1201,2026-07,11,13,13.0,13.0,b?n,PENDING,,

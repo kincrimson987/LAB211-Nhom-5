@@ -86,7 +86,14 @@ public class PayrollEntry extends BaseEntity {
         if (id == null) return "";
         String[] parts = id.split("_");
         if (parts.length >= 4) {
-            return parts[3] + "-" + parts[2];
+            // Canonical format: PR_<employeeId>_<MM>_<YYYY>.
+            if (parts[2].matches("\\d{2}") && parts[3].matches("\\d{4}")) {
+                return parts[3] + "-" + parts[2];
+            }
+            // Backward compatibility for old rows: PR_<employeeId>_<YYYY>_<MM>.
+            if (parts[2].matches("\\d{4}") && parts[3].matches("\\d{2}")) {
+                return parts[2] + "-" + parts[3];
+            }
         }
         return "";
     }
