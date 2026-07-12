@@ -40,32 +40,45 @@ public class PayrollController {
         PayrollRule rule = ruleRepo.getConfig();
         List<Employee> employees = employeeRepo.findAll();
 
-       for (Employee emp : employees) {
+        for (Employee emp : employees) {
+            AttendanceRecord attendance = attendanceRepo.findByEmployeeAndMonth(emp.getId(), yearMonth);
+            if (attendance == null) {
+                continue;
+            }
+
+            String[] parts = yearMonth.split("-");
+            String year = parts[0];
+            String month = parts[1];
+            String entryId = "PR_" + emp.getId() + "_" + month + "_" + year;
+
+            PayrollEntry existing = entryRepo.findByEmployeeAndMonth(emp.getId(), yearMonth);
+            if (existing != null && existing.getStatus() == PayrollStatus.PROCESSED) {
+                continue;
+            }
+
+            double netSalary = emp.calculateSalary(attendance, rule);
+            PayrollEntry entry = new PayrollEntry(entryId, 0, emp.getId(), netSalary, PayrollStatus.PENDING);
+            entry.process();
+
+           if (existing != null) {
             try {
                 entryRepo.processWithFileLock("data/payroll_entries.csv", () -> {
-                    PayrollEntry existing = entryRepo.findByEmployeeAndMonth(emp.getId(), "2026-07"); // Hoặc dùng biến Month của bạn nếu có
-                    if (existing != null && existing.getStatus() == PayrollStatus.PROCESSED) {
-                        return null;
-                    }
-
-                    double netSalary = emp.calculateSalary(attendance, rule);
-                    PayrollEntry entry = new PayrollEntry(entryId, 0, emp.getId(), netSalary, "2026-07", PayrollStatus.PROCESSED);
-                    entry.process();
-
-                    if (existing != null) {
-                        entryRepo.update(entry);
-                    } else {
-                        entryRepo.save(entry);
-                    }
-
-                    results.add(entry);
-                    return null;
+                    entryRepo.update(entry);
                 });
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            } catch (Exception e) { e.printStackTrace(); }
+       } else {
+    try {
+        entryRepo.processWithFileLock("data/payroll_entries.csv", () -> {
+            entryRepo.save(entry);
+        });
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
+            results.add(entry);
         }
         return results;
+    }
 
     /**
      * Xử lý lương tháng, đo thời gian chạy và lưu kết quả vào PayrollRun.
