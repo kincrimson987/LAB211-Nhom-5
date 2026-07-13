@@ -21,10 +21,13 @@ public class Main {
                 // ── 2. Controllers ───────────────────────────────────────────────
                 EmployeeController employeeController = new EmployeeController(employeeRepo, departmentRepo);
                 DepartmentController departmentController = new DepartmentController(departmentRepo);
-                AttendanceController attendanceController = new AttendanceController(attendanceRepo, employeeRepo);
+                AttendanceController attendanceController = new AttendanceController(
+                                attendanceRepo, employeeRepo,
+                                new AttendanceAdjustmentRepository(), leaveReqRepo);
                 LeaveController leaveController = new LeaveController(leaveReqRepo, leaveBalRepo, employeeRepo);
                 PayrollController payrollController = new PayrollController(
-                                employeeRepo, attendanceRepo, payrollRuleRepo, payrollEntryRepo, payrollRunRepo);
+                                employeeRepo, attendanceRepo, payrollRuleRepo, payrollEntryRepo,
+                                payrollRunRepo, leaveReqRepo);
                 ReportController reportController = new ReportController(
                                 payrollEntryRepo, attendanceRepo, payrollRunRepo, employeeRepo);
                 SimulationController simulationController = new SimulationController(

@@ -650,7 +650,10 @@ public class MainView {
             // GÃƒÂ¡Ã‚Â»Ã‚Âi Ãƒâ€žÃ¢â‚¬ËœÃƒÆ’Ã‚Âºng tÃƒÆ’Ã‚Âªn method: approve() vÃƒÂ¡Ã‚Â»Ã¢â‚¬Âºi LockMechanism
             leaveController.approve(leaveId, currentSession.getAccount().getId(),
                     LockMechanism.NO_LOCK);
-            printSuccess("Approved. Charged " + chargeableDays + " new leave day(s).");
+            LeaveRequest approved = leaveController.getRequestById(leaveId);
+            printSuccess("Approved " + chargeableDays + " day(s): "
+                    + approved.getPaidLeaveDays() + " paid, "
+                    + approved.getUnpaidLeaveDays() + " unpaid.");
         } catch (Exception ex) { printError(ex.getMessage()); }
     }
 
@@ -1159,12 +1162,14 @@ public class MainView {
     }
 
     private void printLeaveTable(List<LeaveRequest> list) {
-        System.out.printf(BOLD + "%-15s %-12s %-10s %-12s %-12s %-10s%n" + RESET, "Leave ID","Employee","Type","Start","End","Status");
-        System.out.println("-".repeat(75));
+        System.out.printf(BOLD + "%-15s %-12s %-10s %-12s %-12s %-10s %-6s %-6s%n" + RESET,
+                "Leave ID","Employee","Type","Start","End","Status","Paid","Unpaid");
+        System.out.println("-".repeat(91));
         for (LeaveRequest r : list)
-            System.out.printf("%-15s %-12s %-10s %-12s %-12s %-10s%n",
-                    r.getLeaveId(), r.getEmployeeId(), r.getLeaveType(), r.getStartDate(), r.getEndDate(), r.getStatus());
-        System.out.println("-".repeat(75));
+            System.out.printf("%-15s %-12s %-10s %-12s %-12s %-10s %-6d %-6d%n",
+                    r.getLeaveId(), r.getEmployeeId(), r.getLeaveType(), r.getStartDate(), r.getEndDate(),
+                    r.getStatus(), r.getPaidLeaveDays(), r.getUnpaidLeaveDays());
+        System.out.println("-".repeat(91));
     }
 
     private void printLeaveTablePaged(List<LeaveRequest> list) {

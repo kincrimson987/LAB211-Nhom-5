@@ -43,7 +43,7 @@ public class TestSalaryCalculatorJUnit {
         double bonus = 500_000;
         double gross = base + overtime + bonus;
         double tax = gross * 0.10;
-        double expected = Math.round((gross - tax) * 100.0) / 100.0;
+        double expected = Math.floor((gross - tax) / 1_000.0) * 1_000.0;
 
         assertEquals(expected, actual, EPS);
     }
@@ -73,7 +73,7 @@ public class TestSalaryCalculatorJUnit {
 
         double actual = employee.calculateSalary(attendance, rule);
 
-        double expected = Math.round((8_000_000.0 * 23 / 26) * 100.0) / 100.0;
+        double expected = Math.floor((8_000_000.0 * 23 / 26) / 1_000.0) * 1_000.0;
 
         assertEquals(expected, actual, EPS);
     }
@@ -103,7 +103,7 @@ public class TestSalaryCalculatorJUnit {
         double actual = employee.calculateSalary(attendance, rule);
 
         double gross = 20_000_000.0 + 500_000;
-        double expected = Math.round((gross - gross * 0.10) * 100.0) / 100.0;
+        double expected = Math.floor((gross - gross * 0.10) / 1_000.0) * 1_000.0;
 
         assertEquals(expected, actual, EPS);
     }

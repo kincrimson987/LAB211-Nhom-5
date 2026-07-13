@@ -148,13 +148,9 @@ public class DataGenerator {
             for (int i = 1; i <= NUM_EMPLOYEES; i++) {
                 String employeeId = String.format("E%04d", i);
 
-                writer.println(String.format("LB_%s_ANNUAL,%s,ANNUAL,12,0,12,0",
+                writer.println(String.format("LB_%s_PAID_LEAVE,%s,PAID_LEAVE,18,0,18,0",
                         employeeId, employeeId));
-
-                writer.println(String.format("LB_%s_SICK,%s,SICK,6,0,6,0",
-                        employeeId, employeeId));
-
-                totalRows += 2;
+                totalRows++;
             }
         }
 

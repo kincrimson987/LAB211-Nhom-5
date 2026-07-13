@@ -12,6 +12,8 @@ public class LeaveRequest extends BaseEntity {
     // ── Thêm cho dự án ──────────────────────────
     private String employeeId;
     private String approvedBy;
+    private int paidLeaveDays;
+    private int unpaidLeaveDays;
 
     // ==================== CONSTRUCTORS ====================
 
@@ -117,6 +119,11 @@ public class LeaveRequest extends BaseEntity {
         this.approvedBy = approvedBy;
     }
 
+    public int getPaidLeaveDays() { return paidLeaveDays; }
+    public void setPaidLeaveDays(int paidLeaveDays) { this.paidLeaveDays = paidLeaveDays; }
+    public int getUnpaidLeaveDays() { return unpaidLeaveDays; }
+    public void setUnpaidLeaveDays(int unpaidLeaveDays) { this.unpaidLeaveDays = unpaidLeaveDays; }
+
     // ==================== BUSINESS METHODS — từ diagram ====================
 
     public void approve() {
@@ -143,7 +150,7 @@ public class LeaveRequest extends BaseEntity {
     // ==================== CSV ====================
 
     public String getCsvHeader() {
-        return "leaveId,employeeId,leaveType,startDate,endDate,reason,status,approvedBy";
+        return "leaveId,employeeId,leaveType,startDate,endDate,reason,status,approvedBy,paidLeaveDays,unpaidLeaveDays";
     }
 
     @Override
@@ -156,7 +163,9 @@ public class LeaveRequest extends BaseEntity {
                 endDate != null ? endDate.toString() : "",
                 reason != null ? reason.replace(",", ";") : "",
                 status != null ? status.name() : "",
-                approvedBy != null ? approvedBy : "");
+                approvedBy != null ? approvedBy : "",
+                String.valueOf(paidLeaveDays),
+                String.valueOf(unpaidLeaveDays));
     }
 
     @Override
@@ -171,6 +180,8 @@ public class LeaveRequest extends BaseEntity {
             this.reason = p[5].trim().replace(";", ",");
             this.status = LeaveStatus.valueOf(p[6].trim());
             this.approvedBy = p[7].trim().isEmpty() ? null : p[7].trim();
+            this.paidLeaveDays = p.length >= 9 && !p[8].trim().isEmpty() ? Integer.parseInt(p[8].trim()) : 0;
+            this.unpaidLeaveDays = p.length >= 10 && !p[9].trim().isEmpty() ? Integer.parseInt(p[9].trim()) : 0;
         }
     }
 

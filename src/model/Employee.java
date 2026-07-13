@@ -89,8 +89,7 @@ public abstract class Employee extends BaseEntity {
     }
 
     public double roundMoney(double value) {
-
-        return Math.round(value * 100.0) / 100.0;
+        return Math.floor(value / 1_000.0) * 1_000.0;
     }
 
     @Override

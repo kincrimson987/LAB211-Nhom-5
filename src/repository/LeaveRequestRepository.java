@@ -29,7 +29,7 @@ public class LeaveRequestRepository extends CsvRepository<LeaveRequest> {
 
     @Override
     public String getHeader() {
-        return "leaveId,employeeId,leaveType,startDate,endDate,reason,status,approvedBy";
+        return "leaveId,employeeId,leaveType,startDate,endDate,reason,status,approvedBy,paidLeaveDays,unpaidLeaveDays";
     }
 
     @Override
@@ -69,6 +69,8 @@ public class LeaveRequestRepository extends CsvRepository<LeaveRequest> {
             } else {
                 request.setApprovedBy(null);
             }
+            request.setPaidLeaveDays(p.length >= 9 && !p[8].trim().isEmpty() ? Integer.parseInt(p[8].trim()) : 0);
+            request.setUnpaidLeaveDays(p.length >= 10 && !p[9].trim().isEmpty() ? Integer.parseInt(p[9].trim()) : 0);
         }
 
         return request;

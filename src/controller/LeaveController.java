@@ -6,8 +6,8 @@ import java.util.UUID;
 
 public class LeaveController {
     private static final LocalDate LEAVE_SYSTEM_START_DATE = LocalDate.of(2026, 7, 1);
-    private static final int ANNUAL_LEAVE_DAYS_PER_YEAR = 12;
-    private static final int SICK_LEAVE_DAYS_PER_YEAR = 6;
+    private static final int PAID_LEAVE_DAYS_PER_YEAR = 18;
+    private static final LeaveType SHARED_BALANCE_TYPE = LeaveType.PAID_LEAVE;
 
     private final LeaveRequestRepository leaveRequestRepo;
     private final LeaveBalanceRepository leaveBalanceRepo;
@@ -41,20 +41,20 @@ public class LeaveController {
         if (startDate.isBefore(LEAVE_SYSTEM_START_DATE)) {
             throw new IllegalArgumentException("Chi duoc xin nghi tu ngay " + LEAVE_SYSTEM_START_DATE + " tro di.");
         }
+        if (startDate.isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("Khong the xin nghi trong qua khu. Ngay bat dau phai tu hom nay tro di.");
+        }
 
         ensureDefaultBalances(employeeId);
         int chargeableDays = calculateChargeableDays(employeeId, startDate, endDate, null, false);
 
         if (leaveType == LeaveType.ANNUAL || leaveType == LeaveType.SICK) {
-            LeaveBalance balance = leaveBalanceRepo.findByEmployeeAndType(employeeId, leaveType);
+            LeaveBalance balance = leaveBalanceRepo.findByEmployeeAndType(employeeId, SHARED_BALANCE_TYPE);
             if (balance == null) {
                 throw new IllegalArgumentException("Khong tim thay so du nghi phep cho loai: " + leaveType);
             }
-            if (balance.getRemainingLeaveDays() < chargeableDays) {
-                throw new InsufficientLeaveBalanceException(
-                        String.format("Khong du ngay nghi phep. Can: %d, Con lai: %d",
-                                chargeableDays, balance.getRemainingLeaveDays()));
-            }
+            // The request may exceed the paid balance. The excess is recorded as unpaid
+            // when HR approves it instead of rejecting the whole request.
         }
 
         String monthStr = String.format("%02d", startDate.getMonthValue());
@@ -88,26 +88,31 @@ public class LeaveController {
                 leaveId,
                 true);
 
+        int paidLeaveDays = 0;
+        int unpaidLeaveDays = chargeableDays;
         boolean deductSuccess = false;
         if (leaveType == LeaveType.ANNUAL || leaveType == LeaveType.SICK) {
-            if (chargeableDays == 0) {
+            LeaveBalance balance = leaveBalanceRepo.findByEmployeeAndType(employeeId, SHARED_BALANCE_TYPE);
+            paidLeaveDays = Math.min(chargeableDays, balance.getRemainingLeaveDays());
+            unpaidLeaveDays = chargeableDays - paidLeaveDays;
+            if (paidLeaveDays == 0) {
                 deductSuccess = true;
             } else {
             switch (lockMechanism) {
                 case NO_LOCK:
-                    deductSuccess = leaveBalanceRepo.deductWithNoLock(employeeId, leaveType, chargeableDays);
+                    deductSuccess = leaveBalanceRepo.deductWithNoLock(employeeId, SHARED_BALANCE_TYPE, paidLeaveDays);
                     break;
                 case SYNCHRONIZED:
-                    deductSuccess = leaveBalanceRepo.deductWithSync(employeeId, leaveType, chargeableDays);
+                    deductSuccess = leaveBalanceRepo.deductWithSync(employeeId, SHARED_BALANCE_TYPE, paidLeaveDays);
                     break;
                 case OPTIMISTIC_LOCKING:
-                    deductSuccess = leaveBalanceRepo.deductWithOptimistic(employeeId, leaveType, chargeableDays);
+                    deductSuccess = leaveBalanceRepo.deductWithOptimistic(employeeId, SHARED_BALANCE_TYPE, paidLeaveDays);
                     break;
                 case FILE_LOCK:
-                    deductSuccess = leaveBalanceRepo.deductWithFileLock(employeeId, leaveType, chargeableDays);
+                    deductSuccess = leaveBalanceRepo.deductWithFileLock(employeeId, SHARED_BALANCE_TYPE, paidLeaveDays);
                     break;
                 default:
-                    deductSuccess = leaveBalanceRepo.deductWithSync(employeeId, leaveType, chargeableDays);
+                    deductSuccess = leaveBalanceRepo.deductWithSync(employeeId, SHARED_BALANCE_TYPE, paidLeaveDays);
             }
             }
         } else {
@@ -119,7 +124,12 @@ public class LeaveController {
                     "Phe duyet that bai: Nhan vien khong du ngay nghi phep hoac co xung dot dong thoi.");
         }
 
-        return leaveRequestRepo.approveRequest(leaveId, approvedBy);
+        request.setPaidLeaveDays(paidLeaveDays);
+        request.setUnpaidLeaveDays(unpaidLeaveDays);
+        request.approve();
+        request.setApprovedBy(approvedBy);
+        leaveRequestRepo.update(request);
+        return true;
     }
 
     public boolean reject(String leaveId, String approvedBy) {
@@ -138,6 +148,10 @@ public class LeaveController {
 
     public List<LeaveRequest> getAllRequests() {
         return leaveRequestRepo.findAll();
+    }
+
+    public LeaveRequest getRequestById(String leaveId) {
+        return leaveRequestRepo.findById(leaveId);
     }
 
     public List<LeaveRequest> getRequestsByEmployee(String employeeId) {
@@ -184,20 +198,12 @@ public class LeaveController {
     }
 
     private void ensureDefaultBalances(String employeeId) {
-        if (leaveBalanceRepo.findByEmployeeAndType(employeeId, LeaveType.ANNUAL) == null) {
+        if (leaveBalanceRepo.findByEmployeeAndType(employeeId, SHARED_BALANCE_TYPE) == null) {
             leaveBalanceRepo.save(new LeaveBalance(
-                    "LB_" + employeeId + "_ANNUAL",
+                    "LB_" + employeeId + "_PAID_LEAVE",
                     employeeId,
-                    LeaveType.ANNUAL,
-                    ANNUAL_LEAVE_DAYS_PER_YEAR));
-        }
-
-        if (leaveBalanceRepo.findByEmployeeAndType(employeeId, LeaveType.SICK) == null) {
-            leaveBalanceRepo.save(new LeaveBalance(
-                    "LB_" + employeeId + "_SICK",
-                    employeeId,
-                    LeaveType.SICK,
-                    SICK_LEAVE_DAYS_PER_YEAR));
+                    SHARED_BALANCE_TYPE,
+                    PAID_LEAVE_DAYS_PER_YEAR));
         }
     }
 

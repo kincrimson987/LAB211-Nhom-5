@@ -1,5 +1,7 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDate;
+import java.time.YearMonth;
 
 public class PayrollController {
 
@@ -8,6 +10,7 @@ public class PayrollController {
     private final PayrollRuleRepository ruleRepo;
     private final PayrollEntryRepository entryRepo;
     private final PayrollRunRepository runRepo;
+    private final LeaveRequestRepository leaveRequestRepo;
     private ReportView view;
 
     public PayrollController(EmployeeRepository employeeRepo,
@@ -15,11 +18,21 @@ public class PayrollController {
                              PayrollRuleRepository ruleRepo,
                              PayrollEntryRepository entryRepo,
                              PayrollRunRepository runRepo) {
+        this(employeeRepo, attendanceRepo, ruleRepo, entryRepo, runRepo, new LeaveRequestRepository());
+    }
+
+    public PayrollController(EmployeeRepository employeeRepo,
+                             AttendanceRepository attendanceRepo,
+                             PayrollRuleRepository ruleRepo,
+                             PayrollEntryRepository entryRepo,
+                             PayrollRunRepository runRepo,
+                             LeaveRequestRepository leaveRequestRepo) {
         this.employeeRepo = employeeRepo;
         this.attendanceRepo = attendanceRepo;
         this.ruleRepo = ruleRepo;
         this.entryRepo = entryRepo;
         this.runRepo = runRepo;
+        this.leaveRequestRepo = leaveRequestRepo;
     }
 
     public PayrollController(ReportView view) {
@@ -28,6 +41,7 @@ public class PayrollController {
         this.ruleRepo = null;
         this.entryRepo = null;
         this.runRepo = null;
+        this.leaveRequestRepo = null;
         this.view = view;
     }
 
@@ -56,7 +70,8 @@ public class PayrollController {
                 continue;
             }
 
-            double netSalary = emp.calculateSalary(attendance, rule);
+            AttendanceRecord payableAttendance = buildPayableAttendance(attendance, rule, yearMonth);
+            double netSalary = emp.calculateSalary(payableAttendance, rule);
             PayrollEntry entry = new PayrollEntry(entryId, 0, emp.getId(), netSalary, PayrollStatus.PENDING);
             entry.process();
 
@@ -78,6 +93,36 @@ public class PayrollController {
             results.add(entry);
         }
         return results;
+    }
+
+    private AttendanceRecord buildPayableAttendance(AttendanceRecord attendance,
+                                                      PayrollRule rule,
+                                                      String yearMonth) {
+        int paidLeaveDays = countPaidLeaveDays(attendance.getEmployeeId(), yearMonth);
+        int payableDays = Math.min(rule.getStandardWorkingDays(),
+                attendance.getWorkDays() + paidLeaveDays);
+        return new AttendanceRecord(
+                attendance.getId(), attendance.getVersion(), attendance.getEmployeeId(),
+                attendance.getYearMonth(), payableDays, attendance.getOvertimeHours());
+    }
+
+    private int countPaidLeaveDays(String employeeId, String yearMonth) {
+        if (leaveRequestRepo == null) return 0;
+        YearMonth target = YearMonth.parse(yearMonth);
+        int total = 0;
+        for (LeaveRequest request : leaveRequestRepo.findByEmployee(employeeId)) {
+            if (request.getStatus() != LeaveStatus.APPROVED || request.getPaidLeaveDays() <= 0) {
+                continue;
+            }
+            int paidRemaining = request.getPaidLeaveDays();
+            for (LocalDate date = request.getStartDate();
+                 !date.isAfter(request.getEndDate()) && paidRemaining > 0;
+                 date = date.plusDays(1)) {
+                if (YearMonth.from(date).equals(target)) total++;
+                paidRemaining--;
+            }
+        }
+        return total;
     }
 
     /**

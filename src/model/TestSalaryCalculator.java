@@ -31,7 +31,7 @@ public class TestSalaryCalculator {
         double bonus1 = 500_000;
         double gross1 = base1 + ot1 + bonus1;
         double tax1 = gross1 * 0.10;
-        double expected1 = Math.round((gross1 - tax1) * 100.0) / 100.0;
+        double expected1 = Math.floor((gross1 - tax1) / 1_000.0) * 1_000.0;
 
         assertEqual(result1, expected1, "FULLTIME full attendance + OT + bonus + tax");
 
@@ -45,7 +45,7 @@ public class TestSalaryCalculator {
 
         double base2 = 8_000_000.0 * 23 / 26;
         double ot2 = 0;
-        double expected2 = Math.round((base2 + ot2) * 100.0) / 100.0;
+        double expected2 = Math.floor((base2 + ot2) / 1_000.0) * 1_000.0;
 
         assertEqual(result2, expected2, "PARTTIME absent 3 days + no bonus");
 
@@ -57,7 +57,7 @@ public class TestSalaryCalculator {
         double result3 = e3.calculateSalary(a3, rule);
 
         double gross3 = 20_000_000.0 + 500_000;
-        double expected3 = Math.round((gross3 - gross3 * 0.10) * 100.0) / 100.0;
+        double expected3 = Math.floor((gross3 - gross3 * 0.10) / 1_000.0) * 1_000.0;
 
         assertEqual(result3, expected3, "FULLTIME high salary + tax");
 
