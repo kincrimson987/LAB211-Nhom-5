@@ -1,6 +1,7 @@
 # Java build output — không nộp trong zip theo yêu cầu thầy
 out/
 *.class
+javac.*.args
 
 # NetBeans / IntelliJ
 nbproject/private/
