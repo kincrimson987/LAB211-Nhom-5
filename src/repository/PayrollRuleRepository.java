@@ -51,6 +51,9 @@ public class PayrollRuleRepository extends CsvRepository<PayrollRule> {
         double overtimeMultiplier = Double.parseDouble(parts[2].trim());
         double attendanceBonus = Double.parseDouble(parts[3].trim());
         double taxRate = Double.parseDouble(parts[4].trim());
+        if (taxRate > 1.0) {
+            taxRate /= 100.0;
+        }
         double taxThreshold = Double.parseDouble(parts[5].trim());
 
         return new PayrollRule(

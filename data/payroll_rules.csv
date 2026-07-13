@@ -1,2 +1,2 @@
 standardWorkingDays,workingHoursPerDay,overtimeMultiplier,attendanceBonus,taxRate,taxThreshold
-26,8,1.5,500000.0,10.0,11000000
+26,8,1.5,500000.0,0.1,11000000

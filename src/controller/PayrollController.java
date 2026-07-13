@@ -1,5 +1,7 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.time.LocalDate;
 import java.time.YearMonth;
 
@@ -53,19 +55,38 @@ public class PayrollController {
         List<PayrollEntry> results = new ArrayList<>();
         PayrollRule rule = ruleRepo.getConfig();
         List<Employee> employees = employeeRepo.findAll();
+        List<PayrollEntry> allEntries = entryRepo.findAll();
+
+        Map<String, AttendanceRecord> attendanceByEmployee = new HashMap<>();
+        for (AttendanceRecord record : attendanceRepo.findByMonth(yearMonth)) {
+            attendanceByEmployee.put(record.getEmployeeId(), record);
+        }
+
+        Map<String, Integer> entryIndexByEmployee = new HashMap<>();
+        for (int i = 0; i < allEntries.size(); i++) {
+            PayrollEntry entry = allEntries.get(i);
+            if (yearMonth.equals(entry.extractYearMonth())) {
+                entryIndexByEmployee.put(entry.getEmployeeId(), i);
+            }
+        }
+
+        String[] parts = yearMonth.split("-");
+        if (parts.length != 2) {
+            throw new IllegalArgumentException("Invalid year-month. Expected YYYY-MM: " + yearMonth);
+        }
+        String year = parts[0];
+        String month = parts[1];
 
         for (Employee emp : employees) {
-            AttendanceRecord attendance = attendanceRepo.findByEmployeeAndMonth(emp.getId(), yearMonth);
+            AttendanceRecord attendance = attendanceByEmployee.get(emp.getId());
             if (attendance == null) {
                 continue;
             }
 
-            String[] parts = yearMonth.split("-");
-            String year = parts[0];
-            String month = parts[1];
             String entryId = "PR_" + emp.getId() + "_" + month + "_" + year;
 
-            PayrollEntry existing = entryRepo.findByEmployeeAndMonth(emp.getId(), yearMonth);
+            Integer existingIndex = entryIndexByEmployee.get(emp.getId());
+            PayrollEntry existing = existingIndex != null ? allEntries.get(existingIndex) : null;
             if (existing != null && existing.getStatus() == PayrollStatus.PROCESSED) {
                 continue;
             }
@@ -75,22 +96,19 @@ public class PayrollController {
             PayrollEntry entry = new PayrollEntry(entryId, 0, emp.getId(), netSalary, PayrollStatus.PENDING);
             entry.process();
 
-           if (existing != null) {
-            try {
-                entryRepo.processWithFileLock("data/payroll_entries.csv", () -> {
-                    entryRepo.update(entry);
-                });
-            } catch (Exception e) { e.printStackTrace(); }
-       } else {
-    try {
-        entryRepo.processWithFileLock("data/payroll_entries.csv", () -> {
-            entryRepo.save(entry);
-        });
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-}
+            if (existingIndex != null) {
+                allEntries.set(existingIndex, entry);
+            } else {
+                entryIndexByEmployee.put(emp.getId(), allEntries.size());
+                allEntries.add(entry);
+            }
             results.add(entry);
+        }
+
+        if (!results.isEmpty()) {
+            synchronized (entryRepo.getFilePath().intern()) {
+                entryRepo.writeAllLines(allEntries);
+            }
         }
         return results;
     }

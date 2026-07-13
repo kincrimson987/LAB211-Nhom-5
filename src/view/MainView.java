@@ -768,12 +768,15 @@ public class MainView {
             PayrollRule cur = payrollController.getPayrollRule();
             printPayrollRule(cur);
             printInfo("Press Enter to keep current value.");
+            double currentTaxPercent = cur.getTaxRate() * 100.0;
             PayrollRule updated = new PayrollRule(
                     parseInt(promptOptional("Standard work days [" + cur.getStandardWorkingDays() + "]"), cur.getStandardWorkingDays()),
                     parseInt(promptOptional("Hours/day [" + cur.getWorkingHoursPerDay() + "]"), cur.getWorkingHoursPerDay()),
                     parseDoubleVal(promptOptional("Overtime multiplier [" + cur.getOvertimeMultiplier() + "]"), cur.getOvertimeMultiplier()),
                     parseDoubleVal(promptOptional("Attendance bonus [" + cur.getAttendanceBonus() + "]"), cur.getAttendanceBonus()),
-                    parseDoubleVal(promptOptional("Tax rate [" + cur.getTaxRate() + "]"), cur.getTaxRate()),
+                    parseDoubleVal(promptOptional("Tax rate (%) [" +
+                            String.format(java.util.Locale.ROOT, "%.1f", currentTaxPercent) + "]"),
+                            currentTaxPercent) / 100.0,
                     parseDoubleVal(promptOptional("Tax threshold [" +
                             String.format(java.util.Locale.ROOT, "%.0f", cur.getTaxThreshold()) + "]"),
                             cur.getTaxThreshold())
