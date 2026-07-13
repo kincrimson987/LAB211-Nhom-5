@@ -47,6 +47,11 @@ public class LeaveController {
 
         ensureDefaultBalances(employeeId);
         int chargeableDays = calculateChargeableDays(employeeId, startDate, endDate, null, false);
+        int requestedDays = (int) (endDate.toEpochDay() - startDate.toEpochDay()) + 1;
+        if (chargeableDays < requestedDays) {
+            throw new IllegalArgumentException(
+                    "Khoang ngay xin nghi bi trung voi mot don nghi da ton tai.");
+        }
 
         if (leaveType == LeaveType.ANNUAL || leaveType == LeaveType.SICK) {
             LeaveBalance balance = leaveBalanceRepo.findByEmployeeAndType(employeeId, SHARED_BALANCE_TYPE);
