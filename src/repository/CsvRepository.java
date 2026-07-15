@@ -50,19 +50,21 @@ public abstract class CsvRepository<T> {
     }
 
     public void update(T entity) {
-        List<T> all = readAllLines();
-        boolean found = false;
-        for (int i = 0; i < all.size(); i++) {
-            if (getId(all.get(i)).equals(getId(entity))) {
-                all.set(i, entity);
-                found = true;
-                break;
+        synchronized (filePath.intern()) {
+            List<T> all = readAllLines();
+            boolean found = false;
+            for (int i = 0; i < all.size(); i++) {
+                if (getId(all.get(i)).equals(getId(entity))) {
+                    all.set(i, entity);
+                    found = true;
+                    break;
+                }
             }
+            if (!found) {
+                throw new IllegalArgumentException("Entity not found: " + getId(entity));
+            }
+            writeAllLines(all);
         }
-        if (!found) {
-            throw new IllegalArgumentException("Entity not found: " + getId(entity));
-        }
-        writeAllLines(all);
     }
 
     public void delete(String id) {
@@ -72,44 +74,48 @@ public abstract class CsvRepository<T> {
     }
 
     public List<T> readAllLines() {
-        List<T> list = new ArrayList<>();
-        File file = new File(filePath);
-        if (!file.exists()) {
-            return list;
-        }
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            String headerLine = reader.readLine();
-            if (headerLine == null) {
+        synchronized (filePath.intern()) {
+            List<T> list = new ArrayList<>();
+            File file = new File(filePath);
+            if (!file.exists()) {
                 return list;
             }
 
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (!line.trim().isEmpty()) {
-                    list.add(parseLine(line));
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String headerLine = reader.readLine();
+                if (headerLine == null) {
+                    return list;
                 }
+
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (!line.trim().isEmpty()) {
+                        list.add(parseLine(line));
+                    }
+                }
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to read CSV: " + filePath, e);
             }
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to read CSV: " + filePath, e);
+            return list;
         }
-        return list;
     }
 
     public void writeAllLines(List<T> entities) {
-        File file = new File(filePath);
-        File parent = file.getParentFile();
-        if (parent != null && !parent.exists()) {
-            parent.mkdirs();
-        }
-
-        try (PrintWriter writer = new PrintWriter(new FileWriter(file))) {
-            writer.println(getHeader());
-            for (T entity : entities) {
-                writer.println(toLine(entity));
+        synchronized (filePath.intern()) {
+            File file = new File(filePath);
+            File parent = file.getParentFile();
+            if (parent != null && !parent.exists()) {
+                parent.mkdirs();
             }
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to write CSV: " + filePath, e);
+
+            try (PrintWriter writer = new PrintWriter(new FileWriter(file))) {
+                writer.println(getHeader());
+                for (T entity : entities) {
+                    writer.println(toLine(entity));
+                }
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to write CSV: " + filePath, e);
+            }
         }
     }
 }

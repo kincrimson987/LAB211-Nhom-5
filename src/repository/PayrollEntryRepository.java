@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -122,6 +124,12 @@ public class PayrollEntryRepository extends CsvRepository<PayrollEntry> {
         if (entry.getStatus() == PayrollStatus.PROCESSED)
             return false;
 
+        try {
+            Thread.sleep(5L);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
         markProcessed(entry);
         update(entry);
         return true;
@@ -131,11 +139,36 @@ public class PayrollEntryRepository extends CsvRepository<PayrollEntry> {
      * Cơ chế 2 — FILE_LOCK: khóa toàn bộ file CSV.
      */
     public boolean processWithFileLock(String entryId, String processedBy) {
-        try (RandomAccessFile raf = new RandomAccessFile(getFilePath(), "rw");
-                FileChannel channel = raf.getChannel();
-                FileLock lock = channel.lock()) {
+        synchronized (getFilePath().intern()) {
+            try (RandomAccessFile raf = new RandomAccessFile(getFilePath(), "rw");
+                    FileChannel channel = raf.getChannel();
+                    FileLock lock = channel.lock()) {
 
-            List<PayrollEntry> all = readAllLines();
+            // Trên Windows, khi channel đang khóa file thì không thể mở lại cùng
+            // file bằng FileReader/FileWriter. Đọc và ghi trực tiếp qua channel
+            // đang giữ khóa để tránh lỗi "locked a portion of the file".
+            if (channel.size() > Integer.MAX_VALUE) {
+                throw new IOException("Payroll CSV is too large to process safely.");
+            }
+
+            ByteBuffer input = ByteBuffer.allocate((int) channel.size());
+            channel.position(0);
+            while (input.hasRemaining() && channel.read(input) != -1) {
+                // Đọc hết nội dung trong cùng file channel.
+            }
+            input.flip();
+            String content = StandardCharsets.UTF_8.decode(input).toString();
+            String[] lines = content.split("\\R");
+
+            String header = lines.length > 0 && !lines[0].trim().isEmpty()
+                    ? lines[0]
+                    : new PayrollEntry().getCsvHeader();
+            List<PayrollEntry> all = new ArrayList<>();
+            for (int i = 1; i < lines.length; i++) {
+                if (!lines[i].trim().isEmpty()) {
+                    all.add(parseLine(lines[i]));
+                }
+            }
             PayrollEntry entry = findInList(all, entryId);
             if (entry == null)
                 return false;
@@ -143,10 +176,22 @@ public class PayrollEntryRepository extends CsvRepository<PayrollEntry> {
                 return false;
 
             markProcessed(entry);
-            writeAllLines(all);
-            return true;
-        } catch (IOException e) {
-            throw new RuntimeException("File lock failed for entry: " + entryId, e);
+            StringBuilder output = new StringBuilder(header).append(System.lineSeparator());
+            for (PayrollEntry item : all) {
+                output.append(toLine(item)).append(System.lineSeparator());
+            }
+
+            ByteBuffer bytes = StandardCharsets.UTF_8.encode(output.toString());
+            channel.truncate(0);
+            channel.position(0);
+            while (bytes.hasRemaining()) {
+                channel.write(bytes);
+            }
+            channel.force(true);
+                return true;
+            } catch (IOException e) {
+                throw new RuntimeException("File lock failed for entry: " + entryId, e);
+            }
         }
     }
 

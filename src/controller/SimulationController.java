@@ -1,6 +1,13 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class SimulationController {
 
@@ -52,19 +59,47 @@ public class SimulationController {
         List<PayrollEntry> entries = prepareEntries(employees, yearMonth, rule);
 
         long startTime = System.currentTimeMillis();
-        int successCount = 0;
+        Map<String, AtomicInteger> successfulAttempts = new ConcurrentHashMap<>();
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
 
         // Chạy theo cơ chế đã chọn
         for (PayrollEntry entry : entries) {
-            boolean ok = processEntry(entry.getId(), "SIMULATION");
-            if (ok) successCount++;
+            for (int attempt = 0; attempt < 2; attempt++) {
+                executor.submit(() -> {
+                    if (processEntry(entry.getId(), "SIMULATION")) {
+                        successfulAttempts
+                                .computeIfAbsent(entry.getId(), key -> new AtomicInteger())
+                                .incrementAndGet();
+                    }
+                });
+            }
+        }
+
+        executor.shutdown();
+        try {
+            if (!executor.awaitTermination(10, TimeUnit.MINUTES)) {
+                executor.shutdownNow();
+                throw new IllegalStateException("Simulation timed out.");
+            }
+        } catch (InterruptedException e) {
+            executor.shutdownNow();
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Simulation was interrupted.", e);
         }
 
         long elapsedMs = System.currentTimeMillis() - startTime;
-        double tps = elapsedMs > 0 ? (successCount * 1000.0 / elapsedMs) : successCount;
+        int successCount = (int) successfulAttempts.values().stream()
+                .filter(count -> count.get() > 0)
+                .count();
+        int doublePayment = (int) successfulAttempts.values().stream()
+                .filter(count -> count.get() > 1)
+                .count();
+        int operationCount = entries.size() * 2;
+        double tps = elapsedMs > 0
+                ? operationCount * 1000.0 / elapsedMs
+                : operationCount;
 
         // Phát hiện lỗi
-        int doublePayment = detectDoublePayment().size();
         int wrongLeave    = detectWrongLeaveDeduction().size();
 
         PayrollRun run = new PayrollRun(
@@ -85,12 +120,19 @@ public class SimulationController {
 
     public List<String> detectDoublePayment() {
         List<String> suspects = new ArrayList<>();
-        List<Employee> employees = employeeRepository.findAll();
-
-        for (Employee emp : employees) {
-            long count = payrollEntryRepository.countProcessedByEmployee(emp.getId());
-            if (count > 1) {
-                suspects.add(emp.getId() + " (" + emp.getName() + ") - " + count + " processed entries");
+        Map<String, Integer> processedByEmployeeMonth = new HashMap<>();
+        for (PayrollEntry entry : payrollEntryRepository.findAll()) {
+            if (entry.getStatus() != PayrollStatus.PROCESSED) {
+                continue;
+            }
+            String key = entry.getEmployeeId() + "|" + entry.extractYearMonth();
+            int count = processedByEmployeeMonth.getOrDefault(key, 0) + 1;
+            processedByEmployeeMonth.put(key, count);
+        }
+        for (Map.Entry<String, Integer> item : processedByEmployeeMonth.entrySet()) {
+            if (item.getValue() > 1) {
+                suspects.add(item.getKey().replace('|', ' ') + " - "
+                        + item.getValue() + " processed entries");
             }
         }
         return suspects;
@@ -118,6 +160,11 @@ public class SimulationController {
     private List<PayrollEntry> prepareEntries(List<Employee> employees,
                                               String yearMonth, PayrollRule rule) {
         List<PayrollEntry> entries = new ArrayList<>();
+        List<PayrollEntry> allEntries = payrollEntryRepository.findAll();
+        Map<String, PayrollEntry> entriesById = new HashMap<>();
+        for (PayrollEntry entry : allEntries) {
+            entriesById.put(entry.getId(), entry);
+        }
         String[] yearMonthParts = yearMonth.split("-");
         String year = yearMonthParts[0];
         String month = yearMonthParts[1];
@@ -129,19 +176,20 @@ public class SimulationController {
             double netSalary = emp.calculateSalary(att, rule);
             String entryId   = "PR_" + emp.getId() + "_" + month + "_" + year;
 
-            PayrollEntry existing = payrollEntryRepository.findById(entryId);
+            PayrollEntry existing = entriesById.get(entryId);
             if (existing == null) {
                 PayrollEntry entry = new PayrollEntry(
                         entryId, 1L, emp.getId(), netSalary, PayrollStatus.PENDING);
-                payrollEntryRepository.save(entry);
+                allEntries.add(entry);
+                entriesById.put(entryId, entry);
                 entries.add(entry);
             } else {
                 existing.setStatus(PayrollStatus.PENDING);
                 existing.setVersion(existing.getVersion() + 1);
-                payrollEntryRepository.update(existing);
                 entries.add(existing);
             }
         }
+        payrollEntryRepository.writeAllLines(allEntries);
         return entries;
     }
 
