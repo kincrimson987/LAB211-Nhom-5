@@ -890,10 +890,15 @@ public class MainView {
         boolean back = false;
         while (!back) {
             printSubMenu("SYNCHRONIZATION & SIMULATION", new String[]{
+<<<<<<< HEAD
                 "Run All 4 Payroll Simulations (Default 20 Threads)"
+=======
+                "Run Payroll Simulation", "Select Sync Mode"
+>>>>>>> parent of 5c29b17 (Update MainView.java)
             });
             switch (prompt("Choose").trim()) {
                 case "1" -> handleRunSimulation();
+                case "2" -> handleSelectSyncMode();
                 case "0" -> back = true;
                 default  -> printError("Invalid choice.");
             }
@@ -904,6 +909,7 @@ public class MainView {
         printSectionHeader("RUN PAYROLL SIMULATION");
         try {
             String yearMonth = prompt("Year-Month (YYYY-MM)");
+<<<<<<< HEAD
             int threads = promptThreadCount(20);
             String[] modes = {"NO_LOCK", "FILE_LOCK", "SYNCHRONIZED", "OPTIMISTIC"};
             List<PayrollRun> runs = new java.util.ArrayList<>();
@@ -918,7 +924,31 @@ public class MainView {
 
             printSuccess("All 4 simulations completed!");
             printSimulationComparisonTable(runs, threads);
+=======
+            int threads = parseInt(promptOptional("Threads (Enter = 10)"), 10);
+            printInfo("Running with " + threads + " threads, mode: " + simulationController.getCurrentSyncMode());
+            PayrollRun run = simulationController.runSimulation(yearMonth, threads);
+            printSuccess("Done!");
+            printPayrollRunSummary(run);
+            printInfo("Simulation result da bao gom TPS, elapsed time, double payment va wrong leave deduction.");
+>>>>>>> parent of 5c29b17 (Update MainView.java)
         } catch (Exception ex) { printError(ex.getMessage()); }
+    }
+
+    private void handleSelectSyncMode() {
+        printSectionHeader("SELECT SYNC MODE");
+        System.out.println("  1. NO_LOCK      2. FILE_LOCK");
+        System.out.println("  3. SYNCHRONIZED 4. OPTIMISTIC");
+        String mode = switch (prompt("Choose")) {
+            case "1" -> "NO_LOCK";
+            case "2" -> "FILE_LOCK";
+            case "3" -> "SYNCHRONIZED";
+            case "4" -> "OPTIMISTIC";
+            default  -> null;
+        };
+        if (mode == null) { printError("Invalid choice."); return; }
+        simulationController.setSyncMode(mode);
+        printSuccess("Mode set to: " + mode);
     }
 
     // ÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚ÂÃƒÂ¢Ã¢â‚¬Â¢Ã‚Â
@@ -1264,42 +1294,6 @@ public class MainView {
         printRow("Double Pay", String.valueOf(r.getDoublePaymentCount()));
         printRow("Wrong Leave", String.valueOf(r.getWrongLeaveCount()));
         System.out.println(CYAN + "+----------------------------------------------+" + RESET);
-    }
-
-    private void printSimulationComparisonTable(List<PayrollRun> runs, int threads) {
-        printSectionHeader("SIMULATOR COMPARISON RESULT");
-        System.out.printf(BOLD
-                        + "%-15s %-8s %-9s %-12s %-10s %-9s %-10s %-10s %-11s %-7s%n"
-                        + RESET,
-                "Mechanism", "Threads", "Success", "RejectedDup", "DoublePay",
-                "WrongLv", "ElapsedMs", "TPS", "Violation%", "Result");
-        System.out.println("-".repeat(118));
-
-        for (PayrollRun run : runs) {
-            int rejectedDuplicates = Math.max(0,
-                    run.getSuccessCount() - run.getDoublePaymentCount());
-            double violationRate = run.getSuccessCount() > 0
-                    ? run.getDoublePaymentCount() * 100.0 / run.getSuccessCount()
-                    : 0.0;
-            boolean passed = run.getSuccessCount() > 0
-                    && run.getDoublePaymentCount() == 0
-                    && run.getWrongLeaveCount() == 0;
-
-            System.out.printf("%-15s %-8d %-9d %-12d %-10d %-9d %-10d %-10.2f %-11.2f %s%n",
-                    run.getMechanism(),
-                    threads,
-                    run.getSuccessCount(),
-                    rejectedDuplicates,
-                    run.getDoublePaymentCount(),
-                    run.getWrongLeaveCount(),
-                    run.getElapsedMs(),
-                    run.getTps(),
-                    violationRate,
-                    passed ? GREEN + "PASS" + RESET : RED + "FAIL" + RESET);
-        }
-        System.out.println("-".repeat(118));
-        printInfo("Each payroll entry receives 2 concurrent payment requests.");
-        printInfo("RejectedDup is expected; DoublePay and WrongLv must be 0 to PASS.");
     }
 
     private void printPayrollRunTable(List<PayrollRun> runs) {
