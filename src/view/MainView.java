@@ -890,7 +890,7 @@ public class MainView {
         boolean back = false;
         while (!back) {
             printSubMenu("SYNCHRONIZATION & SIMULATION", new String[]{
-                "Run All 4 Payroll Simulations (10 Threads)"
+                "Run All 4 Payroll Simulations (Default 20 Threads)"
             });
             switch (prompt("Choose").trim()) {
                 case "1" -> handleRunSimulation();
@@ -904,14 +904,16 @@ public class MainView {
         printSectionHeader("RUN PAYROLL SIMULATION");
         try {
             String yearMonth = prompt("Year-Month (YYYY-MM)");
-            int threads = 10;
+            int threads = promptThreadCount(20);
             String[] modes = {"NO_LOCK", "FILE_LOCK", "SYNCHRONIZED", "OPTIMISTIC"};
             List<PayrollRun> runs = new java.util.ArrayList<>();
 
             for (String mode : modes) {
                 simulationController.setSyncMode(mode);
                 printInfo("Running " + mode + " with " + threads + " threads...");
-                runs.add(simulationController.runSimulation(yearMonth, threads));
+                PayrollRun run = simulationController.runSimulation(yearMonth, threads);
+                runs.add(run);
+                printSuccess(mode + " completed in " + run.getElapsedMs() + " ms");
             }
 
             printSuccess("All 4 simulations completed!");
@@ -1406,6 +1408,24 @@ public class MainView {
         System.out.print(BOLD + label + ": " + RESET);
         String input = scanner.nextLine().trim();
         return input.isEmpty() ? null : input;
+    }
+
+    private int promptThreadCount(int defaultValue) {
+        while (true) {
+            String input = promptOptional("Thread count (default " + defaultValue + ")");
+            if (input == null) {
+                return defaultValue;
+            }
+            try {
+                int value = Integer.parseInt(input);
+                if (value > 0) {
+                    return value;
+                }
+            } catch (NumberFormatException ignored) {
+                // Re-prompt below with the same validation message.
+            }
+            printError("Enter a positive integer.");
+        }
     }
 
     private double promptDouble(String label) {

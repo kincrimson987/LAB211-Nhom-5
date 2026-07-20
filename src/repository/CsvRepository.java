@@ -12,6 +12,9 @@ import java.util.List;
  */
 public abstract class CsvRepository<T> {
 
+    private static final int CSV_IO_MAX_RETRIES = 50;
+    private static final long CSV_IO_RETRY_DELAY_MS = 100L;
+
     private String filePath;
 
     public CsvRepository(String filePath) {
@@ -75,29 +78,41 @@ public abstract class CsvRepository<T> {
 
     public List<T> readAllLines() {
         synchronized (filePath.intern()) {
-            List<T> list = new ArrayList<>();
-            File file = new File(filePath);
-            if (!file.exists()) {
+            IOException lastError = null;
+            for (int attempt = 1; attempt <= CSV_IO_MAX_RETRIES; attempt++) {
+                try {
+                    return readAllLinesOnce();
+                } catch (IOException e) {
+                    lastError = e;
+                    sleepBeforeRetry(attempt);
+                }
+            }
+            throw new RuntimeException("Failed to read CSV: " + filePath
+                    + " (" + lastError.getMessage() + ")", lastError);
+        }
+    }
+
+    private List<T> readAllLinesOnce() throws IOException {
+        List<T> list = new ArrayList<>();
+        File file = new File(filePath);
+        if (!file.exists()) {
+            return list;
+        }
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String headerLine = reader.readLine();
+            if (headerLine == null) {
                 return list;
             }
 
-            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-                String headerLine = reader.readLine();
-                if (headerLine == null) {
-                    return list;
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (!line.trim().isEmpty()) {
+                    list.add(parseLine(line));
                 }
-
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    if (!line.trim().isEmpty()) {
-                        list.add(parseLine(line));
-                    }
-                }
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to read CSV: " + filePath, e);
             }
-            return list;
         }
+        return list;
     }
 
     public void writeAllLines(List<T> entities) {
@@ -108,14 +123,33 @@ public abstract class CsvRepository<T> {
                 parent.mkdirs();
             }
 
-            try (PrintWriter writer = new PrintWriter(new FileWriter(file))) {
-                writer.println(getHeader());
-                for (T entity : entities) {
-                    writer.println(toLine(entity));
+            IOException lastError = null;
+            for (int attempt = 1; attempt <= CSV_IO_MAX_RETRIES; attempt++) {
+                try (PrintWriter writer = new PrintWriter(new FileWriter(file))) {
+                    writer.println(getHeader());
+                    for (T entity : entities) {
+                        writer.println(toLine(entity));
+                    }
+                    return;
+                } catch (IOException e) {
+                    lastError = e;
+                    sleepBeforeRetry(attempt);
                 }
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to write CSV: " + filePath, e);
             }
+            throw new RuntimeException("Failed to write CSV: " + filePath
+                    + " (" + lastError.getMessage() + ")", lastError);
+        }
+    }
+
+    private void sleepBeforeRetry(int attempt) {
+        if (attempt >= CSV_IO_MAX_RETRIES) {
+            return;
+        }
+        try {
+            Thread.sleep(CSV_IO_RETRY_DELAY_MS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("CSV operation interrupted: " + filePath, e);
         }
     }
 }

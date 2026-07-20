@@ -35,9 +35,9 @@ public class PayrollEntryRepository extends CsvRepository<PayrollEntry> {
      */
     private String EMPLOYEES_PATH = "data/employees.csv";
 
-    private int OPTIMISTIC_MAX_RETRIES = 10;
+    private int OPTIMISTIC_MAX_RETRIES = 5;
 
-    private long OPTIMISTIC_BASE_BACKOFF_MS = 50L;
+    private long OPTIMISTIC_BASE_BACKOFF_MS = 5L;
 
     public PayrollEntryRepository() {
         super("data/payroll_entries.csv");
@@ -221,22 +221,64 @@ public class PayrollEntryRepository extends CsvRepository<PayrollEntry> {
      */
     public boolean processWithOptimistic(String entryId, String processedBy) {
         for (int attempt = 0; attempt < OPTIMISTIC_MAX_RETRIES; attempt++) {
-            PayrollEntry entry = findById(entryId);
-            if (entry == null)
-                return false;
-            if (entry.getStatus() == PayrollStatus.PROCESSED)
-                return false;
-
-            long expectedVersion = entry.getVersion();
-            markProcessed(entry);
-
-            if (updateIfVersionMatch(entry, expectedVersion)) {
+            if (tryProcessWithOptimistic(entryId)) {
                 return true;
             }
-
             sleepWithBackoff(attempt);
         }
         return false;
+    }
+
+    private boolean tryProcessWithOptimistic(String entryId) {
+        synchronized (getFilePath().intern()) {
+            File lockFile = new File(getFilePath());
+            try (RandomAccessFile raf = new RandomAccessFile(lockFile, "rw");
+                 FileChannel channel = raf.getChannel();
+                 FileLock lock = channel.lock()) {
+
+                List<PayrollEntry> all = new ArrayList<>();
+                String header = raf.readLine();
+                String line;
+                while ((line = raf.readLine()) != null) {
+                    if (!line.trim().isEmpty()) {
+                        all.add(parseLine(line));
+                    }
+                }
+
+                boolean updatedAny = false;
+                for (PayrollEntry entry : all) {
+                    if (!entry.getId().equals(entryId)) {
+                        continue;
+                    }
+                    if (entry.getStatus() == PayrollStatus.PROCESSED) {
+                        return false;
+                    }
+                    long expectedVersion = entry.getVersion();
+                    markProcessed(entry);
+                    if (entry.getVersion() != expectedVersion + 1) {
+                        return false;
+                    }
+                    updatedAny = true;
+                    break;
+                }
+
+                if (!updatedAny) {
+                    return false;
+                }
+
+                raf.setLength(0);
+                raf.seek(0);
+                raf.writeBytes(header != null ? header : new PayrollEntry().getCsvHeader());
+                raf.writeBytes(System.lineSeparator());
+                for (PayrollEntry entry : all) {
+                    raf.writeBytes(entry.toCsvLine());
+                    raf.writeBytes(System.lineSeparator());
+                }
+                return true;
+            } catch (IOException e) {
+                throw new RuntimeException("Optimistic update failed for entry: " + entryId, e);
+            }
+        }
     }
 
     /**
@@ -314,7 +356,8 @@ public class PayrollEntryRepository extends CsvRepository<PayrollEntry> {
 
     private void sleepWithBackoff(int attempt) {
         try {
-            Thread.sleep(OPTIMISTIC_BASE_BACKOFF_MS * (1L << attempt));
+            long delayMs = Math.min(OPTIMISTIC_BASE_BACKOFF_MS * (1L << attempt), 100L);
+            Thread.sleep(delayMs);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
