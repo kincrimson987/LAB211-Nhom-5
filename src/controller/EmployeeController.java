@@ -13,11 +13,28 @@ public class EmployeeController {
 
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
+    private final UserAccountRepository userAccountRepository;
+    private final LeaveBalanceRepository leaveBalanceRepository;
 
     public EmployeeController(EmployeeRepository employeeRepository,
                               DepartmentRepository departmentRepository) {
+        this(employeeRepository, departmentRepository, null, null);
+    }
+
+    public EmployeeController(EmployeeRepository employeeRepository,
+                              DepartmentRepository departmentRepository,
+                              UserAccountRepository userAccountRepository) {
+        this(employeeRepository, departmentRepository, userAccountRepository, null);
+    }
+
+    public EmployeeController(EmployeeRepository employeeRepository,
+                              DepartmentRepository departmentRepository,
+                              UserAccountRepository userAccountRepository,
+                              LeaveBalanceRepository leaveBalanceRepository) {
         this.employeeRepository = employeeRepository;
         this.departmentRepository = departmentRepository;
+        this.userAccountRepository = userAccountRepository;
+        this.leaveBalanceRepository = leaveBalanceRepository;
     }
 
     // ─────────────────────────────────────────
@@ -43,20 +60,52 @@ public class EmployeeController {
         validateName(name);
         validateEmail(email);
         checkEmailUnique(email, null);
-        validateDepartmentExists(departmentId);
+        String normalizedDepartmentId = normalizeDepartmentId(departmentId);
+        validateDepartmentExists(normalizedDepartmentId);
         validateBaseSalary(baseSalary);
+        if (type == null) {
+            throw new IllegalArgumentException("Employee type cannot be empty.");
+        }
 
         // Tạo đối tượng đúng kiểu
         Employee employee;
         if (type == EmployeeType.FULLTIME) {
             employee = new FullTimeEmployee(
-                    generateId(), 1L, name.trim(), email.trim(), departmentId, baseSalary);
+                    generateId(), 1L, name.trim(), email.trim(), normalizedDepartmentId, baseSalary);
         } else {
             employee = new PartTimeEmployee(
-                    generateId(), 1L, name.trim(), email.trim(), departmentId, baseSalary);
+                    generateId(), 1L, name.trim(), email.trim(), normalizedDepartmentId, baseSalary);
         }
 
         employeeRepository.save(employee);
+        UserAccount createdAccount = null;
+        LeaveBalance createdBalance = null;
+        try {
+            if (userAccountRepository != null) {
+                createdAccount = buildEmployeeAccount(employee);
+                userAccountRepository.save(createdAccount);
+            }
+            if (leaveBalanceRepository != null
+                    && leaveBalanceRepository.findByEmployeeAndType(
+                            employee.getId(), LeaveType.PAID_LEAVE) == null) {
+                createdBalance = new LeaveBalance(
+                        "LB_" + employee.getId() + "_PAID_LEAVE",
+                        employee.getId(), LeaveType.PAID_LEAVE, 18);
+                leaveBalanceRepository.save(createdBalance);
+            }
+        } catch (RuntimeException ex) {
+            if (createdBalance != null
+                    && leaveBalanceRepository.findById(createdBalance.getId()) != null) {
+                leaveBalanceRepository.delete(createdBalance.getId());
+            }
+            if (createdAccount != null
+                    && userAccountRepository.findById(createdAccount.getId()) != null) {
+                userAccountRepository.delete(createdAccount.getId());
+            }
+            employeeRepository.delete(employee.getId());
+            throw new IllegalStateException(
+                    "Related employee data could not be created; employee creation was rolled back.", ex);
+        }
         return employee;
     }
 
@@ -75,11 +124,18 @@ public class EmployeeController {
      * @throws IllegalArgumentException nếu không tìm thấy
      */
     public Employee getEmployeeById(String id) {
-        Employee employee = employeeRepository.findById(id);
+        String normalizedId = normalizeEmployeeId(id);
+        Employee employee = employeeRepository.findById(normalizedId);
         if (employee == null) {
-            throw new IllegalArgumentException("Không tìm thấy nhân viên với ID: " + id);
+            throw new IllegalArgumentException("Không tìm thấy nhân viên với ID: " + normalizedId);
         }
         return employee;
+    }
+
+    public UserAccount getAccountByEmployeeId(String employeeId) {
+        return userAccountRepository == null
+                ? null
+                : userAccountRepository.findByEmployeeId(normalizeEmployeeId(employeeId));
     }
 
     /**
@@ -143,8 +199,9 @@ public class EmployeeController {
         }
 
         if (departmentId != null) {
-            validateDepartmentExists(departmentId);
-            existing.setDepartmentId(departmentId);
+            String normalizedDepartmentId = normalizeDepartmentId(departmentId);
+            validateDepartmentExists(normalizedDepartmentId);
+            existing.setDepartmentId(normalizedDepartmentId);
         }
 
         if (baseSalary >= 0) {
@@ -167,8 +224,36 @@ public class EmployeeController {
      * @throws IllegalArgumentException nếu không tìm thấy
      */
     public void deleteEmployee(String id) {
-        getEmployeeById(id); // throws nếu không tồn tại
-        employeeRepository.delete(id);
+        Employee employee = getEmployeeById(id);
+        UserAccount account = userAccountRepository == null
+                ? null
+                : userAccountRepository.findByEmployeeId(employee.getId());
+        List<LeaveBalance> balances = leaveBalanceRepository == null
+                ? java.util.Collections.emptyList()
+                : leaveBalanceRepository.findByEmployee(employee.getId());
+        employeeRepository.delete(employee.getId());
+        try {
+            if (account != null) {
+                userAccountRepository.delete(account.getId());
+            }
+            for (LeaveBalance balance : balances) {
+                leaveBalanceRepository.delete(balance.getId());
+            }
+        } catch (RuntimeException ex) {
+            if (employeeRepository.findById(employee.getId()) == null) {
+                employeeRepository.save(employee);
+            }
+            if (account != null && userAccountRepository.findById(account.getId()) == null) {
+                userAccountRepository.save(account);
+            }
+            for (LeaveBalance balance : balances) {
+                if (leaveBalanceRepository.findById(balance.getId()) == null) {
+                    leaveBalanceRepository.save(balance);
+                }
+            }
+            throw new IllegalStateException(
+                    "Related employee data could not be deleted; employee deletion was rolled back.", ex);
+        }
     }
 
     // ─────────────────────────────────────────
@@ -179,6 +264,42 @@ public class EmployeeController {
         int nextNumber = getNextEmployeeNumber();
         saveLastEmployeeNumber(nextNumber);
         return String.format("E%04d", nextNumber);
+    }
+
+    private UserAccount buildEmployeeAccount(Employee employee) {
+        if (userAccountRepository.findByEmployeeId(employee.getId()) != null) {
+            throw new IllegalArgumentException("Employee already has an account: " + employee.getId());
+        }
+        String username = employee.getId().toLowerCase(java.util.Locale.ROOT);
+        if (userAccountRepository.findByUsername(username) != null) {
+            throw new IllegalArgumentException("Username already exists: " + username);
+        }
+        return new UserAccount(generateUserAccountId(), 1L,
+                username, username + "@123", "EMPLOYEE", true, employee.getId());
+    }
+
+    private String generateUserAccountId() {
+        int max = userAccountRepository.findAll().stream()
+                .map(UserAccount::getId)
+                .filter(id -> id != null && id.matches("U\\d+"))
+                .mapToInt(id -> Integer.parseInt(id.substring(1)))
+                .max()
+                .orElse(0);
+        return String.format("U%04d", max + 1);
+    }
+
+    private String normalizeEmployeeId(String employeeId) {
+        if (employeeId == null || employeeId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Employee ID cannot be empty.");
+        }
+        return employeeId.trim().toUpperCase(java.util.Locale.ROOT);
+    }
+
+    private String normalizeDepartmentId(String departmentId) {
+        if (departmentId == null || departmentId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Department ID cannot be empty.");
+        }
+        return departmentId.trim().toUpperCase(java.util.Locale.ROOT);
     }
 
     private int getNextEmployeeNumber() {

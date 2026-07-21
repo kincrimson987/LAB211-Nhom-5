@@ -52,6 +52,12 @@ public class PayrollController {
     // ─────────────────────────────────────────
 
    public synchronized List<PayrollEntry> runPayroll(String yearMonth) {
+        final YearMonth period;
+        try {
+            period = YearMonth.parse(yearMonth);
+        } catch (RuntimeException ex) {
+            throw new IllegalArgumentException("Invalid year-month. Expected YYYY-MM: " + yearMonth, ex);
+        }
         List<PayrollEntry> results = new ArrayList<>();
         PayrollRule rule = ruleRepo.getConfig();
         List<Employee> employees = employeeRepo.findAll();
@@ -70,12 +76,8 @@ public class PayrollController {
             }
         }
 
-        String[] parts = yearMonth.split("-");
-        if (parts.length != 2) {
-            throw new IllegalArgumentException("Invalid year-month. Expected YYYY-MM: " + yearMonth);
-        }
-        String year = parts[0];
-        String month = parts[1];
+        String year = String.valueOf(period.getYear());
+        String month = String.format("%02d", period.getMonthValue());
 
         for (Employee emp : employees) {
             AttendanceRecord attendance = attendanceByEmployee.get(emp.getId());
@@ -93,7 +95,9 @@ public class PayrollController {
 
             AttendanceRecord payableAttendance = buildPayableAttendance(attendance, rule, yearMonth);
             double netSalary = emp.calculateSalary(payableAttendance, rule);
-            PayrollEntry entry = new PayrollEntry(entryId, 0, emp.getId(), netSalary, PayrollStatus.PENDING);
+            long nextVersion = existing == null ? 0L : existing.getVersion();
+            PayrollEntry entry = new PayrollEntry(
+                    entryId, nextVersion, emp.getId(), netSalary, PayrollStatus.PENDING);
             entry.process();
 
             if (existingIndex != null) {

@@ -47,9 +47,19 @@ public abstract class CsvRepository<T> {
     }
 
     public void save(T entity) {
-        List<T> all = readAllLines();
-        all.add(entity);
-        writeAllLines(all);
+        if (entity == null || getId(entity) == null || getId(entity).trim().isEmpty()) {
+            throw new IllegalArgumentException("Entity ID cannot be empty.");
+        }
+        synchronized (filePath.intern()) {
+            List<T> all = readAllLines();
+            boolean duplicate = all.stream()
+                    .anyMatch(existing -> getId(existing).equals(getId(entity)));
+            if (duplicate) {
+                throw new IllegalArgumentException("Entity already exists: " + getId(entity));
+            }
+            all.add(entity);
+            writeAllLines(all);
+        }
     }
 
     public void update(T entity) {
@@ -71,9 +81,11 @@ public abstract class CsvRepository<T> {
     }
 
     public void delete(String id) {
-        List<T> all = readAllLines();
-        all.removeIf(entity -> getId(entity).equals(id));
-        writeAllLines(all);
+        synchronized (filePath.intern()) {
+            List<T> all = readAllLines();
+            all.removeIf(entity -> getId(entity).equals(id));
+            writeAllLines(all);
+        }
     }
 
     public List<T> readAllLines() {

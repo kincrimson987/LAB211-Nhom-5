@@ -34,12 +34,17 @@ public class Department extends BaseEntity {
 
     @Override
     public void fromCsvLine(String line) {
-        String[] parts = line.split(",");
-        if (parts.length >= 4) {
-            setId(parts[0]);
-            setVersion(Long.parseLong(parts[1]));
-            this.name = parts[2];
-            this.managerId = parts[3];
+        String[] parts = line.split(",", -1);
+        if (parts.length != 4) {
+            throw new IllegalArgumentException("Invalid department CSV line: " + line);
+        }
+        setId(parts[0].trim());
+        setVersion(Long.parseLong(parts[1].trim()));
+        this.name = parts[2].trim();
+        this.managerId = parts[3].trim();
+
+        if (getId().isEmpty() || name.isEmpty()) {
+            throw new IllegalArgumentException("Department ID and name are required: " + line);
         }
     }
 }

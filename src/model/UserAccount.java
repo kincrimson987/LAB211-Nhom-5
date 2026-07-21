@@ -80,16 +80,20 @@ public class UserAccount extends BaseEntity {
 
     @Override
     public void fromCsvLine(String line) {
-        String[] parts = line.split(",");
+        String[] parts = line.split(",", -1);
 
-        if (parts.length >= 6) {
-            setId(parts[0].trim());
-            setVersion(Long.parseLong(parts[1].trim()));
-            this.username = parts[2].trim();
-            this.password = parts[3].trim();
-            this.role = parts[4].trim();
-            this.active = Boolean.parseBoolean(parts[5].trim());
-            this.employeeId = parts.length >= 7 ? parts[6].trim() : "";
+        if (parts.length != 7) {
+            throw new IllegalArgumentException("Invalid user account CSV line: " + line);
+        }
+        setId(parts[0].trim());
+        setVersion(Long.parseLong(parts[1].trim()));
+        this.username = parts[2].trim();
+        this.password = parts[3].trim();
+        this.role = parts[4].trim();
+        this.active = Boolean.parseBoolean(parts[5].trim());
+        this.employeeId = parts[6].trim();
+        if (getId().isEmpty() || username.isEmpty() || password.isEmpty() || role.isEmpty()) {
+            throw new IllegalArgumentException("Required user account field is empty: " + line);
         }
     }
 

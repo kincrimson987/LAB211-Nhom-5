@@ -26,6 +26,7 @@ public class DataGenerator {
 
         try {
             generateDepartments();
+            resetDepartmentSequence();
             generateEmployees();
             resetEmployeeSequence();
             generateUserAccounts();
@@ -122,6 +123,12 @@ public class DataGenerator {
         }
     }
 
+    private static void resetDepartmentSequence() throws IOException {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(DATA_DIR + "department_sequence.txt"))) {
+            writer.println(NUM_DEPARTMENTS);
+        }
+    }
+
     private static void generateUserAccounts() throws IOException {
         int totalRows = 0;
         try (PrintWriter writer = new PrintWriter(new FileWriter(DATA_DIR + "user_accounts.csv"))) {
@@ -194,10 +201,13 @@ public class DataGenerator {
         int totalRows = 0;
 
         try (PrintWriter writer = new PrintWriter(new FileWriter(DATA_DIR + "leave_requests.csv"))) {
-            writer.println("leaveId,employeeId,leaveType,startDate,endDate,reason,status,approvedBy");
+            writer.println("leaveId,employeeId,leaveType,startDate,endDate,reason,status,approvedBy,paidLeaveDays,unpaidLeaveDays");
 
             for (int m = 1; m <= MONTHS_TO_GENERATE; m++) {
                 YearMonth period = periodForIndex(m);
+                if (period.isBefore(YearMonth.of(2026, 7))) {
+                    continue;
+                }
                 int year = period.getYear();
                 int month = period.getMonthValue();
                 for (int i = 1; i <= NUM_EMPLOYEES; i++) {
@@ -213,7 +223,7 @@ public class DataGenerator {
                         String endDate = String.format("%d-%02d-%02d", year, month, endDay);
                         String leaveId = String.format("LR_%s_%02d_%d", employeeId, month, year);
 
-                        writer.println(String.format("%s,%s,%s,%s,%s,Leave request,PENDING,",
+                        writer.println(String.format("%s,%s,%s,%s,%s,Leave request,PENDING,,0,0",
                                 leaveId,
                                 employeeId,
                                 leaveType,

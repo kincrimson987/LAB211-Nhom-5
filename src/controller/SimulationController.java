@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -60,16 +61,21 @@ public class SimulationController {
 
         long startTime = System.currentTimeMillis();
         Map<String, AtomicInteger> successfulAttempts = new ConcurrentHashMap<>();
+        ConcurrentLinkedQueue<RuntimeException> taskErrors = new ConcurrentLinkedQueue<>();
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
 
         // Chạy theo cơ chế đã chọn
         for (PayrollEntry entry : entries) {
             for (int attempt = 0; attempt < 2; attempt++) {
                 executor.submit(() -> {
-                    if (processEntry(entry.getId(), "SIMULATION")) {
-                        successfulAttempts
-                                .computeIfAbsent(entry.getId(), key -> new AtomicInteger())
-                                .incrementAndGet();
+                    try {
+                        if (processEntry(entry.getId(), "SIMULATION")) {
+                            successfulAttempts
+                                    .computeIfAbsent(entry.getId(), key -> new AtomicInteger())
+                                    .incrementAndGet();
+                        }
+                    } catch (RuntimeException ex) {
+                        taskErrors.add(ex);
                     }
                 });
             }
@@ -85,6 +91,11 @@ public class SimulationController {
             executor.shutdownNow();
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Simulation was interrupted.", e);
+        }
+        if (!taskErrors.isEmpty()) {
+            throw new IllegalStateException(
+                    "Simulation failed in " + taskErrors.size() + " task(s).",
+                    taskErrors.peek());
         }
 
         long elapsedMs = System.currentTimeMillis() - startTime;

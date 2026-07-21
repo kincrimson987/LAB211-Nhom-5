@@ -41,9 +41,11 @@ public class UserAccountRepository extends CsvRepository<UserAccount> {
     }
 
     public UserAccount findByUsername(String username) {
+        if (username == null) return null;
+        String normalized = username.trim();
         for (UserAccount account : findAll()) {
             if (account.getUsername() != null
-                    && account.getUsername().equals(username)) {
+                    && account.getUsername().equalsIgnoreCase(normalized)) {
                 return account;
             }
         }

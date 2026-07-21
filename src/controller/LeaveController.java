@@ -24,12 +24,13 @@ public class LeaveController {
     public LeaveRequest submit(String employeeId, LeaveType leaveType,
                                LocalDate startDate, LocalDate endDate,
                                String reason) {
+        employeeId = normalizeEmployeeId(employeeId);
         Employee emp = employeeRepo.findById(employeeId);
         if (emp == null) {
             throw new EmployeeNotFoundException("Khong tim thay nhan vien voi ma: " + employeeId);
         }
-        if (leaveType == LeaveType.UNPAID) {
-            throw new IllegalArgumentException("He thong hien tai khong su dung loai nghi UNPAID.");
+        if (leaveType == null || leaveType == LeaveType.UNPAID || leaveType == LeaveType.PAID_LEAVE) {
+            throw new IllegalArgumentException("Loai nghi phep khong hop le: " + leaveType);
         }
 
         if (startDate == null || endDate == null) {
@@ -73,6 +74,18 @@ public class LeaveController {
     }
 
     public boolean approve(String leaveId, String approvedBy, LockMechanism lockMechanism) {
+        if (leaveId == null || leaveId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Leave request ID cannot be empty.");
+        }
+        synchronized (leaveId.trim().intern()) {
+            LockMechanism mechanism = lockMechanism == null
+                    ? LockMechanism.SYNCHRONIZED
+                    : lockMechanism;
+            return approveLocked(leaveId.trim(), approvedBy, mechanism);
+        }
+    }
+
+    private boolean approveLocked(String leaveId, String approvedBy, LockMechanism lockMechanism) {
         LeaveRequest request = leaveRequestRepo.findById(leaveId);
         if (request == null) {
             throw new IllegalArgumentException("Khong tim thay yeu cau nghi phep voi ma: " + leaveId);
@@ -138,6 +151,15 @@ public class LeaveController {
     }
 
     public boolean reject(String leaveId, String approvedBy) {
+        if (leaveId == null || leaveId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Leave request ID cannot be empty.");
+        }
+        synchronized (leaveId.trim().intern()) {
+            return rejectLocked(leaveId.trim(), approvedBy);
+        }
+    }
+
+    private boolean rejectLocked(String leaveId, String approvedBy) {
         LeaveRequest request = leaveRequestRepo.findById(leaveId);
         if (request == null) {
             throw new IllegalArgumentException("Khong tim thay yeu cau nghi phep voi ma: " + leaveId);
@@ -210,6 +232,13 @@ public class LeaveController {
                     SHARED_BALANCE_TYPE,
                     PAID_LEAVE_DAYS_PER_YEAR));
         }
+    }
+
+    private String normalizeEmployeeId(String employeeId) {
+        if (employeeId == null || employeeId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Employee ID cannot be empty.");
+        }
+        return employeeId.trim().toUpperCase(java.util.Locale.ROOT);
     }
 
     private int calculateChargeableDays(String employeeId,

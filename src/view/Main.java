@@ -19,8 +19,10 @@ public class Main {
                 PayrollRunRepository payrollRunRepo = new PayrollRunRepository();
 
                 // ── 2. Controllers ───────────────────────────────────────────────
-                EmployeeController employeeController = new EmployeeController(employeeRepo, departmentRepo);
-                DepartmentController departmentController = new DepartmentController(departmentRepo);
+                EmployeeController employeeController = new EmployeeController(
+                                employeeRepo, departmentRepo, userRepo, leaveBalRepo);
+                DepartmentController departmentController = new DepartmentController(
+                                departmentRepo, employeeRepo);
                 AttendanceController attendanceController = new AttendanceController(
                                 attendanceRepo, employeeRepo,
                                 new AttendanceAdjustmentRepository(), leaveReqRepo);

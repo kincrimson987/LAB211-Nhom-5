@@ -231,12 +231,14 @@ public class MainView {
                     ? EmployeeType.PARTTIME : EmployeeType.FULLTIME;
             double baseSalary = promptDouble("Base salary (VND, 0 = default)");
             Employee created = employeeController.addEmployee(name, email, departmentId, type, baseSalary);
-            UserAccount account = createAccountForEmployee(created);
+            UserAccount account = employeeController.getAccountByEmployeeId(created.getId());
             printSuccess("Employee added!");
             printEmployeeDetail(created);
-            printSuccess("Employee account created automatically.");
-            printUserAccountDetail(account);
-        } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
+            if (account != null) {
+                printSuccess("Employee account created automatically.");
+                printUserAccountDetail(account);
+            }
+        } catch (RuntimeException ex) { printError(ex.getMessage()); }
     }
 
     private void handleUpdateEmployee() {
@@ -253,7 +255,7 @@ public class MainView {
             Employee updated = employeeController.updateEmployee(id, name, email, departmentId, salary);
             printSuccess("Updated!");
             printEmployeeDetail(updated);
-        } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
+        } catch (RuntimeException ex) { printError(ex.getMessage()); }
     }
 
     private void handleDeleteEmployee() {
@@ -262,12 +264,10 @@ public class MainView {
         try {
             printEmployeeDetail(employeeController.getEmployeeById(id));
             if (confirm("Confirm delete?")) {
-                UserAccount linkedAccount = userRepo.findByEmployeeId(id);
                 employeeController.deleteEmployee(id);
-                if (linkedAccount != null) userRepo.delete(linkedAccount.getId());
                 printSuccess("Deleted.");
             } else { printInfo("Cancelled."); }
-        } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
+        } catch (RuntimeException ex) { printError(ex.getMessage()); }
     }
 
     private void handleSearchEmployee() {
@@ -310,24 +310,6 @@ public class MainView {
         }
     }
 
-    private UserAccount createAccountForEmployee(Employee employee) {
-        if (employee == null || employee.getId() == null || employee.getId().isBlank()) {
-            throw new IllegalArgumentException("A valid employee is required to create an account.");
-        }
-        if (userRepo.findByEmployeeId(employee.getId()) != null) {
-            throw new IllegalArgumentException("This employee already has an account.");
-        }
-        String username = employee.getId().toLowerCase(java.util.Locale.ROOT);
-        if (userRepo.findByUsername(username) != null) {
-            throw new IllegalArgumentException("Username already exists: " + username);
-        }
-        UserAccount account = new UserAccount(
-                generateUserAccountId(), 1L, username, username + "@123",
-                "EMPLOYEE", true, employee.getId());
-        userRepo.save(account);
-        return account;
-    }
-
     private void handleAddDepartment() {
         printSectionHeader("ADD DEPARTMENT");
         try {
@@ -335,7 +317,7 @@ public class MainView {
             String managerId = promptOptional("Manager ID (Enter to skip)");
             Department dept  = departmentController.addDepartment(name, managerId);
             printSuccess("Department added: " + dept.getId() + " - " + dept.getName());
-        } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
+        } catch (RuntimeException ex) { printError(ex.getMessage()); }
     }
 
     private void handleUpdateDepartment() {
@@ -346,7 +328,7 @@ public class MainView {
             Department updated = departmentController.updateDepartment(
                     id, promptOptional("New name"), promptOptional("New manager ID"));
             printSuccess("Updated: " + updated.getName());
-        } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
+        } catch (RuntimeException ex) { printError(ex.getMessage()); }
     }
 
     private void handleDeleteDepartment() {
@@ -356,7 +338,7 @@ public class MainView {
             printDepartmentDetail(departmentController.getDepartmentById(id));
             if (confirm("Confirm delete?")) { departmentController.deleteDepartment(id); printSuccess("Deleted."); }
             else printInfo("Cancelled.");
-        } catch (IllegalArgumentException ex) { printError(ex.getMessage()); }
+        } catch (RuntimeException ex) { printError(ex.getMessage()); }
     }
 
     private void handleSearchDepartment() {
@@ -890,11 +872,7 @@ public class MainView {
         boolean back = false;
         while (!back) {
             printSubMenu("SYNCHRONIZATION & SIMULATION", new String[]{
-<<<<<<< HEAD
-                "Run All 4 Payroll Simulations (Default 20 Threads)"
-=======
                 "Run Payroll Simulation", "Select Sync Mode"
->>>>>>> parent of 5c29b17 (Update MainView.java)
             });
             switch (prompt("Choose").trim()) {
                 case "1" -> handleRunSimulation();
@@ -909,29 +887,12 @@ public class MainView {
         printSectionHeader("RUN PAYROLL SIMULATION");
         try {
             String yearMonth = prompt("Year-Month (YYYY-MM)");
-<<<<<<< HEAD
-            int threads = promptThreadCount(20);
-            String[] modes = {"NO_LOCK", "FILE_LOCK", "SYNCHRONIZED", "OPTIMISTIC"};
-            List<PayrollRun> runs = new java.util.ArrayList<>();
-
-            for (String mode : modes) {
-                simulationController.setSyncMode(mode);
-                printInfo("Running " + mode + " with " + threads + " threads...");
-                PayrollRun run = simulationController.runSimulation(yearMonth, threads);
-                runs.add(run);
-                printSuccess(mode + " completed in " + run.getElapsedMs() + " ms");
-            }
-
-            printSuccess("All 4 simulations completed!");
-            printSimulationComparisonTable(runs, threads);
-=======
             int threads = parseInt(promptOptional("Threads (Enter = 10)"), 10);
             printInfo("Running with " + threads + " threads, mode: " + simulationController.getCurrentSyncMode());
             PayrollRun run = simulationController.runSimulation(yearMonth, threads);
             printSuccess("Done!");
             printPayrollRunSummary(run);
             printInfo("Simulation result da bao gom TPS, elapsed time, double payment va wrong leave deduction.");
->>>>>>> parent of 5c29b17 (Update MainView.java)
         } catch (Exception ex) { printError(ex.getMessage()); }
     }
 
@@ -1404,24 +1365,6 @@ public class MainView {
         return input.isEmpty() ? null : input;
     }
 
-    private int promptThreadCount(int defaultValue) {
-        while (true) {
-            String input = promptOptional("Thread count (default " + defaultValue + ")");
-            if (input == null) {
-                return defaultValue;
-            }
-            try {
-                int value = Integer.parseInt(input);
-                if (value > 0) {
-                    return value;
-                }
-            } catch (NumberFormatException ignored) {
-                // Re-prompt below with the same validation message.
-            }
-            printError("Enter a positive integer.");
-        }
-    }
-
     private double promptDouble(String label) {
         while (true) {
             try { return Double.parseDouble(prompt(label).replace(",", "")); }
@@ -1450,17 +1393,6 @@ public class MainView {
         if (s == null) return fallback;
         try { return Double.parseDouble(s.replace(",", "")); }
         catch (Exception e) { return fallback; }
-    }
-
-    private String generateUserAccountId() {
-        int max = 0;
-        for (UserAccount account : userRepo.findAll()) {
-            String id = account.getId();
-            if (id != null && id.matches("U\\d+")) {
-                max = Math.max(max, Integer.parseInt(id.substring(1)));
-            }
-        }
-        return String.format("U%03d", max + 1);
     }
 
     private String requireLinkedEmployeeId() {
